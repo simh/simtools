@@ -1,6 +1,10 @@
 #ifndef MACRO11_H
 #define MACRO11_H
 
+#define VERSIONSTR "0.3 (April 21, 2009)"
+//#define VERSIONSTR "0.2   July 15, 2001"
+
+
 /*
 Copyright (c) 2001, Richard Krehbiel
 All rights reserved.
@@ -34,6 +38,5 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
 
-extern void *memcheck(void *p);
 
 #endif

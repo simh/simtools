@@ -1,3 +1,6 @@
+#define UTIL__C
+
+
 /* Some generally useful routines */
 /* The majority of the non-portable code is in here. */
 
@@ -39,8 +42,9 @@ DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-#include "util.h"
+#include "util.h"                      /* own defintions */
 
 #ifdef WIN32
 #include <sys/types.h>
@@ -52,54 +56,60 @@ DAMAGE.
 #endif
 
 /* Sure, the library typically provides some kind of
-	ultoa or _ultoa function.  But since it's merely typical
-	and not standard, and since the function is so simple,
-	I'll write my own.
+    ultoa or _ultoa function.  But since it's merely typical
+    and not standard, and since the function is so simple,
+    I'll write my own.
 
-	It's significant feature is that it'll produce representations in
-	any number base from 2 to 36.
+    It's significant feature is that it'll produce representations in
+    any number base from 2 to 36.
 */
 
-char *my_ultoa(unsigned long val, char *buf, unsigned int base)
+char           *my_ultoa(
+    unsigned long val,
+    char *buf,
+    unsigned int base)
 {
-	static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	char *strt = buf, *end;
+    static char     digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char           *strt = buf,
+            *end;
 
-	do
-	{
-		*buf++ = digits[val % base];
-		val /= base;
-	} while(val != 0);
+    do {
+        *buf++ = digits[val % base];
+        val /= base;
+    } while (val != 0);
 
-	*buf = 0;			/* delimit */
-	end = buf+1;
+    *buf = 0;                          /* delimit */
+    end = buf + 1;
 
-	/* Now reverse the bytes */
+    /* Now reverse the bytes */
 
-	while(buf > strt)
-	{
-		char temp;
-		temp = *--buf;
-		*buf = *strt;
-		*strt++ = temp;
-	}
+    while (buf > strt) {
+        char            temp;
 
-	return end;
+        temp = *--buf;
+        *buf = *strt;
+        *strt++ = temp;
+    }
+
+    return end;
 }
 
 /* Ditto my_ultoa.  This actually emits
-	a signed representation in other number bases. */
+    a signed representation in other number bases. */
 
-char *my_ltoa(long val, char *buf, unsigned int base)
+char           *my_ltoa(
+    long val,
+    char *buf,
+    unsigned int base)
 {
-	unsigned long uval;
+    unsigned long   uval;
 
-	if(val < 0)
-		uval = -val, *buf++ = '-';
-	else
-		uval = val;
+    if (val < 0)
+        uval = -val, *buf++ = '-';
+    else
+        uval = val;
 
-	return my_ultoa(uval, buf, base);
+    return my_ultoa(uval, buf, base);
 }
 
 /*
@@ -113,60 +123,103 @@ char *my_ltoa(long val, char *buf, unsigned int base)
   this function.
 */
 
-void my_searchenv(char *name, char *envname, char *hitfile, int hitlen)
+void my_searchenv(
+    char *name,
+    char *envname,
+    char *hitfile,
+    int hitlen)
 {
-	char *env;
-	char *envcopy;
-	char *cp;
+    char           *env;
+    char           *envcopy;
+    char           *cp;
 
-	*hitfile = 0;				/* Default failure indication */
+    *hitfile = 0;                      /* Default failure indication */
 
-	/* Note: If the given name is absolute, then don't search the
-	   path, but use it as is. */
+    /* Note: If the given name is absolute, then don't search the
+       path, but use it as is. */
 
-	if(
+    if (
 #ifdef WIN32
-		strchr(name, ':') != NULL || /* Contain a drive spec? */
-		name[0] == '\\' ||		/* Start with absolute ref? */
+           strchr(name, ':') != NULL || /* Contain a drive spec? */
+           name[0] == '\\' ||          /* Start with absolute ref? */
 #endif
-		name[0] == '/')			/* Start with absolute ref? */
-	{
-		strncpy(hitfile, name, hitlen);	/* Copy to target */
-		return;
-	}
+           name[0] == '/') {           /* Start with absolute ref? */
+        strncpy(hitfile, name, hitlen); /* Copy to target */
+        return;
+    }
 
-	env = getenv(envname);
-	if(env == NULL)
-		return;					/* Variable not defined, no search. */
+    env = getenv(envname);
+    if (env == NULL)
+        return;                        /* Variable not defined, no search. */
 
-	envcopy = strdup(env);		/* strtok destroys it's text
-								   argument.  I don't want the return
-								   value from getenv destroyed. */
+    envcopy = strdup(env);             /* strtok destroys it's text
+                                          argument.  I don't want the return
+                                          value from getenv destroyed. */
 
-	while((cp = strtok(envcopy, PATHSEP)) != NULL)
-	{
-		struct stat info;
-		char *concat = malloc(strlen(cp) + strlen(name) + 2);
-		if(concat == NULL)
-		{
-			free(envcopy);
-			return;
-		}
-		strcpy(concat, cp);
-		if(concat[strlen(concat)-1] != '/')
-			strcat(concat, "/");
-		strcat(concat, name);
-		if(!stat(concat, &info))
-		{
-			/* Copy the file name to hitfile.  Assure that it's really
-			   zero-delimited. */
-			strncpy(hitfile, concat, hitlen-1);
-			hitfile[hitlen-1] = 0;
-			free(envcopy);
-			return;
-		}
-	}
+    while ((cp = strtok(envcopy, PATHSEP)) != NULL) {
+        struct stat     info;
+        char           *concat = malloc(strlen(cp) + strlen(name) + 2);
 
-	/* If I fall out of that loop, then hitfile indicates no match,
-	   and return. */
+        if (concat == NULL) {
+            free(envcopy);
+            return;
+        }
+        strcpy(concat, cp);
+        if (concat[strlen(concat) - 1] != '/')
+            strcat(concat, "/");
+        strcat(concat, name);
+        if (!stat(concat, &info)) {
+            /* Copy the file name to hitfile.  Assure that it's really
+               zero-delimited. */
+            strncpy(hitfile, concat, hitlen - 1);
+            hitfile[hitlen - 1] = 0;
+            free(envcopy);
+            return;
+        }
+    }
+
+    /* If I fall out of that loop, then hitfile indicates no match,
+       and return. */
+}
+
+
+
+
+/* memcheck - crash out if a pointer (returned from malloc) is NULL. */
+
+void           *memcheck(
+    void *ptr)
+{
+    if (ptr == NULL) {
+        fprintf(stderr, "Out of memory.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return ptr;
+}
+
+/* upcase turns a string to upper case */
+
+void upcase(
+    char *str)
+{
+    while (*str) {
+        *str = toupper(*str);
+        str++;
+    }
+}
+
+/* padto adds blanks to the end of a string until it's the given
+   length. */
+
+void padto(
+    char *str,
+    int to)
+{
+    int             needspace = to - strlen(str);
+
+    str += strlen(str);
+    while (needspace > 0)
+        *str++ = ' ', needspace--;
+    *str = 0;
 }

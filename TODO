@@ -1,3 +1,9 @@
+
+listing format errors: ignore whitespace of input
+
+documentation: print supported directives
+
+---------------------------------------
 I was not able to locate a Macro-11 language reference manual any more
 recent than for RT11 version *3*, so I used that plus my recollection
 of more modern features.  It was enough to get the RT11 V5.4 kernel

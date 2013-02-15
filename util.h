@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef UTIL__H
+#define UTIL__H
 
 /*
 
@@ -36,21 +36,55 @@ DAMAGE.
 
 */
 
-char *my_ultoa(unsigned long val, char *buf, unsigned int base);
-char *my_ltoa(long val, char *buf, unsigned int base);
-void my_searchenv(char *name, char *envname,
-				  char *hitfile, int hitlen);
+#include "stream2.h"
+
+char           *my_ultoa(
+    unsigned long val,
+    char *buf,
+    unsigned int base);
+char           *my_ltoa(
+    long val,
+    char *buf,
+    unsigned int base);
+void            my_searchenv(
+    char *name,
+    char *envname,
+    char *hitfile,
+    int hitlen);
 
 /* Cover a few platform-dependencies */
 
 #ifdef WIN32
 typedef unsigned __int64 ulong64;
+
 #define strdup _strdup
 #define putenv _putenv
 #define PATHSEP ";"
 #else
 typedef unsigned long long ulong64;
+
 #define PATHSEP ":"
 #endif
 
-#endif /* UTIL_H */
+
+#define FALSE 0                        /* Everybody needs FALSE and TRUE */
+#define TRUE 1
+
+
+/* EOL says whether a char* is pointing at the end of a line */
+#define EOL(c) (!(c) || (c) == '\n' || (c) == ';')
+
+#define SIZEOF_MEMBER(s, m) (sizeof((s *)0)->m)
+
+void            upcase(
+    char *str);
+
+void            padto(
+    char *str,
+    int to);
+
+void           *memcheck(
+    void *ptr);
+
+
+#endif /* UTIL__H */
