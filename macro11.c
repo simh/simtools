@@ -53,6 +53,7 @@ DAMAGE.
 #include "object.h"
 #include "symbols.h"
 
+#define stricmp strcasecmp
 
 
 /* enable_tf is called by command argument parsing to enable and
