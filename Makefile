@@ -1,4 +1,4 @@
-CFLAGS = -O -g
+CFLAGS ?= -O -g
 
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\
@@ -18,14 +18,14 @@ all: macro11 dumpobj
 tags: macro11 dumpobj
 	ctags *.c *.h
 
-macro11: $(MACRO11_OBJS) makefile
+macro11: $(MACRO11_OBJS) Makefile
 	$(CC) $(CFLAGS) -o macro11 $(MACRO11_OBJS) -lm
 
-dumpobj: $(DUMPOBJ_OBJS) makefile
+dumpobj: $(DUMPOBJ_OBJS) Makefile
 	$(CC) $(CFLAGS) -o dumpobj $(DUMPOBJ_OBJS)
 
-MACRO11_OBJS: makefile
-DUMPOBJ_OBJS: makefile
+MACRO11_OBJS: Makefile
+DUMPOBJ_OBJS: Makefile
 
 clean:
 	-rm -f $(MACRO11_OBJS) $(DUMPOBJ_OBJS) macro11 dumpobj
