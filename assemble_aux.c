@@ -219,6 +219,7 @@ void implicit_gbl(
         break;
     case EX_LIT:
     case EX_SYM:
+    case EX_TEMP_SYM: // Impossible on this pass
         return;
     case EX_ADD:
     case EX_SUB:

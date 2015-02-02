@@ -226,7 +226,7 @@ static int assemble(
                 if (!pass) {
                     /* This may work better in pass 2 - something in
                        RT-11 monitor needs the symbol to apear to be
-                       defined even if I can't resolve it's value. */
+                       defined even if I can't resolve its value. */
                     sym = add_sym(label, 0, SYMBOLFLAG_UNDEFINED, &absolute_section, &symbol_st);
                 } else
                     sym = NULL;
