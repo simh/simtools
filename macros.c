@@ -197,7 +197,8 @@ MACRO          *defmacro(
 
     while (!EOL(*cp)) {
         arg = new_arg();
-        if (arg->locsym = (*cp == '?')) /* special argument flag? */
+        arg->locsym = *cp == '?';
+        if (arg->locsym) /* special argument flag? */
             cp++;
         arg->label = get_symbol(cp, &cp, NULL);
         if (arg->label == NULL) {
@@ -335,8 +336,8 @@ BUFFER         *subst_args(
         if (issym(*in)) {
             label = get_symbol(in, &next, NULL);
             if (label) {
-                if (arg = find_arg(args, label)) {
-                    /* An apostrophy may appear before or after the symbol. */
+                if ((arg = find_arg(args, label))) {
+                    /* An apostrophe may appear before or after the symbol. */
                     /* In either case, remove it from the expansion. */
 
                     if (in > begin && in[-1] == '\'')

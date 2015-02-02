@@ -146,9 +146,7 @@ int main(
     char           *fnames[32];
     int             nr_files = 0;
     FILE           *obj = NULL;
-    static char     line[1024];
     TEXT_RLD        tr;
-    char           *macname = NULL;
     char           *objname = NULL;
     char           *lstname = NULL;
     int             arg;
