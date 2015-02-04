@@ -551,6 +551,8 @@ static int assemble(
                                 my_searchenv(macfile, "MCALL", hitfile, sizeof(hitfile));
                                 if (hitfile[0])
                                     macstr = new_file_stream(hitfile);
+                                else
+                                    macstr = NULL;
                             }
 
                             if (macstr != NULL) {

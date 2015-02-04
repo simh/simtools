@@ -39,3 +39,9 @@ util.o: util.c util.h
 rad50.o: rad50.c rad50.h
 dumpobj.o: dumpobj.c rad50.h util.h
 rad50.o: rad50.c rad50.h
+
+# Since the only test we have so far is for a crash bug,
+# just try to assemble. Later, we will need expected/actual tests.
+tests: macro11
+	./macro11 tests/*
+
