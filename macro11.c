@@ -108,7 +108,7 @@ static void print_help(
     printf("-e  enable <option> (see below)\n");
     printf("-h  print this help\n");
     printf("-l  gives the listing file name (.LST)\n");
-    printf("    -l without file name enables listing to stdout.\n");
+    printf("    -l - enables listing to stdout.\n");
     printf("-m  load RT-11 compatible macro library from which\n");
     printf("    .MCALLed macros can be found.\n");
     printf("    Multiple allowed.\n");
@@ -138,6 +138,10 @@ static void print_help(
     printf("\n");
 }
 
+void usage(char *message) {
+    fputs(message, stderr);
+    exit(EXIT_FAILURE);
+}
 
 int main(
     int argc,
@@ -172,10 +176,16 @@ int main(
                 /* Followed by options to enable */
                 /* Since /SHOW and /ENABL option names don't overlap,
                    I consolidate. */
+                if(arg >= argc-1 || !isalpha(*argv[arg+1])) {
+                    usage("-e must be followed by an option to enable\n");
+                }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 1);
             } else if (!stricmp(cp, "d")) {
                 /* Followed by an option to disable */
+                if(arg >= argc-1 || !isalpha(*argv[arg+1])) {
+                    usage("-d must be followed by an option to disable\n");
+                }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 0);
             } else if (!stricmp(cp, "m")) {
@@ -183,6 +193,9 @@ int main(
                 /* This option gives the name of an RT-11 compatible
                    macro library from which .MCALLed macros can be
                    found. */
+                if(arg >= argc-1 || *argv[arg+1] == '-') {
+                    usage("-m must be followed by a macro library file name\n");
+                }
                 arg++;
                 mlbs[nr_mlbs] = mlb_open(argv[arg]);
                 if (mlbs[nr_mlbs] == NULL) {
@@ -197,6 +210,10 @@ int main(
                     char           *env = getenv("MCALL");
                     char           *temp;
 
+                    if(arg >= argc-1 || *argv[arg+1] == '-') {
+                        usage("-p must be followed by a macro search directory\n");
+                    }
+
                     if (env == NULL)
                         env = "";
 
@@ -210,11 +227,17 @@ int main(
                 }
             } else if (!stricmp(cp, "o")) {
                 /* The -o option gives the object file name (.OBJ) */
+                if(arg >= argc-1 || *argv[arg+1] == '-') {
+                    usage("-o must be followed by the object file name\n");
+                }
                 ++arg;
                 objname = argv[arg];
             } else if (!stricmp(cp, "l")) {
                 /* The option -l gives the listing file name (.LST) */
                 /* -l - enables listing to stdout. */
+                if(arg >= argc-1 || *argv[arg+1] == '-') {
+                    usage("-l must be followed by the listing file name (- for standard output)\n");
+                }
                 lstname = argv[++arg];
                 if (strcmp(lstname, "-") == 0)
                     lstfile = stdout;
@@ -228,25 +251,31 @@ int main(
                    must be the last command line option.  */
                 int             i;
 
+                if(arg != argc-1) {
+                    usage("-x must be the last option\n");
+                }
                 for (i = 0; i < nr_mlbs; i++)
                     mlb_extract(mlbs[i]);
                 return EXIT_SUCCESS;
             } else if (!stricmp(cp, "ysl")) {
                 /* set symbol_len */
-                char           *s = argv[++arg];
-                char           *endp;
-                int             sl = strtol(s, &endp, 10);
+                if (arg >= argc-1) {
+                    usage("-s must be followed by a number\n");
+                } else {
+                    char           *s = argv[++arg];
+                    char           *endp;
+                    int             sl = strtol(s, &endp, 10);
 
-                if (*endp || sl < SYMMAX_DEFAULT || sl > SYMMAX_MAX) {
-                    print_help();
-                    exit(EXIT_FAILURE);
+                    if (*endp || sl < SYMMAX_DEFAULT || sl > SYMMAX_MAX) {
+                        usage("-s must be followed by a number\n");
+                    }
+                    symbol_len = sl;
                 }
-                symbol_len = sl;
             } else if (!stricmp(cp, "yus")) {
                 /* allow underscores */
                 symbol_allow_underscores = 1;
             } else {
-                fprintf(stderr, "Unknown argument %s\n", argv[arg]);
+                fprintf(stderr, "Unknown option %s\n", argv[arg]);
                 print_help();
                 exit(EXIT_FAILURE);
             }
