@@ -60,7 +60,7 @@ void list_source(
         if (!binline)
             binline = memcheck(malloc(sizeof(LSTFORMAT) + 16));
 
-        sprintf(binline, "%*s%*d", SIZEOF_MEMBER(LSTFORMAT, flag), "", SIZEOF_MEMBER(LSTFORMAT, line_number),
+        sprintf(binline, "%*s%*d", (int)SIZEOF_MEMBER(LSTFORMAT, flag), "", (int)SIZEOF_MEMBER(LSTFORMAT, line_number),
                 str->line);
     }
 }
@@ -87,21 +87,18 @@ static void list_fit(
     STREAM *str,
     unsigned addr)
 {
-    int             len = strlen(binline);
     size_t          col1 = offsetof(LSTFORMAT, source);
     size_t          col2 = offsetof(LSTFORMAT, pc);
 
     if (strlen(binline) >= col1) {
-        int             offset = offsetof(LSTFORMAT, pc);
-
         list_flush();
         listline[0] = 0;
         binline[0] = 0;
-        sprintf(binline, "%*s %6.6o", offsetof(LSTFORMAT, pc), "", addr);
+        sprintf(binline, "%*s %6.6o", (int)offsetof(LSTFORMAT, pc), "", addr);
         padto(binline, offsetof(LSTFORMAT, words));
     } else if (strlen(binline) <= col2) {
-        sprintf(binline, "%*s%*d %6.6o", SIZEOF_MEMBER(LSTFORMAT, flag), "",
-                SIZEOF_MEMBER(LSTFORMAT, line_number), str->line, addr);
+        sprintf(binline, "%*s%*d %6.6o", (int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
+                (int)SIZEOF_MEMBER(LSTFORMAT, line_number), str->line, addr);
         padto(binline, offsetof(LSTFORMAT, words));
     }
 }
@@ -115,8 +112,8 @@ void list_value(
     if (dolist()) {
         /* Print the value and go */
         binline[0] = 0;
-        sprintf(binline, "%*s%*d %6.6o", SIZEOF_MEMBER(LSTFORMAT, flag), "",
-                SIZEOF_MEMBER(LSTFORMAT, line_number), str->line, word & 0177777);
+        sprintf(binline, "%*s%*d %6.6o", (int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
+                (int)SIZEOF_MEMBER(LSTFORMAT, line_number), str->line, word & 0177777);
     }
 }
 

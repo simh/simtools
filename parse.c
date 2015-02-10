@@ -322,7 +322,7 @@ int parse_float(
         }
     }
 
-    flt[0] = (unsigned) (sign | (exp << 7) | (ufrac >> 48) & 0x7F);
+    flt[0] = (unsigned) (sign | (exp << 7) | ((ufrac >> 48) & 0x7F));
     if (size > 1) {
         flt[1] = (unsigned) ((ufrac >> 32) & 0xffff);
         if (size > 2) {
@@ -509,7 +509,7 @@ char           *get_symbol(
             if (symcp[len - 1] == '$') {
                 char           *newsym = memcheck(malloc(32));  /* Overkill */
 
-                sprintf(newsym, "%d$%d", strtol(symcp, NULL, 10), lsb);
+                sprintf(newsym, "%ld$%d", strtol(symcp, NULL, 10), lsb);
                 free(symcp);
                 symcp = newsym;
                 if (islocal)
