@@ -181,6 +181,75 @@ static EX_TREE *new_temp_sym(
     return tp;
 }
 
+SYMBOL *dup_symbol(
+    SYMBOL *sym)
+{
+    SYMBOL *res;
+
+    if (sym == NULL) {
+        return NULL;
+    }
+
+    res = memcheck(malloc(sizeof(SYMBOL)));
+    res->label = memcheck(strdup(sym->label));
+    res->flags = sym->flags;
+    res->stmtno = sym->stmtno;
+    res->next = NULL;
+    res->section = sym->section;
+    res->value = sym->value;
+
+    return res;
+}
+
+
+EX_TREE *dup_tree(
+    EX_TREE *tp)
+{
+    EX_TREE *res = NULL;
+
+    if (tp == NULL) {
+        return NULL;
+    }
+
+    res = new_ex_tree();
+    res->type = tp->type;
+    res->cp = tp->cp;
+
+    switch (tp->type) {
+    case EX_UNDEFINED_SYM:
+    case EX_TEMP_SYM:
+        res->data.symbol = dup_symbol(tp->data.symbol);
+        break;
+
+    /* The symbol reference in EX_SYM is not freed in free_tree() */
+    case EX_SYM:
+        res->data.symbol = tp->data.symbol;
+        break;
+
+    case EX_LIT:
+        res->data.lit = tp->data.lit;
+        break;
+
+    case EX_COM:
+    case EX_NEG:
+    case EX_ERR:
+        res->data.child.left = dup_tree(tp->data.child.left);
+        break;
+
+    case EX_ADD:
+    case EX_SUB:
+    case EX_MUL:
+    case EX_DIV:
+    case EX_AND:
+    case EX_OR:
+        res->data.child.left = dup_tree(tp->data.child.left);
+        res->data.child.right = dup_tree(tp->data.child.right);
+        break;
+    }
+
+    return res;
+}
+
 #define RELTYPE(tp) (((tp)->type == EX_SYM || (tp)->type == EX_TEMP_SYM) && \
         (tp)->data.symbol->section->flags & PSECT_REL)
 
@@ -240,16 +309,12 @@ EX_TREE        *evaluate(
             }
 
             /* Copy other symbol reference verbatim. */
-            res = new_ex_tree();
-            res->type = EX_SYM;
-            res->data.symbol = tp->data.symbol;
-            res->cp = tp->cp;
+            res = dup_tree(tp);
             break;
         }
 
     case EX_LIT:
-        res = new_ex_tree();
-        *res = *tp;
+        res = dup_tree(tp);
         break;
 
     case EX_TEMP_SYM:
@@ -269,7 +334,7 @@ EX_TREE        *evaluate(
         } else {
             /* Copy verbatim. */
             res = new_ex_tree();
-            res->type = EX_NEG;
+            res->type = EX_COM;
             res->cp = tp->cp;
             res->data.child.left = tp;
         }
@@ -300,7 +365,7 @@ EX_TREE        *evaluate(
 
     case EX_ERR:
         /* Copy */
-        res = ex_err(tp->data.child.left, tp->cp);
+        res = dup_tree(tp);
         break;
 
     case EX_ADD:
