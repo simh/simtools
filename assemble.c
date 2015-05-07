@@ -934,6 +934,8 @@ static int assemble(
                                 sect->flags |= PSECT_SAV;       /* Is root */
                             } else if (strcmp(label, "OVR") == 0) {
                                 sect->flags |= PSECT_COM;       /* Is common */
+                            } else if (strcmp(label, "CON") == 0) {
+                                sect->flags &= ~PSECT_COM;      /* Concatenated */
                             } else if (strcmp(label, "RW") == 0) {
                                 sect->flags &= ~PSECT_RO;       /* Not read-only */
                             } else if (strcmp(label, "RO") == 0) {
