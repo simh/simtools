@@ -932,6 +932,8 @@ static int assemble(
                                 sect->flags |= PSECT_REL;       /* Is relative */
                             } else if (strcmp(label, "SAV") == 0) {
                                 sect->flags |= PSECT_SAV;       /* Is root */
+                            } else if (strcmp(label, "NOSAV") == 0) {
+                                sect->flags &= ~PSECT_SAV;      /* Is not root */
                             } else if (strcmp(label, "OVR") == 0) {
                                 sect->flags |= PSECT_COM;       /* Is common */
                             } else if (strcmp(label, "CON") == 0) {
