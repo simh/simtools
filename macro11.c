@@ -235,7 +235,8 @@ int main(
             } else if (!stricmp(cp, "l")) {
                 /* The option -l gives the listing file name (.LST) */
                 /* -l - enables listing to stdout. */
-                if(arg >= argc-1 || *argv[arg+1] == '-') {
+                if(arg >= argc-1 ||
+			(argv[arg+1][0] == '-' && argv[arg+1][1] != '\0')) {
                     usage("-l must be followed by the listing file name (- for standard output)\n");
                 }
                 lstname = argv[++arg];
