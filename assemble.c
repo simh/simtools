@@ -244,7 +244,7 @@ static int assemble(
         /* Try to resolve macro */
 
         op = lookup_sym(label, &macro_st);
-        if (op && op->stmtno < stmtno) {
+        if (op /*&& op->stmtno < stmtno*/) {
             STREAM         *macstr;
 
             free(label);
