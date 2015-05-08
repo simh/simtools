@@ -449,18 +449,7 @@ static int assemble(
                             return 0;
                         }
 
-                        if (name[0] == '"') {
-                            char           *name1 = name + 1;
-                            char           *ename = name1 + strlen(name1) - 1;
-                            if (*ename == '"') {
-                                *ename = '\0';
-                            } else {
-                                report(stack->top, "No closing quotation mark: %s\n", name);
-                            }
-                            incl = new_file_stream(name1);
-                        } else {
-                            incl = new_file_stream(name);
-                        }
+                        incl = new_file_stream(name);
                         if (incl == NULL) {
                             report(stack->top, "Unable to open .INCLUDE file %s\n", name);
                             free(name);

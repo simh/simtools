@@ -563,6 +563,15 @@ int brackrange(
         endlen = 1;
         *start = 1;
         break;
+    case '/':	/* seen on page 6-52 */
+    case '?':	/* seen on page 6-52 */
+    case '\\':	/* seen on page 6-52 */
+    case '"':	/* seen in Kermit-11 source for RT11 */
+        endstr[0] = cp[0];
+        strcpy(endstr + 1, "\n");
+        *start = 1;
+        endlen = 1;
+        break;
     default:
         return FALSE;
     }
