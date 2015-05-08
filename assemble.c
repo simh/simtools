@@ -1201,6 +1201,7 @@ static int assemble(
                                 return 0;
                             }
 
+                            cp = skipwhite(cp);
                             if (*cp++ != ',') {
                                 report(stack->top, "Illegal syntax\n");
                                 free_addr_mode(&left);
