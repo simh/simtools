@@ -897,15 +897,24 @@ static int assemble(
                     {
                         SYMBOL         *sectsym;
                         SECTION        *sect;
+                        unsigned int    old_flags = ~0;
+                        int             unnamed_csect = 0;
 
                         label = get_symbol(cp, &cp, NULL);
-                        if (label == NULL)
-                            label = memcheck(strdup(""));       /* Allow blank */
+                        if (label == NULL) {
+                            if (op->value == P_CSECT) {
+                                label = memcheck(strdup(". BLK."));
+                                unnamed_csect = 1;
+                            } else {
+                                label = memcheck(strdup(""));       /* Allow blank */
+                            }
+                        }
 
                         sectsym = lookup_sym(label, &section_st);
                         if (sectsym) {
                             sect = sectsym->section;
                             free(label);
+                            old_flags = sect->flags;
                         } else {
                             sect = new_section();
                             sect->label = label;
@@ -915,48 +924,66 @@ static int assemble(
                             sect->type = SECTION_USER;
                             sections[sector++] = sect;
                             sectsym = add_sym(label, 0, 0, sect, &section_st);
+
+                            /* page 6-41 table 6-5 */
+                            if (op->value == P_PSECT) {
+                                sect->flags |= PSECT_REL;
+                            } else if (op->value == P_CSECT) {
+                                if (unnamed_csect) {
+                                    sect->flags |= PSECT_REL;
+                                } else {
+                                    sect->flags |= PSECT_REL | PSECT_COM | PSECT_GBL;
+                                }
+                            }
                         }
 
-                        if (op->value == P_PSECT)
-                            sect->flags |= PSECT_REL;
-                        else if (op->value == P_CSECT)
-                            sect->flags |= PSECT_REL | PSECT_COM | PSECT_GBL;
+                        cp = skipdelim(cp);
+                        if (!EOL(*cp)) {
+                            while (cp = skipdelim(cp), !EOL(*cp)) {
+                                /* Parse section options */
+                                label = get_symbol(cp, &cp, NULL);
+                                if (strcmp(label, "ABS") == 0) {
+                                    sect->flags &= ~PSECT_REL;      /* Not relative */
+                                    sect->flags |= PSECT_COM;       /* implies common */
+                                } else if (strcmp(label, "REL") == 0) {
+                                    sect->flags |= PSECT_REL;       /* Is relative */
+                                } else if (strcmp(label, "SAV") == 0) {
+                                    sect->flags |= PSECT_SAV;       /* Is root */
+                                } else if (strcmp(label, "NOSAV") == 0) {
+                                    sect->flags &= ~PSECT_SAV;      /* Is not root */
+                                } else if (strcmp(label, "OVR") == 0) {
+                                    sect->flags |= PSECT_COM;       /* Is common */
+                                } else if (strcmp(label, "CON") == 0) {
+                                    sect->flags &= ~PSECT_COM;      /* Concatenated */
+                                } else if (strcmp(label, "RW") == 0) {
+                                    sect->flags &= ~PSECT_RO;       /* Not read-only */
+                                } else if (strcmp(label, "RO") == 0) {
+                                    sect->flags |= PSECT_RO;        /* Is read-only */
+                                } else if (strcmp(label, "I") == 0) {
+                                    sect->flags &= ~PSECT_DATA;     /* Not data */
+                                } else if (strcmp(label, "D") == 0) {
+                                    sect->flags |= PSECT_DATA;      /* data */
+                                } else if (strcmp(label, "GBL") == 0) {
+                                    sect->flags |= PSECT_GBL;       /* Global */
+                                } else if (strcmp(label, "LCL") == 0) {
+                                    sect->flags &= ~PSECT_GBL;      /* Local */
+                                } else {
+                                    report(stack->top, "Unknown flag %s given to " ".PSECT directive\n", label);
+                                    free(label);
+                                    return 0;
+                                }
 
-                        while (cp = skipdelim(cp), !EOL(*cp)) {
-                            /* Parse section options */
-                            label = get_symbol(cp, &cp, NULL);
-                            if (strcmp(label, "ABS") == 0) {
-                                sect->flags &= ~PSECT_REL;      /* Not relative */
-                                sect->flags |= PSECT_COM;       /* implies common */
-                            } else if (strcmp(label, "REL") == 0) {
-                                sect->flags |= PSECT_REL;       /* Is relative */
-                            } else if (strcmp(label, "SAV") == 0) {
-                                sect->flags |= PSECT_SAV;       /* Is root */
-                            } else if (strcmp(label, "NOSAV") == 0) {
-                                sect->flags &= ~PSECT_SAV;      /* Is not root */
-                            } else if (strcmp(label, "OVR") == 0) {
-                                sect->flags |= PSECT_COM;       /* Is common */
-                            } else if (strcmp(label, "CON") == 0) {
-                                sect->flags &= ~PSECT_COM;      /* Concatenated */
-                            } else if (strcmp(label, "RW") == 0) {
-                                sect->flags &= ~PSECT_RO;       /* Not read-only */
-                            } else if (strcmp(label, "RO") == 0) {
-                                sect->flags |= PSECT_RO;        /* Is read-only */
-                            } else if (strcmp(label, "I") == 0) {
-                                sect->flags &= ~PSECT_DATA;     /* Not data */
-                            } else if (strcmp(label, "D") == 0) {
-                                sect->flags |= PSECT_DATA;      /* data */
-                            } else if (strcmp(label, "GBL") == 0) {
-                                sect->flags |= PSECT_GBL;       /* Global */
-                            } else if (strcmp(label, "LCL") == 0) {
-                                sect->flags &= ~PSECT_GBL;      /* Local */
-                            } else {
-                                report(stack->top, "Unknown flag %s given to " ".PSECT directive\n", label);
                                 free(label);
-                                return 0;
                             }
-
-                            free(label);
+                            /* If a section is declared a second time, and flags
+                             * are given, then they must be identical to the
+                             * first time.
+                             * See page 6-38 of AA-KX10A-TC_PDP-11_MACRO-11_Reference_Manual_May88.pdf .
+                             */
+                            if (old_flags != ~0 && sect->flags != old_flags) {
+                                sect->flags = old_flags;
+                                report(stack->top, "Program section flags not identical\n");
+                            }
                         }
 
                         go_section(tr, sect);
