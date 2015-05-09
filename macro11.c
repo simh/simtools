@@ -353,13 +353,6 @@ int main(
         stack_push(&stack, str);
     }
 
-    /*
-     * Reset dot in all sections. write_globals() only does it
-     * if there is an object file.
-     */
-    for (i = 0; i < sector; i++) {
-	sections[i]->pc = 0;
-    }
     DOT = 0;
 
     current_pc->section = &blank_section;

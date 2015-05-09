@@ -693,8 +693,15 @@ void write_globals(
     SYMBOL_ITER     sym_iter;
     int             isect;
 
-    if (obj == NULL)
-        return;                        /* Nothing to do if no OBJ file. */
+    if (obj == NULL) {
+	for (isect = 0; isect < sector; isect++) {
+	    psect = sections[isect];
+
+	    psect->sector = isect;     /* Assign it a sector */
+	    psect->pc = 0;             /* Reset its PC for second pass */
+	}
+        return;                        /* Nothing more to do if no OBJ file. */
+    }
 
     gsd_init(&gsd, obj);
 
