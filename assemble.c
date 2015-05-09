@@ -978,9 +978,9 @@ static int assemble(
                                  * flags are ignored, and an error issued.
                                  * Apparently, that isn't true.
                                  * Kermit seems to do this in k11cmd.mac:
+                                 *      .psect  $pdata          ; line 16
                                  *      .psect  $pdata  ,ro,d,lcl,rel,con
                                  *               ; k11mac.mac, first pass only
-                                 *      .psect  $pdata          ; line 16
                                  *      .psect  $PDATA  ,D      ; line 1083
                                  * and ends up with
                                  * $PDATA  001074    003   (RO,D,LCL,REL,CON)
