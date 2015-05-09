@@ -28,6 +28,7 @@ static char    *binline;        /* for octal expansion */
 
 FILE           *lstfile = NULL;
 
+int             list_pass_0 = 0;/* Also list what happens during the first pass */
 
 
 
@@ -36,7 +37,9 @@ FILE           *lstfile = NULL;
 static int dolist(
     void)
 {
-    int             ok = lstfile != NULL && pass > 0 && list_level > 0;
+    int             ok = lstfile != NULL &&
+                         (pass > 0 || list_pass_0) &&
+                         list_level > 0;
 
     return ok;
 }
@@ -147,7 +150,7 @@ void report(
     char           *name = "**";
     int             line = 0;
 
-    if (!pass)
+    if (!pass && list_pass_0 < 2)
         return;                        /* Don't report now. */
 
     if (str) {

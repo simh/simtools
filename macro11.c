@@ -125,6 +125,7 @@ static void print_help(
     printf("-ysl Syntax extension: change length of symbols from \n");
     printf("     default = %d to larger values, max %d.\n", SYMMAX_DEFAULT, SYMMAX_MAX);
     printf("-yus Syntax extension: allow underscore \"_\" in symbols.\n");
+    printf("-yl1 Extension: list the first pass too, not only the second.\n");
     printf("\n");
     printf("Options for -e and -d are:\n");
     printf("AMA (off) - absolute addressing (versus PC-relative)\n");
@@ -236,7 +237,7 @@ int main(
                 /* The option -l gives the listing file name (.LST) */
                 /* -l - enables listing to stdout. */
                 if(arg >= argc-1 ||
-			(argv[arg+1][0] == '-' && argv[arg+1][1] != '\0')) {
+                        (argv[arg+1][0] == '-' && argv[arg+1][1] != '\0')) {
                     usage("-l must be followed by the listing file name (- for standard output)\n");
                 }
                 lstname = argv[++arg];
@@ -275,6 +276,9 @@ int main(
             } else if (!stricmp(cp, "yus")) {
                 /* allow underscores */
                 symbol_allow_underscores = 1;
+            } else if (!stricmp(cp, "yl1")) {
+                /* list the first pass, in addition to the second */
+                list_pass_0++;
             } else {
                 fprintf(stderr, "Unknown option %s\n", argv[arg]);
                 print_help();
@@ -324,6 +328,9 @@ int main(
 
     assemble_stack(&stack, &tr);
 
+    if (list_pass_0 && lstfile) {
+        list_symbol_table();
+    }
 #if 0
     if (enabl_debug)
         dump_all_macros();

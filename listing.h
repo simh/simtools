@@ -35,6 +35,8 @@ extern int      list_level;     /* Listing control level.  .LIST
 
 extern FILE    *lstfile;
 
+extern int      list_pass_0;    /* Also list what happens during the first pass */
+
 #endif
 
 
