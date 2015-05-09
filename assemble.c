@@ -982,6 +982,8 @@ static int assemble(
                                  *               ; k11mac.mac, first pass only
                                  *      .psect  $pdata          ; line 16
                                  *      .psect  $PDATA  ,D      ; line 1083
+                                 * and ends up with
+                                 * $PDATA  001074    003   (RO,D,LCL,REL,CON)
                                  */
 
                                 /*
