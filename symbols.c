@@ -9,6 +9,7 @@
 #include "util.h"
 #include "assemble_globals.h"
 #include "listing.h"
+#include "object.h"
 
 /* GLOBALS */
 int             symbol_len = SYMMAX_DEFAULT;    /* max. len of symbols. default = 6 */
@@ -29,6 +30,7 @@ SYMBOL_TABLE    macro_st;       /* Macros */
 SYMBOL_TABLE    implicit_st;    /* The symbols which may be implicit globals */
 
 
+void list_section(SECTION *sec);
 
 /* hash_name hashes a name into a value from 0-HASH_SIZE */
 
@@ -475,4 +477,121 @@ static void sym_hist(
             fputc('#', lstfile);
         fputc('\n', lstfile);
     }
+}
+
+static int symbol_compar(
+    const void *a,
+    const void *b)
+{
+    SYMBOL *sa = *(SYMBOL **)a;
+    SYMBOL *sb = *(SYMBOL **)b;
+
+    return strcmp(sa->label, sb->label);
+}
+
+void list_symbol_table(
+    void)
+{
+    SYMBOL_ITER iter;
+    SYMBOL *sym;
+    int skip_locals = 0;
+
+    fprintf(lstfile,"\n\nSymbol table\n\n");
+
+    /* Count the symbols in the table */
+    int nsyms = 0;
+    for (sym = first_sym(&symbol_st, &iter); sym != NULL; sym = next_sym(&symbol_st, &iter)) {
+        if (skip_locals && sym->flags & SYMBOLFLAG_LOCAL) {
+            continue;
+        }
+        nsyms++;
+    }
+
+    /* Sort them by name */
+    SYMBOL **symbols = malloc(nsyms * sizeof (SYMBOL *));
+    SYMBOL **symbolp = symbols;
+
+    for (sym = first_sym(&symbol_st, &iter); sym != NULL; sym = next_sym(&symbol_st, &iter)) {
+        if (skip_locals && sym->flags & SYMBOLFLAG_LOCAL) {
+            continue;
+        }
+        *symbolp++ = sym;
+    }
+
+    qsort(symbols, nsyms, sizeof(SYMBOL *), symbol_compar);
+
+    symbolp = symbols;
+
+    /* Print the listing in NCOLS columns. */
+#define NCOLS   5
+
+    int nlines = (nsyms + NCOLS - 1) / NCOLS;
+    int line;
+    /*
+     * DIRER$  004562RGX    006
+     * ^       ^     ^      ^-- for R symbols: program segment number
+     * |       |     +-- Flags: R = relocatable
+     * |       |                G = global
+     * |       |                X = implicit global
+     * |       |                L = local
+     * |       |                W = weak
+     * |       +- value, ****** for if it was not a definition
+     * +- label name
+     */
+
+    for (line = 0; line < nlines; line++) {
+        int i;
+        for (i = line; i < nsyms; i += nlines) {
+            sym = symbols[i];
+
+            fprintf(lstfile,"%-6s", sym->label);
+            fprintf(lstfile,"%c", (sym->section->flags & PSECT_REL) ? ' ' : '=');
+            if (!(sym->flags & SYMBOLFLAG_DEFINITION)) {
+                fprintf(lstfile," ******");
+            } else {
+                fprintf(lstfile," %06o", sym->value & 0177777);
+            }
+            fprintf(lstfile,"%c", (sym->section->flags & PSECT_REL) ? 'R' : ' ');
+            fprintf(lstfile,"%c", (sym->flags & SYMBOLFLAG_GLOBAL) ?  'G' : ' ');
+            fprintf(lstfile,"%c", (sym->flags & SYMBOLFLAG_IMPLICIT_GLOBAL) ? 'X' : ' ');
+            fprintf(lstfile,"%c", (sym->flags & SYMBOLFLAG_LOCAL) ?   'L' : ' ');
+            fprintf(lstfile,"%c", (sym->flags & SYMBOLFLAG_WEAK) ?    'W' : ' ');
+            if (sym->section->sector != 0) {
+                fprintf(lstfile,"  %03d ", sym->section->sector);
+            } else {
+                fprintf(lstfile,"      ");
+            }
+        }
+        fprintf(lstfile,"\n");
+    }
+
+    /* List sections */
+
+    fprintf(lstfile,"\n\nProgram sections:\n\n");
+
+    int i;
+    for (i = 0; i < sector; i++) {
+        list_section(sections[i]);
+    }
+}
+
+void list_section(
+    SECTION *sec)
+{
+    if (sec == NULL) {
+        fprintf(lstfile, "(null)\n");
+        return;
+    }
+
+    int flags = sec->flags;
+
+    fprintf(lstfile, "%-6s  %06o    %03d   ",
+        sec->label, sec->size, sec->sector);
+    fprintf(lstfile, "(%s,%s,%s,%s,%s,%s)\n",
+        (flags & PSECT_RO)   ? "RO"  : "RW",
+        (flags & PSECT_DATA) ? "D"   : "I",
+        (flags & PSECT_GBL)  ? "GBL" : "LCL",
+        (flags & PSECT_REL)  ? "REL" : "ABS",
+        (flags & PSECT_COM)  ? "OVR" : "CON",
+        (flags & PSECT_SAV)  ? "SAV" : "NOSAV");
 }

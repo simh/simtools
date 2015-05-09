@@ -38,6 +38,8 @@ typedef struct symbol {
 #define SYMBOLFLAG_DEFINITION 8 /* Symbol is a global definition, not reference */
 #define SYMBOLFLAG_UNDEFINED 16 /* Symbol is a phony, undefined */
 #define SYMBOLFLAG_LOCAL 32     /* Set if this is a local label (i.e. 10$) */
+#define SYMBOLFLAG_IMPLICIT_GLOBAL 64  /* If migrated from implicit global table to
+                                 * normal symbol table */
 
     SECTION        *section;    /* Section in which this symbol is defined */
     struct symbol  *next;       /* Next symbol with the same hash value */

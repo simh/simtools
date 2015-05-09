@@ -252,8 +252,10 @@ void migrate_implicit(
 
     for (isym = first_sym(&implicit_st, &iter); isym != NULL; isym = next_sym(&implicit_st, &iter)) {
         sym = lookup_sym(isym->label, &symbol_st);
-        if (sym)
+        if (sym) {
             continue;                  // It's already in there.  Great.
+        }
+        isym->flags |= SYMBOLFLAG_IMPLICIT_GLOBAL;
         sym = add_sym(isym->label, isym->value, isym->flags, isym->section, &symbol_st);
         // Just one other thing - migrate the stmtno
         sym->stmtno = isym->stmtno;

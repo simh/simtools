@@ -388,6 +388,10 @@ int main(
     if (errcount > 0)
         fprintf(stderr, "%d Errors\n", errcount);
 
+    if (lstfile) {
+        list_symbol_table();
+    }
+
     if (lstfile && strcmp(lstname, "-") != 0)
         fclose(lstfile);
 
