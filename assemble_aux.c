@@ -696,12 +696,12 @@ void write_globals(
     int             isect;
 
     if (obj == NULL) {
-	for (isect = 0; isect < sector; isect++) {
-	    psect = sections[isect];
+    for (isect = 0; isect < sector; isect++) {
+            psect = sections[isect];
 
-	    psect->sector = isect;     /* Assign it a sector */
-	    psect->pc = 0;             /* Reset its PC for second pass */
-	}
+            psect->sector = isect;     /* Assign it a sector */
+            psect->pc = 0;             /* Reset its PC for second pass */
+        }
         return;                        /* Nothing more to do if no OBJ file. */
     }
 
@@ -720,7 +720,7 @@ void write_globals(
 
         gsd_psect(&gsd, psect->label, psect->flags, psect->size);
         psect->sector = isect;         /* Assign it a sector */
-        psect->pc = 0;                 /* Reset it's PC for second pass */
+        psect->pc = 0;                 /* Reset its PC for second pass */
 
         sym = first_sym(&symbol_st, &sym_iter);
         while (sym) {
