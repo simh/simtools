@@ -974,8 +974,20 @@ static int assemble(
                              * See page 6-38 of AA-KX10A-TC_PDP-11_MACRO-11_Reference_Manual_May88.pdf .
                              */
                             if (old_flags != ~0 && sect->flags != old_flags) {
+                                /* The manual also says that any different
+                                 * flags are ignored, and an error issued.
+                                 * Apparently, that isn't true.
+                                 * Kermit seems to do this in k11cmd.mac:
+                                 *      .psect  $pdata  ,ro,d,lcl,rel,con
+                                 *               ; k11mac.mac, first pass only
+                                 *      .psect  $pdata          ; line 16
+                                 *      .psect  $PDATA  ,D      ; line 1083
+                                 */
+
+                                /*
                                 sect->flags = old_flags;
                                 report(stack->top, "Program section flags not identical\n");
+                                */
                             }
                         }
 
