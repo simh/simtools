@@ -20,6 +20,7 @@ typedef struct cond {
     int             line;
 } COND;
 
+#define SECT_STACK_SIZE 32
 
 #ifndef ASSEMBLE_GLOBALS__C
 /* GLOBAL VARIABLES */
@@ -51,7 +52,7 @@ extern int      nr_mlbs;        /* Number of macro libraries */
 extern COND     conds[MAX_CONDS];       /* Stack of recent conditions */
 extern int      last_cond;      /* 0 means no stacked cond. */
 
-extern SECTION *sect_stack[32]; /* 32 saved sections */
+extern SECTION *sect_stack[SECT_STACK_SIZE]; /* 32 saved sections */
 extern int      sect_sp;        /* Stack pointer */
 
 extern char    *module_name;    /* The module name (taken from the 'TITLE'); */

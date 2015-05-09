@@ -344,6 +344,10 @@ static int assemble(
                     return 0;
 
                 case P_SAVE:
+                    if (sect_sp >= SECT_STACK_SIZE - 1) {
+                        report(stack->top, "Too many saved sections for .SAVE\n");
+                        return 0;
+                    }
                     sect_sp++;
                     sect_stack[sect_sp] = current_pc->section;
                     return 1;
@@ -354,7 +358,7 @@ static int assemble(
                         return 0;
                     } else {
                         go_section(tr, sect_stack[sect_sp]);
-                        sect_sp++;
+                        sect_sp--;
                     }
                     return 1;
 
