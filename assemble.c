@@ -1239,7 +1239,7 @@ static int assemble(
 
                             /* Relative PSECT or absolute? */
                             if (current_pc->section->flags & PSECT_REL) {
-                                SYMBOL         *sym;
+                                SYMBOL         *sym = NULL;
 
                                 /* Can't branch unless I can
                                    calculate the offset. */
@@ -1252,7 +1252,9 @@ static int assemble(
 
                                 if (!express_sym_offset(value, &sym, &offset)
                                     || sym->section != current_pc->section) {
-                                    report(stack->top, "Bad branch target\n");
+                                    report(stack->top, "Bad branch target (%s)\n",
+                                            sym ? "not same section"
+                                                : "can't express offset");
                                     store_word(stack->top, tr, 2, op->value);
                                     free_tree(value);
                                     return 0;
@@ -1264,7 +1266,7 @@ static int assemble(
                                 offset -= DOT + 2;
                             } else {
                                 if (value->type != EX_LIT) {
-                                    report(stack->top, "Bad branch target\n");
+                                    report(stack->top, "Bad branch target (not literal; ABS section)\n");
                                     store_word(stack->top, tr, 2, op->value);
                                     free_tree(value);
                                     return 0;
@@ -1317,13 +1319,13 @@ static int assemble(
                                 SYMBOL         *sym;
 
                                 if (!express_sym_offset(value, &sym, &offset)) {
-                                    report(stack->top, "Bad branch target\n");
+                                    report(stack->top, "Bad branch target (can't express offset)\n");
                                     free_tree(value);
                                     return 0;
                                 }
                                 /* Must be same section */
                                 if (sym->section != current_pc->section) {
-                                    report(stack->top, "Bad branch target\n");
+                                    report(stack->top, "Bad branch target (different section)\n");
                                     free_tree(value);
                                     offset = 0;
                                 } else {
@@ -1333,7 +1335,7 @@ static int assemble(
                                 }
                             } else {
                                 if (value->type != EX_LIT) {
-                                    report(stack->top, "Bad branch " "target\n");
+                                    report(stack->top, "Bad branch target (not a literal)\n");
                                     offset = 0;
                                 } else {
                                     offset = DOT + 2 - value->data.lit;
