@@ -506,7 +506,7 @@ STREAM         *expandmacro(
 /* dump_all_macros is a diagnostic function that's currently not
    used.  I used it while debugging, and I haven't removed it. */
 
-static void dump_all_macros(
+void dump_all_macros(
     void)
 {
     MACRO          *mac;
@@ -515,7 +515,7 @@ static void dump_all_macros(
     for (mac = (MACRO *) first_sym(&macro_st, &iter); mac != NULL; mac = (MACRO *) next_sym(&macro_st, &iter)) {
         dumpmacro(mac, lstfile);
 
-        printf("\n\n");
+        fprintf(lstfile, "\n\n");
     }
 }
 

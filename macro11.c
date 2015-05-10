@@ -279,6 +279,8 @@ int main(
             } else if (!stricmp(cp, "yl1")) {
                 /* list the first pass, in addition to the second */
                 list_pass_0++;
+            } else if (!stricmp(cp, "yd")) {
+                enabl_debug++;
             } else {
                 fprintf(stderr, "Unknown option %s\n", argv[arg]);
                 print_help();
@@ -332,7 +334,7 @@ int main(
         list_symbol_table();
     }
 #if 0
-    if (enabl_debug)
+    if (enabl_debug > 1)
         dump_all_macros();
 #endif
 

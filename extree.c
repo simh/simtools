@@ -18,12 +18,17 @@
    to go away. Hopefully the compiler will realize when it's dead, and
    eliminate it. */
 
-static void print_tree(
+void print_tree(
     FILE *printfile,
     EX_TREE *tp,
     int depth)
 {
     SYMBOL         *sym;
+
+    if (tp == NULL) {
+        fprintf(printfile, "(null)");
+        return;
+    }
 
     switch (tp->type) {
     case EX_LIT:
