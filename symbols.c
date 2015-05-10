@@ -190,9 +190,15 @@ SYMBOL         *add_sym(
     SYMBOL         *sym;
     char            label[SYMMAX_MAX + 1];      // big size
 
-    //JH: truncate symbol to SYMMAX
-    strncpy(label, labelraw, symbol_len);
-    label[symbol_len] = 0;
+    if (isdigit(labelraw[0])) {
+        // Don't truncate local labels
+        strncpy(label, labelraw, SYMMAX_MAX);
+        label[SYMMAX_MAX] = 0;
+    } else {
+        //JH: truncate symbol to SYMMAX
+        strncpy(label, labelraw, symbol_len);
+        label[symbol_len] = 0;
+    }
 
     sym = lookup_sym(label, table);
     if (sym != NULL) {
@@ -495,6 +501,7 @@ void list_symbol_table(
     SYMBOL_ITER iter;
     SYMBOL *sym;
     int skip_locals = 0;
+    int longest_symbol = symbol_len;
 
     fprintf(lstfile,"\n\nSymbol table\n\n");
 
@@ -505,6 +512,10 @@ void list_symbol_table(
             continue;
         }
         nsyms++;
+        int len = strlen(sym->label);
+        if (len > longest_symbol) {
+            longest_symbol = len;
+        }
     }
 
     /* Sort them by name */
@@ -523,9 +534,8 @@ void list_symbol_table(
     symbolp = symbols;
 
     /* Print the listing in NCOLS columns. */
-#define NCOLS   5
-
-    int nlines = (nsyms + NCOLS - 1) / NCOLS;
+    int ncols = (132 / (longest_symbol + 18));
+    int nlines = (nsyms + ncols - 1) / ncols;
     int line;
     /*
      * DIRER$  004562RGX    006
@@ -544,12 +554,12 @@ void list_symbol_table(
         for (i = line; i < nsyms; i += nlines) {
             sym = symbols[i];
 
-            fprintf(lstfile,"%-6s", sym->label);
+            fprintf(lstfile,"%-*s", longest_symbol, sym->label);
             fprintf(lstfile,"%c", (sym->section->flags & PSECT_REL) ? ' ' : '=');
             if (!(sym->flags & SYMBOLFLAG_DEFINITION)) {
-                fprintf(lstfile," ******");
+                fprintf(lstfile,"******");
             } else {
-                fprintf(lstfile," %06o", sym->value & 0177777);
+                fprintf(lstfile,"%06o", sym->value & 0177777);
             }
             fprintf(lstfile,"%c", (sym->section->flags & PSECT_REL) ? 'R' : ' ');
             fprintf(lstfile,"%c", (sym->flags & SYMBOLFLAG_GLOBAL) ?  'G' : ' ');
