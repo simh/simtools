@@ -462,11 +462,11 @@ STREAM         *expandmacro(
     /* Now go back and fill in defaults */  {
         int             locsym;
 
-        if (last_lsb != lsb)
+        if (last_macro_lsb != lsb)
             locsym = last_locsym = 32768;
         else
             locsym = last_locsym;
-        last_lsb = lsb;
+        last_macro_lsb = lsb;
 
         for (macarg = mac->args; macarg != NULL; macarg = macarg->next) {
             arg = find_arg(args, macarg->label);

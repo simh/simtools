@@ -126,8 +126,9 @@ static int assemble(
             free(label);
 
             /* See if local symbol block should be incremented */
-            if (!enabl_lsb && !local)
-                lsb++;
+            if (!enabl_lsb && !local) {
+                lsb = get_next_lsb();
+            }
 
             cp = skipwhite(ncp);
             opcp = cp;
@@ -358,6 +359,9 @@ static int assemble(
                         return 0;
                     } else {
                         go_section(tr, sect_stack[sect_sp]);
+                        if (!enabl_lsb) {
+                            lsb = get_next_lsb();
+                        }
                         sect_sp--;
                     }
                     return 1;
@@ -647,7 +651,7 @@ static int assemble(
                             enabl_ama = 1;
                         else if (strcmp(label, "LSB") == 0) {
                             enabl_lsb = 1;
-                            lsb++;
+                            lsb = get_next_lsb();
                         } else if (strcmp(label, "GBL") == 0)
                             enabl_gbl = 1;
                         free(label);
@@ -661,9 +665,10 @@ static int assemble(
                         label = get_symbol(cp, &cp, NULL);
                         if (strcmp(label, "AMA") == 0)
                             enabl_ama = 0;
-                        else if (strcmp(label, "LSB") == 0)
+                        else if (strcmp(label, "LSB") == 0) {
+                            lsb = get_next_lsb();
                             enabl_lsb = 0;
-                        else if (strcmp(label, "GBL") == 0)
+                        } else if (strcmp(label, "GBL") == 0)
                             enabl_gbl = 0;
                         free(label);
                         cp = skipdelim(cp);
@@ -882,6 +887,9 @@ static int assemble(
                     return 1;
 
                 case P_ASECT:
+                    if (!enabl_lsb) {
+                        lsb = get_next_lsb();
+                    }
                     go_section(tr, &absolute_section);
                     return 1;
 
@@ -993,6 +1001,9 @@ static int assemble(
                             }
                         }
 
+                        if (!enabl_lsb) {
+                            lsb = get_next_lsb();
+                        }
                         go_section(tr, sect);
 
                         return 1;
@@ -1532,6 +1543,23 @@ static int assemble(
     free(label);
 
     return do_word(stack, tr, cp, 2);
+}
+
+int get_next_lsb(
+    void)
+{
+    if (lsb_used) {
+        lsb_used = 0;
+        if (enabl_debug && lstfile) {
+            fprintf(lstfile, "get_next_lsb: lsb: %d becomes %d (= next_lsb)\n", lsb, next_lsb);
+        }
+        return next_lsb++;
+    } else {
+        if (enabl_debug && lstfile) {
+            fprintf(lstfile, "get_next_lsb: lsb: stays %d\n", lsb);
+        }
+        return lsb;
+    }
 }
 
 /* assemble_stack assembles the input stack.  It returns the error

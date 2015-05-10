@@ -9,6 +9,7 @@
 
 #include "util.h"
 #include "rad50.h"
+#include "listing.h"
 #include "assemble_globals.h"
 
 
@@ -510,10 +511,15 @@ char           *get_symbol(
                 char           *newsym = memcheck(malloc(32));  /* Overkill */
 
                 sprintf(newsym, "%ld$%d", strtol(symcp, NULL, 10), lsb);
+		if (enabl_debug && lstfile) {
+		    fprintf(lstfile, "lsb %d: %s -> %s\n",
+			    lsb, symcp, newsym);
+		}
                 free(symcp);
                 symcp = newsym;
                 if (islocal)
                     *islocal = SYMBOLFLAG_LOCAL;
+		lsb_used++;
             } else {
                 free(symcp);
                 return NULL;

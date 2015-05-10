@@ -14,7 +14,9 @@ int             radix = 8;      /* The current input conversion radix */
 
 
 int             lsb = 0;        /* The current local symbol section identifier */
-int             last_lsb = 0;   /* The last block in which a macro
+int             lsb_used = 0;   /* Whether there was a local symbol using this lsb */
+int             next_lsb = 0;   /* The number of the next local symbol block */
+int             last_macro_lsb = 0; /* The last block in which a macro
                                    automatic label was created */
 
 int             last_locsym = 32768;    /* The last local symbol number generated */

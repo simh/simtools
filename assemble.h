@@ -13,5 +13,7 @@
 int             assemble_stack(
     STACK *stack,
     TEXT_RLD *tr);
+int             get_next_lsb(
+    void);
 
 #endif

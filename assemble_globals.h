@@ -28,7 +28,9 @@ extern int      pass;           /* The current assembly pass.  0 = first pass */
 extern int      stmtno;         /* The current source line number */
 extern int      radix;          /* The current input conversion radix */
 extern int      lsb;            /* The current local symbol section identifier */
-extern int      last_lsb;       /* The last block in which a macro
+extern int      lsb_used;       /* Whether there was a local symbol using this lsb */
+extern int      next_lsb;       /* The number of the next local symbol block */
+extern int      last_macro_lsb; /* The last block in which a macro
                                    automatic label was created */
 
 extern int      last_locsym;    /* The last local symbol number generated */

@@ -322,7 +322,9 @@ int main(
     pass = 0;
     stmtno = 0;
     lsb = 0;
-    last_lsb = -1;
+    next_lsb = 1;
+    lsb_used = 0;
+    last_macro_lsb = -1;
     last_locsym = 32767;
     last_cond = -1;
     sect_sp = -1;
@@ -370,7 +372,9 @@ int main(
     pass = 1;
     stmtno = 0;
     lsb = 0;
-    last_lsb = -1;
+    next_lsb = 1;
+    lsb_used = 0;
+    last_macro_lsb = -1;
     last_locsym = 32767;
     pop_cond(-1);
     sect_sp = -1;
