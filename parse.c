@@ -863,3 +863,26 @@ EX_TREE        *parse_expr(
 
     return value;
 }
+
+/*
+  parse_unary_expr It parses and evaluates
+  an arithmetic expression but only a unary: (op)value or <expr>.
+  In particular, it doesn't try to divide in <lf>/SOH/.
+*/
+
+EX_TREE        *parse_unary_expr(
+    char *cp,
+    int undef)
+{
+    EX_TREE        *expr;
+    EX_TREE        *value;
+
+    expr = parse_unary(cp);            /* Parse into a tree */
+    value = evaluate(expr, undef);     /* Perform the arithmetic */
+    value->cp = expr->cp;              /* Pointer to end of text is part of
+                                          the rootmost node  */
+    free_tree(expr);                   /* Discard parse in favor of
+                                          evaluation */
+
+    return value;
+}

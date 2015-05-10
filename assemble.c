@@ -1077,7 +1077,7 @@ static int assemble(
                             cp = skipwhite(cp);
                             if (*cp == '<' || *cp == '^') {
                                 /* A byte value */
-                                value = parse_expr(cp, 0);
+                                value = parse_unary_expr(cp, 0);
                                 cp = value->cp;
                                 store_value(stack, tr, 1, value);
                                 free_tree(value);

@@ -35,6 +35,9 @@ int             get_mode(
 EX_TREE        *parse_expr(
     char *cp,
     int undef);
+EX_TREE        *parse_unary_expr(
+    char *cp,
+    int undef);
 int             parse_float(
     char *cp,
     char **endp,
