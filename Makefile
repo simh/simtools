@@ -3,7 +3,7 @@ CFLAGS ?= -O -g
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\
 	extree.c listing.c macros.c parse.c rept_irpc.c symbols.c \
-	mlb.c object.c stream2.c util.c rad50.c
+	mlb-rsx.c object.c stream2.c util.c rad50.c
 
 MACRO11_OBJS = $(MACRO11_SRCS:.c=.o)
 
@@ -33,6 +33,7 @@ clean:
 macro11.o: macro11.c macro11.h rad50.h object.h  stream2.h \
  mlb.h util.h
 mlb.o: mlb.c  rad50.h stream2.h mlb.h macro11.h util.h
+mlb-rsx.o: mlb-rsx.c  rad50.h stream2.h mlb.h macro11.h util.h
 object.o: object.c rad50.h object.h
 stream2.o: stream2.c macro11.h  stream2.h
 util.o: util.c util.h
