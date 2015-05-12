@@ -149,10 +149,11 @@ void my_searchenv(
     }
 
     env = getenv(envname);
-    if (env == NULL)
-        return;                        /* Variable not defined, no search. */
+    if (env == NULL) {                 /* If not defined, search in */
+        env = ".";                     /* current directory */
+    }
 
-    envcopy = strdup(env);             /* strtok destroys it's text
+    envcopy = strdup(env);             /* strtok destroys its text
                                           argument.  I don't want the return
                                           value from getenv destroyed. */
 
@@ -180,6 +181,7 @@ void my_searchenv(
 
     /* If I fall out of that loop, then hitfile indicates no match,
        and return. */
+    free(envcopy);
 }
 
 

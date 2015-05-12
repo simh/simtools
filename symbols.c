@@ -283,6 +283,7 @@ void add_symbols(
     add_sym(".INCLUDE", P_INCLUDE, 0, &pseudo_section, &system_st);
     add_sym(".IRP", P_IRP, 0, &pseudo_section, &system_st);
     add_sym(".IRPC", P_IRPC, 0, &pseudo_section, &system_st);
+    add_sym(".LIBRARY", P_LIBRARY, 0, &pseudo_section, &system_st);
     add_sym(".LIMIT", P_LIMIT, 0, &pseudo_section, &system_st);
     add_sym(".LIST", P_LIST, 0, &pseudo_section, &system_st);
     add_sym(".MCALL", P_MCALL, 0, &pseudo_section, &system_st);
@@ -469,7 +470,7 @@ void add_symbols(
    hash table useage of a symbol table.  I used this to try to tune
    the hash function for better spread.  It's not used now. */
 
-static void sym_hist(
+void sym_hist(
     SYMBOL_TABLE *st,
     char *name)
 {

@@ -512,6 +512,27 @@ static int assemble(
                         return str != NULL;
                     }
 
+                case P_LIBRARY:
+                    if (pass == 0) {
+                        char            hitfile[FILENAME_MAX];
+                        char           *name = getstring(cp, &cp);
+
+                        my_searchenv(name, "MCALL", hitfile, sizeof(hitfile));
+
+                        if (hitfile[0]) {
+                            mlbs[nr_mlbs] = mlb_open(hitfile);
+                            if (mlbs[nr_mlbs] == NULL) {
+                                report(stack->top, "Unable to register macro library \"%s\"\n", hitfile);
+                            } else {
+                                nr_mlbs++;
+                            }
+                        } else {
+                            report(stack->top, "Unable to locale macro library \"%s\"\n", name);
+                        }
+                        free(name);
+                    }
+                    return 1;
+
                 case P_MCALL:
                     {
                         STREAM         *macstr;
