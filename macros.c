@@ -74,6 +74,7 @@ void read_body(
     int called)
 {
     int             nest;
+    unsigned int    self_redef = 0;
 
     /* Read the stream in until the end marker is hit */
 
@@ -88,7 +89,7 @@ void read_body(
 
         nextline = stack_gets(stack);  /* Now read the line */
         if (nextline == NULL) {        /* End of file. */
-            report(stack->top, "Macro body not closed\n");
+            report(stack->top, "Macro body of '%s' not closed\n", name);
             break;
         }
 
@@ -104,25 +105,71 @@ void read_body(
             continue;
         }
         if (op->section->type == SECTION_PSEUDO) {
-            if (op->value == P_MACRO || op->value == P_REPT || op->value == P_IRP || op->value == P_IRPC)
+            if (op->value == P_MACRO || op->value == P_REPT || op->value == P_IRP || op->value == P_IRPC) {
                 nest++;
+                self_redef <<= 1;
+                if (op->value == P_MACRO) {
+                    /* Check for self-redefinition. If that occurs,
+                     * we can't currently cut the outermost macro definition
+                     * short when we encounter .ENDM <self>.
+                     * self_redef keeps a "stack" of booleans for the
+                     * currently nested levels, indicating whether each
+                     * level is a self-redefinition.
+                     */
+                    char *nested_name = get_symbol(cp, &cp, NULL);
+                    printf("checking self_redef for %s %s\n", name, nested_name);
+                    if (nested_name != NULL) {
+                        if (strcmp(nested_name, name) == 0) {
+                            printf("setting self_redef for %s\n", name);
+                            self_redef |= 1;
+                        }
+                        free(nested_name);
+                    }
+                }
+            }
 
             if (op->value == P_ENDM || op->value == P_ENDR) {
                 nest--;
                 /* If there's a name on the .ENDM, then */
                 /* close the body early if it matches the definition */
-                if (name && op->value == P_ENDM) {
+                /* That is however a bad idea for this case:
+                 * .MACRO FAB$BT DEF
+                 * .MCALL DEF
+                 *         DEF    FB$BID,3
+                 * ...
+                 * .MACRO FAB$BT DEF
+                 * .ENDM FAB$BT
+                 * .ENDM FAB$BT
+                 * Therefore we are a bit more selective.
+                 *
+                 * (in fact, on page 7-3 of the manual, there is no
+                 * allowance for early termination of macros, but instead
+                 * the name is checked and if it doesn't match the currently
+                 * defined macro, an error code A is issued.
+                 */
+                if (!self_redef && nest > 0 &&
+                        name && op->value == P_ENDM) {
                     cp = skipwhite(cp);
                     if (!EOL(*cp)) {
                         char           *label = get_symbol(cp, &cp, NULL);
 
                         if (label) {
-                            if (strcmp(label, name) == 0)
+                            if (strcmp(label, name) == 0) {
+                                /* Something similar to the following code
+                                 * maybe later, if we do need accurate named
+                                 * escapes from nested macro definitions:
+                                while (!(self_redef & 1)) {
+                                    nest--;
+                                    self_redef >>= 1;
+                                }
+                                 */
                                 nest = 0;       /* End of macro body. */
+                            }
                             free(label);
                         }
                     }
                 }
+                self_redef >>= 1;
             }
 
             if (nest == 0)
