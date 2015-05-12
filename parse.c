@@ -569,10 +569,10 @@ int brackrange(
         endlen = 1;
         *start = 1;
         break;
-    case '/':	/* seen on page 6-52 */
-    case '?':	/* seen on page 6-52 */
-    case '\\':	/* seen on page 6-52 */
-    case '"':	/* seen in Kermit-11 source for RT11 */
+    case '/':   /* seen on page 6-52 */
+    case '?':   /* seen on page 6-52 */
+    case '\\':  /* seen on page 6-52 */
+    case '"':   /* seen in Kermit-11 source for RT11 */
         endstr[0] = cp[0];
         strcpy(endstr + 1, "\n");
         *start = 1;
@@ -585,15 +585,28 @@ int brackrange(
     cp += *start;
 
     len = 0;
-    nest = 1;
-    while (nest) {
+    if (endstr[1] == '>') { /* <>\n */
+        nest = 1;
+        while (nest) {
+            int             sublen;
+
+            sublen = strcspn(cp + len, endstr);
+            if (cp[len + sublen] == '<') {
+                nest++;
+                sublen++;  /* avoid infinite loop when sublen == 0 */
+            } else {
+                nest--;
+                if (nest > 0 && cp[len + sublen] == '>')
+                    sublen++;  /* avoid infinite loop when sublen == 0 */
+            }
+            len += sublen;
+            if (sublen == 0)
+                break;
+        }
+    } else {
         int             sublen;
 
         sublen = strcspn(cp + len, endstr);
-        if (cp[len + sublen] == '<')
-            nest++;
-        else
-            nest--;
         len += sublen;
     }
 
