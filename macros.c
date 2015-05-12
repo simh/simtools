@@ -117,10 +117,8 @@ void read_body(
                      * level is a self-redefinition.
                      */
                     char *nested_name = get_symbol(cp, &cp, NULL);
-                    printf("checking self_redef for %s %s\n", name, nested_name);
                     if (nested_name != NULL) {
                         if (strcmp(nested_name, name) == 0) {
-                            printf("setting self_redef for %s\n", name);
                             self_redef |= 1;
                         }
                         free(nested_name);

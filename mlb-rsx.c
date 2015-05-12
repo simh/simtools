@@ -368,7 +368,7 @@ BUFFER         *mlb_entry(
     }
 
     if (i >= mlb->nentries) {
-        fprintf(stderr, "mlb_entry: %s not found\n", name);
+//        fprintf(stderr, "mlb_entry: %s not found\n", name);
         return NULL;
     }
 
