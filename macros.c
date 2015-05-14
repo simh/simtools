@@ -47,7 +47,7 @@ STREAM         *new_macro_stream(
     STREAM *refstr,
     BUFFER *buf,
     MACRO *mac,
-    ARG *args)
+    int nargs)
 {
     MACRO_STREAM   *mstr = memcheck(malloc(sizeof(MACRO_STREAM))); {
         char           *name = memcheck(malloc(strlen(refstr->name) + 32));
@@ -58,8 +58,7 @@ STREAM         *new_macro_stream(
     }
 
     mstr->bstr.stream.vtbl = &macro_stream_vtbl;
-    /* Count the args and save their number */
-    for (mstr->nargs = 0; args; args = args->next, mstr->nargs++) ;
+    mstr->nargs = nargs;  /* for .NARG directive: nonkeyword arguments in call*/
     mstr->cond = last_cond;
     return &mstr->bstr.stream;
 }
@@ -414,9 +413,11 @@ STREAM         *expandmacro(
     char           *label;
     STREAM         *str;
     BUFFER         *buf;
+    int             nargs;
 
     args = NULL;
     arg = NULL;
+    nargs = 0;      /* for the .NARG directive */
 
     /* Parse the arguments */
 
@@ -455,6 +456,7 @@ STREAM         *expandmacro(
             arg = new_arg();
             arg->label = memcheck(strdup(macarg->label));       /* Copy the name */
             arg->value = getstring(cp, &nextcp);
+            nargs++;                   /* Count nonkeyword arguments only. */
         }
 
         arg->next = args;
@@ -500,7 +502,7 @@ STREAM         *expandmacro(
 
     buf = subst_args(mac->text, args);
 
-    str = new_macro_stream(refstr, buf, mac, args);
+    str = new_macro_stream(refstr, buf, mac, nargs);
 
     free_args(args);
     buffer_free(buf);
