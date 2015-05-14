@@ -642,14 +642,21 @@ int do_word(
         store_word(stack->top, tr, 1, 0);       /* Align it */
     }
 
+    cp = skipwhite(cp);
+
     do {
-        EX_TREE        *value = parse_expr(cp, 0);
+        if (cp[0] == ',') {
+            /* Empty expressions count as 0 */
+            store_word(stack->top, tr, size, 0);
+        } else {
+            EX_TREE        *value = parse_expr(cp, 0);
 
-        store_value(stack, tr, size, value);
+            store_value(stack, tr, size, value);
 
-        cp = skipdelim(value->cp);
+            cp = skipdelim(value->cp);
 
-        free_tree(value);
+            free_tree(value);
+        }
     } while (cp = skipdelim(cp), !EOL(*cp));
 
     return 1;
