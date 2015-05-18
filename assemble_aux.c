@@ -134,7 +134,7 @@ static int store_psect_displaced_offset_word(
     char *name)
 {
     change_dot(tr, size);
-    list_word(str, DOT, word, size, "");
+    list_word(str, DOT, word, size, "'");
     return text_psect_displaced_offset_word(tr, &DOT, size, word, name);
 }
 
@@ -146,7 +146,7 @@ static int store_psect_offset_word(
     char *name)
 {
     change_dot(tr, size);
-    list_word(str, DOT, word, size, "");
+    list_word(str, DOT, word, size, "'");
     return text_psect_offset_word(tr, &DOT, size, word, name);
 }
 
