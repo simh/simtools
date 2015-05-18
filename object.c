@@ -684,8 +684,10 @@ int text_psect_offset_word(
 {
     unsigned        radtbl[2];
 
+#if OPTIMIZE_ZERO_OFFSET
     if (word == 0)
         return text_psect_word(tr, addr, size, word, name);
+#endif
 
     if (!text_fit(tr, *addr, size, 8))
         return 0;
@@ -745,8 +747,10 @@ int text_psect_displaced_offset_word(
 {
     unsigned        radtbl[2];
 
+#if OPTIMIZE_ZERO_OFFSET
     if (word == 0)
         return text_psect_displaced_word(tr, addr, size, word, name);
+#endif
 
     if (!text_fit(tr, *addr, size, 8))
         return 0;
