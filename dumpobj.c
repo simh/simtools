@@ -64,6 +64,7 @@ char           *readrec(
 
     chksum = 0;
 
+#if RT11
     while (c = fgetc(fp), c != EOF && c == 0) ;
 
     if (c == EOF)
@@ -83,6 +84,7 @@ char           *readrec(
     }
 
     chksum -= c;                       // even though for 0 the checksum isn't changed...
+#endif /* RT11 */
 
     c = fgetc(fp);
     if (c == EOF) {
@@ -103,7 +105,9 @@ char           *readrec(
 
     chksum -= c;
 
+#if RT11
     *len -= 4;                         // Subtract header and length bytes from length
+#endif
     if (*len < 0) {
         fprintf(stderr, "Improperly formatted OBJ file (5)\n");
         return NULL;
@@ -125,15 +129,28 @@ char           *readrec(
     for (i = 0; i < *len; i++)
         chksum -= (buf[i] & 0xff);
 
+#if RT11
     c = fgetc(fp);
     c &= 0xff;
     chksum &= 0xff;
 
     if (c != chksum) {
         free(buf);
-        fprintf(stderr, "Bad record checksum, " "calculated=%d, recorded=%d\n", chksum, c);
+        fprintf(stderr, "Bad record checksum, " "calculated=$%04x, recorded=$%04x\n", chksum, c);
         return NULL;
     }
+#else
+    if (*len & 1) {
+        /* skip 1 byte of padding */
+        c = fgetc(fp);
+        if (c == EOF) {
+            free(buf);
+            fprintf(stderr, "EOF where padding byte should be");
+            return NULL;
+        }
+
+    }
+#endif /* RT11 */
 
     return buf;
 }
