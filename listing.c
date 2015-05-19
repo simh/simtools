@@ -139,6 +139,18 @@ void list_word(
 }
 
 
+/* Print just a line with the address to the listing file */
+
+void list_location(
+    STREAM *str,
+    unsigned addr)
+{
+    if (dolist()) {
+        list_fit(str, addr);
+    }
+}
+
+
 
 /* reports errors */
 void report(

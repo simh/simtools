@@ -51,6 +51,10 @@ void            list_value(
     STREAM *str,
     unsigned word);
 
+void            list_location(
+    STREAM *str,
+    unsigned word);
+
 void            list_source(
     STREAM *str,
     char *cp);

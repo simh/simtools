@@ -250,6 +250,8 @@ static int assemble(
 
             free(label);
 
+            list_location(stack->top, DOT);
+
             macstr = expandmacro(stack->top, (MACRO *) op, ncp);
 
             stack_push(stack, macstr); /* Push macro expansion
