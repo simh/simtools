@@ -414,14 +414,16 @@ STREAM         *expandmacro(
     STREAM         *str;
     BUFFER         *buf;
     int             nargs;
+    int             onemore;
 
     args = NULL;
     arg = NULL;
     nargs = 0;      /* for the .NARG directive */
+    onemore = 0;
 
     /* Parse the arguments */
 
-    while (!EOL(*cp)) {
+    while (!EOL(*cp) || onemore) {
         char           *nextcp;
 
         /* Check for named argument */
@@ -464,7 +466,8 @@ STREAM         *expandmacro(
 
         eval_arg(refstr, arg);         /* Check for expression evaluation */
 
-        cp = skipdelim(nextcp);
+        /* If there is a trailing comma, there is an empty last argument */
+        cp = skipdelim_comma(nextcp, &onemore);
     }
 
     /* Now go back and fill in defaults */  {

@@ -16,6 +16,9 @@ char           *skipwhite(
     char *cp);
 char           *skipdelim(
     char *cp);
+char           *skipdelim_comma(
+    char *cp,
+    int  *comma);
 
 SYMBOL         *get_op(
     char *cp,

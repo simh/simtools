@@ -35,6 +35,21 @@ char           *skipdelim(
     return cp;
 }
 
+/* skipdelim_comma - used to advance between tokens.  Whitespace
+   and one comma are allowed delims.
+   Set *comma depending on whether a comma was skipped. */
+
+char           *skipdelim_comma(
+    char *cp,
+    int  *comma)
+{
+    cp = skipwhite(cp);
+    if (*comma = (*cp == ',')) {
+        cp = skipwhite(cp + 1);
+    }
+    return cp;
+}
+
 /* Parses a string from the input stream. */
 /* If not bracketed by <...> or ^/.../, then */
 /* the string is delimited by trailing comma or whitespace. */
