@@ -88,7 +88,9 @@ char           *readrec(
 
     c = fgetc(fp);
     if (c == EOF) {
+#if RT11
         fprintf(stderr, "Improperly formatted OBJ file (3)\n");
+#endif /* RT11 */
         return NULL;
     }
     *len = c;
@@ -145,7 +147,7 @@ char           *readrec(
         c = fgetc(fp);
         if (c == EOF) {
             free(buf);
-            fprintf(stderr, "EOF where padding byte should be");
+            fprintf(stderr, "EOF where padding byte should be\n");
             return NULL;
         }
 
