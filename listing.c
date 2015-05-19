@@ -115,7 +115,7 @@ void list_value(
     if (dolist()) {
         /* Print the value and go */
         binline[0] = 0;
-        sprintf(binline, "%*s%*d %6.6o", (int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
+        sprintf(binline, "%*s%*d        %6.6o", (int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
                 (int)SIZEOF_MEMBER(LSTFORMAT, line_number), str->line, word & 0177777);
     }
 }
