@@ -637,6 +637,8 @@ int do_word(
     char *cp,
     int size)
 {
+    int comma;
+
     if (size == 2 && (DOT & 1)) {
         report(stack->top, ".WORD on odd boundary\n");
         store_word(stack->top, tr, 1, 0);       /* Align it */
@@ -653,11 +655,16 @@ int do_word(
 
             store_value(stack, tr, size, value);
 
-            cp = skipdelim(value->cp);
+            cp = value->cp;
 
             free_tree(value);
         }
-    } while (cp = skipdelim(cp), !EOL(*cp));
+    } while (cp = skipdelim_comma(cp, &comma), !EOL(*cp));
+
+    if (comma) {
+        /* Trailing empty expressions count as 0 */
+        store_word(stack->top, tr, size, 0);
+    }
 
     return 1;
 }
