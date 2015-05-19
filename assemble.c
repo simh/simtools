@@ -900,6 +900,7 @@ static int assemble(
                     if (DOT & 1) {
                         list_word(stack->top, DOT, 0, 1, "");
                         DOT++;
+                        change_dot(tr, 0);
                     }
                     return 1;
 
@@ -907,6 +908,7 @@ static int assemble(
                     if (!(DOT & 1)) {
                         list_word(stack->top, DOT, 0, 1, "");
                         DOT++;
+                        change_dot(tr, 0);
                     }
                     return 1;
 
