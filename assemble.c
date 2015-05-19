@@ -397,6 +397,7 @@ static int assemble(
                         add_sym(label, mstr->nargs, SYMBOLFLAG_DEFINITION | local, &absolute_section,
                                 &symbol_st);
                         free(label);
+                        list_value(stack->top, mstr->nargs);
                         return 1;
                     }
 

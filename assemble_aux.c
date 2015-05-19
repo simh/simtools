@@ -122,7 +122,7 @@ static int store_internal_word(
     unsigned word)
 {
     change_dot(tr, size);
-    list_word(str, DOT, word, size, "");
+    list_word(str, DOT, word, size, "'");
     return text_internal_word(tr, &DOT, size, word);
 }
 

@@ -597,7 +597,7 @@ void list_section(
     int flags = sec->flags;
 
     fprintf(lstfile, "%-6s  %06o    %03d   ",
-        sec->label, sec->size, sec->sector);
+        sec->label, sec->size & 0177777, sec->sector);
     fprintf(lstfile, "(%s,%s,%s,%s,%s,%s)\n",
         (flags & PSECT_RO)   ? "RO"  : "RW",
         (flags & PSECT_DATA) ? "D"   : "I",
