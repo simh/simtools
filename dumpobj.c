@@ -348,7 +348,12 @@ void got_gsd(
             xferad = value;
             break;
         case 4:
-            sprintf(gsdline, "\tGLOBAL %s=%o %s flags=%o\n", name, value, cp[i + 4] & 8 ? "DEF" : "REF", flags);
+            sprintf(gsdline, "\tGLOBAL %s=%o %s%s%s %s flags=%o\n", name, value,
+                    flags &   01 ? "WEAK " : "",
+                    flags &   04 ? "LIB "  : "",
+                    flags &  010 ? "DEF"   : "REF",
+                    flags &  040 ? "REL"   : "ABS",
+                    flags);
             break;
         case 5:
             sprintf(gsdline, "\tPSECT %s=%o flags=%o\n", name, value, flags);
@@ -360,6 +365,9 @@ void got_gsd(
             break;
         case 7:
             sprintf(gsdline, "\tVSECT %s=%o flags=%o\n", name, value, flags);
+            break;
+        case 010:
+            sprintf(gsdline, "\tCompletion Routine Name %s=%o flags=%o\n", name, value, flags);
             break;
         default:
             sprintf(gsdline, "\t***Unknown GSD entry type %d flags=%o\n", cp[i + 5] & 0xff, flags);

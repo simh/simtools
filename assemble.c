@@ -361,6 +361,7 @@ static int assemble(
                         return 0;
                     } else {
                         go_section(tr, sect_stack[sect_sp]);
+                        list_location(stack->top, DOT);
                         if (!enabl_lsb) {
                             lsb = get_next_lsb();
                         }
@@ -917,6 +918,7 @@ static int assemble(
                         lsb = get_next_lsb();
                     }
                     go_section(tr, &absolute_section);
+                    list_location(stack->top, DOT);
                     return 1;
 
                 case P_CSECT:
@@ -1031,6 +1033,7 @@ static int assemble(
                             lsb = get_next_lsb();
                         }
                         go_section(tr, sect);
+                        list_location(stack->top, DOT);
 
                         return 1;
                     }                  /* end PSECT code */

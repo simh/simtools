@@ -710,7 +710,7 @@ void write_globals(
     int             isect;
 
     if (obj == NULL) {
-    for (isect = 0; isect < sector; isect++) {
+        for (isect = 0; isect < sector; isect++) {
             psect = sections[isect];
 
             psect->sector = isect;     /* Assign it a sector */
