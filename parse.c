@@ -44,7 +44,7 @@ char           *skipdelim_comma(
     int  *comma)
 {
     cp = skipwhite(cp);
-    if (*comma = (*cp == ',')) {
+    if ((*comma = (*cp == ','))) {
         cp = skipwhite(cp + 1);
     }
     return cp;

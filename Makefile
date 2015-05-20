@@ -31,7 +31,7 @@ clean:
 	-rm -f $(MACRO11_OBJS) $(DUMPOBJ_OBJS) macro11 dumpobj
 
 macro11.o: macro11.c macro11.h rad50.h object.h  stream2.h \
- mlb.h util.h
+ mlb.h util.h symbols.h
 mlb.o: mlb.c  rad50.h stream2.h mlb.h macro11.h util.h
 mlb-rsx.o: mlb-rsx.c  rad50.h stream2.h mlb.h macro11.h util.h
 object.o: object.c rad50.h object.h

@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "symbols.h"                   /* my own definitions */
 

@@ -361,4 +361,6 @@ void            add_table(
 void            add_symbols(
     SECTION *current_section);
 
+void            list_symbol_table(
+    void);
 #endif
