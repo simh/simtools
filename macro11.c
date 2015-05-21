@@ -300,7 +300,7 @@ int main(
 
     text_init(&tr, NULL, 0);
 
-    module_name = memcheck(strdup(""));
+    module_name = memcheck(strdup(".MAIN."));
 
     xfer_address = new_ex_lit(1);      /* The undefined transfer address */
 
