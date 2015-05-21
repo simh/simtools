@@ -758,26 +758,24 @@ static int assemble(
                             cp = value->cp;
                             ok = eval_undefined(value);
                             free_tree(value);
-                        } else if (strcmp(label, "B") == 0) {
+                        } else if (strcmp(label, "B") == 0 ||
+                                   strcmp(label, "NB") == 0) {
                             char           *thing;
 
                             cp = skipwhite(cp);
-                            if (!EOL(*cp))
-                                thing = getstring(cp, &cp);
-                            else
-                                thing = memcheck(strdup(""));
-                            ok = (*thing == 0);
-                            free(thing);
-                        } else if (strcmp(label, "NB") == 0) {
-                            char           *thing;
+                            if (EOL(*cp)) {
+                                ok = 1;
+                            } else {
+                                char           *thing, *end;
 
-                            cp = skipwhite(cp);
-                            if (!EOL(*cp))
                                 thing = getstring(cp, &cp);
-                            else
-                                thing = memcheck(strdup(""));
-                            ok = (*thing != 0);
-                            free(thing);
+                                end = skipwhite(thing);
+                                ok = (*end == 0);
+                                free(thing);
+                            }
+                            if (label[0] == 'N') {
+                                ok = !ok;
+                            }
                         } else if (strcmp(label, "IDN") == 0) {
                             char           *thing1,
                                            *thing2;
