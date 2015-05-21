@@ -357,6 +357,7 @@ static int assemble(
                     }
                     sect_sp++;
                     sect_stack[sect_sp] = current_pc->section;
+                    dot_stack[sect_sp] = DOT;
                     return 1;
 
                 case P_RESTORE:
@@ -365,6 +366,7 @@ static int assemble(
                         return 0;
                     } else {
                         go_section(tr, sect_stack[sect_sp]);
+                        DOT = dot_stack[sect_sp];
                         list_location(stack->top, DOT);
                         if (!enabl_lsb) {
                             lsb = get_next_lsb();

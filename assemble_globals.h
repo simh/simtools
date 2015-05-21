@@ -57,6 +57,7 @@ extern COND     conds[MAX_CONDS];       /* Stack of recent conditions */
 extern int      last_cond;      /* 0 means no stacked cond. */
 
 extern SECTION *sect_stack[SECT_STACK_SIZE]; /* 32 saved sections */
+extern int      dot_stack[SECT_STACK_SIZE];  /* 32 saved sections */
 extern int      sect_sp;        /* Stack pointer */
 
 extern char    *module_name;    /* The module name (taken from the 'TITLE'); */

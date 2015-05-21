@@ -47,6 +47,7 @@ COND            conds[MAX_CONDS];       /* Stack of recent conditions */
 int             last_cond;      /* 0 means no stacked cond. */
 
 SECTION        *sect_stack[SECT_STACK_SIZE]; /* 32 saved sections */
+int             dot_stack[SECT_STACK_SIZE];  /* 32 saved sections */
 int             sect_sp;        /* Stack pointer */
 
 char           *module_name = NULL;     /* The module name (taken from the 'TITLE'); */
