@@ -352,7 +352,9 @@ EX_TREE        *evaluate(
             /* negate literal */
             res = new_ex_lit((unsigned) -(int) tp->data.lit);
             free_tree(tp);
-        } else if (tp->type == EX_SYM || tp->type == EX_TEMP_SYM) {
+        } else if (tp->type == EX_TEMP_SYM ||
+                   (tp->type == EX_SYM &&
+                    (tp->data.symbol->flags & SYMBOLFLAG_DEFINITION))) {
             /* Make a temp sym with the negative value of the given
                sym (this works for symbols within relocatable sections
                too) */
