@@ -1,0 +1,25 @@
+tar2mt converts a tar file to a simh .tap tape image.
+
+.tap format tape images have the format
+
+	4 byte record length 1
+	record 1
+	repeat of 4 byte record length 1
+	4 byte record length 2
+	record 2
+	repeat of 4 byte record length 2
+	:
+	4 bytes = 00000000 for end of file
+
+and so on.  This is the tape format expected by simh, Tim Stark's TS10,
+and John Wilson's E11.
+
+tar2mt is invoked by
+
+	tar2mt {-b blocksize} file1 file2 file3...
+
+blocksize defaults to 8192.
+
+Each file in turn is converted from a tar file to a .tap tape image.  The
+input file can have any extension; the converted file will have a .tap
+extension.

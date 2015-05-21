@@ -1,6 +1,6 @@
 /* This program dumps the format of a simulated magtape
 
-   Copyright (c) 1993-2003, Robert M. Supnik
+   Copyright (c) 1993-2007, Robert M. Supnik
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -22,6 +22,9 @@
    Except as contained in this notice, the name of Robert M Supnik shall not
    be used in advertising or otherwise to promote the sale, use or other dealings
    in this Software without prior written authorization from Robert M Supnik.
+
+   07-Mar-07    JDB     Fixed precedence error in gap marker test
+   30-Aug-06    JDB     Added erase gap support
 */
 
 #include <stddef.h>
@@ -41,7 +44,7 @@ int main (int argc, char *argv[])
 int obj, i, k, fc, rc, tpos;
 unsigned int bc, fmt, rlntsiz;
 unsigned char *s, bca[4];
-int preveof;
+int preveof, gapcount, gpos, gincr;
 FILE *ifile;
 #define MAXRLNT 65536
 
@@ -75,7 +78,7 @@ for (i = 1; i < argc; i++) {
 	    printf ("Error opening file: %s\n", argv[i]);
 	    exit (0);  }
 	printf ("Processing input file %s\n", argv[i]);
-	tpos = 0; rc = 1; fc = 1; preveof = 0;
+	tpos = 0; rc = 1; fc = 1; preveof = 0; gapcount = 0;
 	printf ("Processing tape file %d\n", fc);
 	for (obj = 1;;) {
 	    fseek (ifile, tpos, SEEK_SET);
@@ -89,6 +92,20 @@ for (i = 1; i < argc; i++) {
 		bc = (((unsigned int) bca[1]) << 8) | ((unsigned int) bca[0]);
 	        break;
 		}
+
+        if (k && ((bc == 0xFFFFFFFE) | (bc == 0xFFFEFFFF))) {
+            if (gapcount == 0)
+                gpos = tpos;
+            gincr = (bc == 0xFFFFFFFE ? 4 : 2);
+            gapcount = gapcount + gincr;
+            tpos = tpos + gincr;
+            continue;  }
+        else if (gapcount) {
+            printf ("Obj %d, position %d, erase gap, length = %d (0x%X)\n",
+                obj, gpos, gapcount, gapcount);
+            obj++;
+            gapcount = 0;  }
+
 	    if ((k == 0) || (bc == 0xFFFFFFFF)) {
 		printf ("End of physical tape\n");
 		break;  }
