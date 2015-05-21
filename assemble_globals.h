@@ -46,6 +46,8 @@ extern int      enabl_lsb;      /* When set, stops non-local symbol
 
 extern int      enabl_gbl;      /* Implicit definition of global symbols */
 
+extern int      enabl_lc;       /* If lowercase disabled, convert assembler
+                                   source to upper case. */
 extern int      suppressed;     /* Assembly suppressed by failed conditional */
 
 extern MLB     *mlbs[MAX_MLBS]; /* macro libraries specified on the command line */

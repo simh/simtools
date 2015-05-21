@@ -47,6 +47,10 @@ static int assemble(
     if (line == NULL)
         return -1;                     /* Return code for EOF. */
 
+    if (!enabl_lc) {                   /* If lower case disabled, */
+        upcase(line);                  /* turn it into upper case. */
+    }
+
     cp = line;
 
     /* Frankly, I don't need to keep "line."  But I found it quite
@@ -677,8 +681,11 @@ static int assemble(
                         else if (strcmp(label, "LSB") == 0) {
                             enabl_lsb = 1;
                             lsb = get_next_lsb();
-                        } else if (strcmp(label, "GBL") == 0)
+                        } else if (strcmp(label, "GBL") == 0) {
                             enabl_gbl = 1;
+                        } else if (strcmp(label, "LC") == 0) {
+                            enabl_lc = 1;
+                        }
                         free(label);
                         cp = skipdelim(cp);
                     }
@@ -693,8 +700,11 @@ static int assemble(
                         else if (strcmp(label, "LSB") == 0) {
                             lsb = get_next_lsb();
                             enabl_lsb = 0;
-                        } else if (strcmp(label, "GBL") == 0)
+                        } else if (strcmp(label, "GBL") == 0) {
                             enabl_gbl = 0;
+                        } else if (strcmp(label, "LC") == 0) {
+                            enabl_lc = 0;
+                        }
                         free(label);
                         cp = skipdelim(cp);
                     }
