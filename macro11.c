@@ -83,6 +83,7 @@ static void print_version(
     fprintf(strm, "  Version %s\n", VERSIONSTR);
     fprintf(strm, "  Copyright 2001 Richard Krehbiel,\n");
     fprintf(strm, "  modified 2009 by Joerg Hoppe.\n");
+    fprintf(strm, "  modified 2015 by Olaf 'Rhialto' Seibert.\n");
 }
 
 
