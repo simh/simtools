@@ -26,6 +26,9 @@ SYMBOL         *get_op(
 char           *getstring(
     char *cp,
     char **endp);
+char           *getstring_fn(
+    char *cp,
+    char **endp);
 char           *get_symbol(
     char *cp,
     char **endp,

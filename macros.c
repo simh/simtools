@@ -371,32 +371,75 @@ BUFFER         *subst_args(
     return gb;                         /* Done. */
 }
 
-/* eval_arg - the language allows an argument expression to be given
+/* eval_str - the language allows an argument expression to be given
    as "\expression" which means, evaluate the expression and
    substitute the numeric value in the current radix. */
 
-void eval_arg(
+char *eval_str(
     STREAM *refstr,
-    ARG *arg)
+    char *arg)
 {
-    /* Check for value substitution */
+    EX_TREE        *value = parse_expr(arg, 0);
+    unsigned        word = 0;
+    char            temp[10];
 
-    if (arg->value[0] == '\\') {
-        EX_TREE        *value = parse_expr(arg->value + 1, 0);
-        unsigned        word = 0;
-        char            temp[10];
+    if (value->type != EX_LIT) {
+        report(refstr, "Constant value required\n");
+    } else
+        word = value->data.lit;
 
-        if (value->type != EX_LIT) {
-            report(refstr, "Constant value required\n");
-        } else
-            word = value->data.lit;
+    free_tree(value);
 
-        free_tree(value);
+    /* printf can't do base 2. */
+    my_ultoa(word & 0177777, temp, radix);
+    free(arg);
+    arg = memcheck(strdup(temp));
+    return arg;
+}
 
-        /* printf can't do base 2. */
-        my_ultoa(word & 0177777, temp, radix);
-        free(arg->value);
-        arg->value = memcheck(strdup(temp));
+/* getstring_macarg - parse a string that possibly starts with a backslash.
+ * If so, performs expression evaluation.
+ *
+ * The current implementation over-accepts some input.
+ *
+ * MACRO V05.05:
+
+        .list me
+        .macro test x
+        .blkb x
+        .endm
+
+        size = 10
+        foo = 2
+
+    ; likes:
+
+        test size
+        test \size
+        test \<size>
+        test \<size + foo>
+        test ^/size + foo/
+
+    ; dislikes:
+
+        test <\size>          ; arg is \size which could be ok in other cases
+        test size + foo       ; gets split at the space
+        test /size + foo/     ; gets split at the space
+        test \/size + foo/
+        test \^/size + foo/   ; * accepted by this version
+
+ */
+
+char           *getstring_macarg(
+    STREAM *refstr,
+    char *cp,
+    char **endp)
+{
+    if (cp[0] == '\\') {
+        char *str = getstring(cp + 1, endp);
+        return eval_str(refstr, str);         /* Perform expression evaluation */
+    } else {
+        return getstring(cp, endp);
     }
 }
 
@@ -440,7 +483,7 @@ STREAM         *expandmacro(
             arg = new_arg();
             arg->label = label;
             nextcp = skipwhite(nextcp + 1);
-            arg->value = getstring(nextcp, &nextcp);
+            arg->value = getstring_macarg(refstr, nextcp, &nextcp);
         } else {
             if (label)
                 free(label);
@@ -457,14 +500,12 @@ STREAM         *expandmacro(
 
             arg = new_arg();
             arg->label = memcheck(strdup(macarg->label));       /* Copy the name */
-            arg->value = getstring(cp, &nextcp);
+            arg->value = getstring_macarg(refstr, cp, &nextcp);
             nargs++;                   /* Count nonkeyword arguments only. */
         }
 
         arg->next = args;
         args = arg;
-
-        eval_arg(refstr, arg);         /* Check for expression evaluation */
 
         /* If there is a trailing comma, there is an empty last argument */
         cp = skipdelim_comma(nextcp, &onemore);

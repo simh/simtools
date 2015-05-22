@@ -459,7 +459,7 @@ static int assemble(
 
                 case P_INCLUDE:
                     {
-                        char           *name = getstring(cp, &cp);
+                        char           *name = getstring_fn(cp, &cp);
                         STREAM         *incl;
 
                         if (name == NULL) {
@@ -525,7 +525,7 @@ static int assemble(
                 case P_LIBRARY:
                     if (pass == 0) {
                         char            hitfile[FILENAME_MAX];
-                        char           *name = getstring(cp, &cp);
+                        char           *name = getstring_fn(cp, &cp);
 
                         my_searchenv(name, "MCALL", hitfile, sizeof(hitfile));
 

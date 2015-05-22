@@ -151,11 +151,10 @@ char           *irp_stream_gets(
         arg->next = NULL;
         arg->locsym = 0;
         arg->label = istr->label;
-        arg->value = getstring(cp, &cp);
+        arg->value = getstring_macarg(str, cp, &cp);
         cp = skipdelim(cp);
         istr->offset = (int) (cp - istr->items);
 
-        eval_arg(str, arg);
         buf = subst_args(istr->body, arg);
 
         free(arg->value);

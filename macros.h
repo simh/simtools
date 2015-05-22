@@ -59,9 +59,10 @@ void            read_body(
     BUFFER *gb,
     char *name,
     int called);
-void            eval_arg(
+char           *getstring_macarg(
     STREAM *refstr,
-    ARG *arg);
+    char *cp,
+    char **endp);
 BUFFER         *subst_args(
     BUFFER *text,
     ARG *args);

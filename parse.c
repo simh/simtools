@@ -77,6 +77,49 @@ char           *getstring(
     return str;
 }
 
+/* Parses a string from the input stream for .include and .library.
+ * These have a special kind of delimiters. It likes
+ * .include /name/ ?name? \name\ "name"
+ * but not
+ * .include ^/name/ <name> name =name= :name:
+ * .include :name: seems to be silently ignored.
+ */
+char           *getstring_fn(
+    char *cp,
+    char **endp)
+{
+    char            endstr[4];
+    int             len;
+    char           *str;
+
+    switch (*cp) {
+    case '<':
+    case '=':
+    case ':':
+        return NULL;
+    }
+
+    if (!ispunct(*cp)) {
+        return NULL;
+    }
+
+    endstr[0] = *cp;
+    endstr[1] = '\n';
+    endstr[2] = '\0';
+    cp++;
+
+    len = strcspn(cp, endstr);
+
+    if (endp)
+        *endp = cp + len + 1;
+
+    str = memcheck(malloc(len + 1));
+    memcpy(str, cp, len);
+    str[len] = 0;
+
+    return str;
+}
+
 /* Get what would be the operation code from the line.  */
 /* Used to find the ends of streams without evaluating them, like
    finding the closing .ENDM on a macro definition */
@@ -583,15 +626,6 @@ int brackrange(
         strcpy(endstr, "<>\n");
         endlen = 1;
         *start = 1;
-        break;
-    case '/':   /* seen on page 6-52 */
-    case '?':   /* seen on page 6-52 */
-    case '\\':  /* seen on page 6-52 */
-    case '"':   /* seen in Kermit-11 source for RT11 */
-        endstr[0] = cp[0];
-        strcpy(endstr + 1, "\n");
-        *start = 1;
-        endlen = 1;
         break;
     default:
         return FALSE;
