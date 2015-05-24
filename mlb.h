@@ -50,10 +50,12 @@ typedef struct mlb {
     FILE           *fp;
     MLBENT         *directory;
     int             nentries;
+    int             is_objlib;     /* is really an object library */
 } MLB;
 
 extern MLB     *mlb_open(
-    char *name);
+    char *name,
+    int allow_object_library);
 extern BUFFER  *mlb_entry(
     MLB *mlb,
     char *name);

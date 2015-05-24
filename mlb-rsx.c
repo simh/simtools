@@ -36,6 +36,10 @@ DAMAGE.
 */
 
 /*
+ * OLB: Object LiBrary
+ * MLB, SML: MacroLiBrary, System MacroLibrary.
+ */
+/*
  * The MLB file format is (mostly) documented in chapter 10 of
  * 3a/AA-JS15A-TC_RSX-11M-PLUS_4.0_Utilities_Manual_Aug87.pdf .
  *
@@ -158,7 +162,6 @@ DAMAGE.
 #include "util.h"
 
 #define BLOCKSIZE               512
-#define VAR_LENGTH_RECORDS      0
 
 #define WORD(cp) ((*(cp) & 0xff) + ((*((cp)+1) & 0xff) << 8))
 
@@ -171,23 +174,6 @@ DAMAGE.
                        (WORD((rec)+6) & 511))
 
 extern FILE    *lstfile;
-
-/* compare_position is the qsort callback function that compares byte
-   locations within the macro library */
-static int compare_position(
-    const void *arg1,
-    const void *arg2)
-{
-    const char     *c1 = arg1,
-            *c2 = arg2;
-
-    if (BYTEPOS(c1) < BYTEPOS(c2))
-        return -1;
-    if (BYTEPOS(c1) > BYTEPOS(c2))
-        return 1;
-    return 0;
-}
-
 
 /* trim removes trailing blanks from a string. */
 static void trim(
@@ -203,7 +189,8 @@ static void trim(
 /* Returns NULL on failure. */
 
 MLB            *mlb_open(
-    char *name)
+    char *name,
+    int allow_objlib)
 {
     MLB            *mlb = memcheck(malloc(sizeof(MLB)));
     char           *buff;
@@ -229,7 +216,10 @@ MLB            *mlb_open(
         return NULL;
     }
 
-    if (WORD(buff) != 01001) {         /* Is this really a macro library? */
+    mlb->is_objlib = 0;
+    if (allow_objlib && WORD(buff) == 01000) { /* Is it an object library? */
+        mlb->is_objlib = 1;
+    } else if (WORD(buff) != 01001) {  /* Is this really a macro library? */
         fprintf(stderr, "error: first word not correct value\n");
         mlb_close(mlb);                /* Nope. */
         return NULL;
@@ -402,7 +392,7 @@ BUFFER         *mlb_entry(
      * The text is always shorter than the on-disk size.
      */
     buf = new_buffer();
-    buffer_resize(buf, ent->length + 1);        /* Make it large enough */
+    buffer_resize(buf, ent->length);       /* Make it large enough */
     bp = buf->buffer;
 
     /*
@@ -412,7 +402,13 @@ BUFFER         *mlb_entry(
      * seen MLB and OLB files with var length records.
      */
 
-    if (module_header[0] & 0x10) {
+    if (mlb->is_objlib) {
+        /* In object libraries, copy the internal structure, since we
+         * can consider them to be binary.
+         */
+        i = fread(bp, 1, ent->length, mlb->fp);
+        bp += i;
+    } else if (module_header[0] & 0x10) {
 //        fprintf(stderr, "mlb_entry: %s at position %lx variable length records\n", name, (long)ent->position);
         /* Variable length records with size before them */
         i = ent->length;
@@ -420,9 +416,9 @@ BUFFER         *mlb_entry(
             int length;
 
 //            fprintf(stderr, "file offset:$%lx\n", (long)ftell(mlb->fp));
-            c = fgetc(mlb->fp);            /* Get macro byte */
+            c = fgetc(mlb->fp);            /* Get low byte of length */
             length = c & 0xFF;
-            c = fgetc(mlb->fp);            /* Get macro byte */
+            c = fgetc(mlb->fp);            /* Get high byte */
             length += (c & 0xFF) << 8;
             i -= 2;
 //            fprintf(stderr, "line length: %d $%x\n", length, length);
@@ -430,6 +426,7 @@ BUFFER         *mlb_entry(
             /* Odd lengths are padded with an extra 0 byte */
             int padded = length & 1;
             if (length > i) {
+                fprintf(stderr, "line length %d > remaining archive member %d\n", length, i);
                 length = i;
             }
 
@@ -460,7 +457,6 @@ BUFFER         *mlb_entry(
             *bp++ = c;
         }
     }
-    *bp++ = 0;                           /* Store trailing 0 delim */
 
     /* Now resize that buffer to the length actually read. */
     buffer_resize(buf, (int) (bp - buf->buffer));
@@ -468,7 +464,7 @@ BUFFER         *mlb_entry(
     return buf;
 }
 
-/* mlb_extract - walk thru a macro library and store it's contents
+/* mlb_extract - walk thru a macro library and store its contents
    into files in the current directory.
 
    See, I had decided not to bother writing macro library maintenance
@@ -490,12 +486,10 @@ void mlb_extract(
 
         buf = mlb_entry(mlb, mlb->directory[i].label);
         if (buf != NULL) {
-            sprintf(name, "%s.MAC", mlb->directory[i].label);
+            char *suffix = mlb->is_objlib ? "OBJ" : "MAC";
+            sprintf(name, "%s.%s", mlb->directory[i].label, suffix);
             fp = fopen(name, "w");
             int length = buf->length;
-            if (buf->buffer[length - 1] == 0) {
-                length--;
-            }
             fwrite(buf->buffer, 1, length, fp);
             fclose(fp);
             buffer_free(buf);

@@ -199,7 +199,8 @@ int main(
                     usage("-m must be followed by a macro library file name\n");
                 }
                 arg++;
-                mlbs[nr_mlbs] = mlb_open(argv[arg]);
+                int allow_olb = strcmp(argv[argc-1], "-x") == 0;
+                mlbs[nr_mlbs] = mlb_open(argv[arg], allow_olb);
                 if (mlbs[nr_mlbs] == NULL) {
                     fprintf(stderr, "Unable to register macro library %s\n", argv[arg]);
                     exit(EXIT_FAILURE);

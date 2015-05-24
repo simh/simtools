@@ -530,7 +530,7 @@ static int assemble(
                         my_searchenv(name, "MCALL", hitfile, sizeof(hitfile));
 
                         if (hitfile[0]) {
-                            mlbs[nr_mlbs] = mlb_open(hitfile);
+                            mlbs[nr_mlbs] = mlb_open(hitfile, 0);
                             if (mlbs[nr_mlbs] == NULL) {
                                 report(stack->top, "Unable to register macro library \"%s\"\n", hitfile);
                             } else {
