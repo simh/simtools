@@ -356,7 +356,15 @@ void got_gsd(
                     flags);
             break;
         case 5:
-            sprintf(gsdline, "\tPSECT %s=%o flags=%o\n", name, value, flags);
+            sprintf(gsdline, "\tPSECT %s=%o %s%s %s %s %s %s %s flags=%o\n", name, value,
+                    flags &   01 ? "SAV " : "",
+                    flags &   02 ? "LIB " : "",
+                    flags &   04 ? "OVR"  : "CON",
+                    flags &  020 ? "RO"   : "RW",
+                    flags &  040 ? "REL"  : "ABS",
+                    flags & 0100 ? "GBL"  : "LCL",
+                    flags & 0200 ? "D"    : "I",
+                    flags);
             psects[psectid] = strdup(name);
             trim(psects[psectid++]);
             break;
@@ -693,7 +701,7 @@ int main(
             got_libend(cp, len);
             break;
         default:
-            printf("Unknown record type %d\n", cp[0] & 0xff);
+            printf("Unknown record type %o\n", cp[0] & 0xff);
             break;
         }
 
