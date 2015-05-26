@@ -49,7 +49,6 @@ size_t read_len ( FILE* fi )
 /* Read a little-endian four-byte number */
 { unsigned char c;      /* A Character from the file */
   size_t i;
-  size_t lc;            /* The character, as a long int */
   size_t n;             /* the number */
   if ( fread ( &c, 1, 1, fi ) == 0 )
     return (0);
@@ -80,7 +79,7 @@ void usage ( char* argv[] )
   printf ( "          -o Use the 'old simh' print arrangement\n");
 }
 
-main ( int argc, char* argv[] )
+int main ( int argc, char* argv[] )
 { FILE* fi;
   int all;              /* "print all of a record, even blank lines" */
   char* bcd_to_ascii;   /* Translation table, ..._a or ..._h */
@@ -136,7 +135,7 @@ main ( int argc, char* argv[] )
       for ( nb=1, i=np; i>0; i/=10, nb++ ) pr[np-nb] = '0' + ( i%10 );
     printf ( "       %s\n", pr );
     nr = 0;
-    while ( recsiz = read_len ( fi ) )
+    while ( (recsiz = read_len ( fi )) )
     { nb = 1;
       nr++;
       i = recsiz;
@@ -148,7 +147,7 @@ main ( int argc, char* argv[] )
             return(3);
           }
           i--;
-          pr[np] = bcd_to_ascii[pr[np]];
+          pr[np] = bcd_to_ascii[(unsigned int)pr[np]];
           if ( dowm )
             if ( pr[np] == bcd_to_ascii[BCD_WM] ) wm[np--] = '1';
         }
@@ -181,4 +180,5 @@ main ( int argc, char* argv[] )
     }
     if ( nf > 0 ) printf ( "File %d\n", ++nft );
   }
+  return(0);
 }

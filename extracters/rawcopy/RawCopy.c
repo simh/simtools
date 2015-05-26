@@ -34,7 +34,7 @@ while (0 != (bytesread = fread(buf, 1, readsize, fin)))
     {
     if (bytesread != fwrite(buf, 1, bytesread, fout))
         {
-        fprintf(stderr, "Error Writing '%s': %s\n", strerror(errno));
+            fprintf(stderr, "Error Writing '%s': %s\n", argv[2], strerror(errno));
         break;
         }
     else
@@ -46,4 +46,5 @@ fprintf(stderr, "\n");
 fprintf(stderr, "Total Data: %6.2f MBytes (%d bytes)\n", totalbytes/(1024.0*1024.0), totalbytes);
 fclose(fin);
 fclose(fout);
+ exit(0);
 }

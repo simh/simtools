@@ -42,9 +42,10 @@
 int main (int argc, char *argv[])
 {
 int obj, i, k, fc, rc, tpos;
-unsigned int bc, fmt, rlntsiz;
-unsigned char *s, bca[4];
-int preveof, gapcount, gpos, gincr;
+unsigned int bc = 0, fmt, rlntsiz;
+ unsigned char *s;
+ unsigned char bca[4] = { 0,0,0,0 };
+int preveof, gapcount, gpos = 0, gincr;
 FILE *ifile;
 #define MAXRLNT 65536
 
@@ -62,7 +63,7 @@ if ((s != NULL) && (*s++ == '-')) {
 	    fmt = F_E11; rlntsiz = 4; break;
         case 'C': case 'c':
 	    fmt = F_TPC; rlntsiz = 2; break;
-/*	case 'F': case 'f':
+            /*	case 'F': case 'f': */
 /*	    fmt = F_TPF; break; */
 	default:
 	    fprintf (stderr, "Bad option %c\n", *s);

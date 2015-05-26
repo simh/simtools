@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 static unsigned char sixlut[64] = {
 '@','A','B','C','D','E','F','G', 
@@ -41,8 +42,8 @@ unsigned int readframe()
 	do{
 	 c = getchar(); 
 	 if(feof(stdin)) 
-	  exit();
-	  if((c & 0x80) == 0) printf("{nul}\n",c);
+	  exit(0);
+	  if((c & 0x80) == 0) printf("{nul}\n");
 	} while((c & 0x80) == 0);
 
 	i =    ((c & 0xc0)>>6)<<27;
@@ -50,8 +51,8 @@ unsigned int readframe()
 	do{
 	 c = getchar(); 
 	 if(feof(stdin)) 
-	  exit();
-	  if((c & 0x80) == 0) printf("{nul}\n",c);
+	  exit(0);
+	  if((c & 0x80) == 0) printf("{nul}\n");
 	} while((c & 0x80) == 0);
 
 	i = i |((c & 0xc0)>>6)<<24;
@@ -60,8 +61,8 @@ unsigned int readframe()
 	do{
 	 c = getchar(); 
 	 if(feof(stdin)) 
-	  exit();
-	  if((c & 0x80) == 0) printf("{nul}\n",c);
+	  exit(0);
+	  if((c & 0x80) == 0) printf("{nul}\n");
 	} while((c & 0x80) == 0);
 
 	i = i |((c & 0xc0)>>6)<<21;
@@ -69,7 +70,7 @@ unsigned int readframe()
 	return i;
 }
 
-disasm(unsigned int instr)
+void disasm(unsigned int instr)
 {
 	char *idx;
 	if(instr & 0010000) idx = ",X"; else idx = "  ";
@@ -248,7 +249,7 @@ disasm(unsigned int instr)
 	 case(0740000):
 	  printf("NOP         ");
 	  break;
-	 case(0740001):		// CMA compliment AC
+	 case(0740001):		/* CMA compliment AC */
 	  printf("CMA         ");
 	  break;
 	 case(0740002):
@@ -335,19 +336,20 @@ disasm(unsigned int instr)
 	}
 }
 
-main()
+int main(int argc, char **argv)
 {
 	int totalblks = 0;
 	int badblks = 0;
-	unsigned int fullwd = 0;
 	unsigned int currentwd = 0;
-	int wds = 0;
 	int bytecnt = 0;	
 	int col = 0;
 	int framecount;
 	unsigned int cksum;
 	unsigned int adr;
-        unsigned char c;
+
+        (void) argc;
+        (void) argv;
+
 	/*
 	 *  read 3 chars and pack them in a word 
 	 */
@@ -373,22 +375,22 @@ main()
 	      * (check is in readframe..)
 	      */
 
-	       adr = readframe() & 0777777;		// staring adr
+                  adr = readframe() & 0777777;		/*staring adr */
 	       cksum = adr;
 	       printf("ADR: %010o\n", adr);
 
-	       framecount = readframe() & 0777777;	// word count
+	       framecount = readframe() & 0777777;	/* word count */
 	       cksum += framecount;
-	       framecount = -(0xfffe0000 | framecount); // sign extend
+	       framecount = -(0xfffe0000 | framecount); /* sign extend */
 	       printf("CNT: %010o (%d)\n", framecount, framecount);
 
 	       if((adr & 0700000) != 0){
 	        printf("FRAMECOUNT == 0 START ADR == %06o\n", adr);
 		printf("TOTAL BLKS %d TOTAL ERRS %d\n", totalblks, badblks);
-	        exit();
+	        exit(0);
 	       }
 
-	       currentwd = readframe() & 0777777;		// checksum
+	       currentwd = readframe() & 0777777;		/* checksum */
 	       cksum += currentwd;
 	       printf("CKS: %06o\n", currentwd);
 	       /*
@@ -419,5 +421,7 @@ main()
 	if(bytecnt > 0){
 	 printf("%d chrs left\n", bytecnt);
 	}
+
+        exit(0);
 }
 
