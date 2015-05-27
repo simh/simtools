@@ -29,6 +29,7 @@
 #include <string.h>
 #include <errno.h>
 
+int
 main (int argc, char **argv)
 {
 FILE *fIn = NULL, *fOut = NULL;

@@ -174,7 +174,7 @@ int main ( int argc, char* argv[] )
       recsiz2 = read_len ( fi );
       if ( recsiz2 != recsiz )
       { printf("Unequal starting and ending record sizes: %d != %d\n",
-          recsiz, recsiz2);
+          (int)recsiz, (int)recsiz2);
         return(4);
       }
     }

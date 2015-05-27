@@ -32,7 +32,7 @@
 
 int main (int argc, char *argv[])
 {
-int obj, i, k, fc, rc, tpos, sa, ea, fr, fq;
+int i, k, fc, rc, tpos, sa, ea, fr, fq;
 unsigned char b[53];
 unsigned char bca[4];
 unsigned int bc;
@@ -67,7 +67,7 @@ for (i = 1; i < argc; i++) {
 		    printf ("End of logical tape\n");
 		    break;  }
 		preveof = 1;
-		fc++; obj++;
+		fc++;
 		rc = 1;
 		tpos = tpos + 4;  }
 	    else if (bc > MAXRLNT) {

@@ -46,7 +46,7 @@ if (argc < 2) {
 
 for (i = 1; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".tpc");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".tpc");
                 else strcat (oname, ".tpc");
 	ifile = fopen (argv[i], "rb");
 	if (ifile == NULL) {

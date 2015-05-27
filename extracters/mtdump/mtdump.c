@@ -43,7 +43,7 @@ int main (int argc, char *argv[])
 {
 int obj, i, k, fc, rc, tpos;
 unsigned int bc = 0, fmt, rlntsiz;
- unsigned char *s;
+ char *s;
  unsigned char bca[4] = { 0,0,0,0 };
 int preveof, gapcount, gpos = 0, gincr;
 FILE *ifile;

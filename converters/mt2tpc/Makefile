@@ -3,7 +3,7 @@ TOOL=mt2tpc
 CFLAGS=-O2 -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
 BIN=/usr/local/bin
 INSTALL=install
-CC=gcc
+#CC=gcc
 
 $(TOOL): $(TOOL).c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $(TOOL) $(TOOL).c $(LDLIBS)

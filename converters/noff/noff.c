@@ -33,7 +33,7 @@
 int main (int argc, char *argv[])
 {
 int i, c, ffc;
-char *ppos, oline[256], oname[256];
+char *ppos, oname[256];
 FILE *ifile, *ofile;
 
 if ((argc < 2) || (argv[0] == NULL)) {
@@ -42,7 +42,7 @@ if ((argc < 2) || (argv[0] == NULL)) {
 
 for (i = 1; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".new");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".new");
             else strcat (oname, ".new");
 	ifile = fopen (argv[i], "ra");
 	if (ifile == NULL) {

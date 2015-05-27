@@ -35,6 +35,7 @@ int      rep_count=0;    /* >0 if REP statement in process */
 char     listfilename[256];
 FILE    *listfile;
 /****************************************************/
+void
 start_listing (nam)
 /*
 **  Initialize listing output file
@@ -44,11 +45,12 @@ char *nam;
     char *ppos;
 
     strncpy (listfilename, nam, 250);
-    if (ppos = strrchr (listfilename, '.')) strcpy (ppos, ".lst");
+    if ((ppos = strrchr (listfilename, '.'))) strcpy (ppos, ".lst");
         else strcat (listfilename, ".lst");
     listfile = fopen (listfilename, "w");
 }
 /****************************************************/
+void
 finish_listing () {
 /*
 **  Finish off listing output file
@@ -67,6 +69,7 @@ long     outcount;
 long     outbufsize=27;
 long     outbuf[27];
 /****************************************************/
+void
 start_output (nam)
 /*
 **  Initialize binary output file
@@ -76,13 +79,14 @@ char *nam;
     char *ppos;
 
     strncpy (outfilename, nam, 250);
-    if (ppos = strrchr (outfilename, '.')) strcpy (ppos, ".bin");
+    if ((ppos = strrchr (outfilename, '.'))) strcpy (ppos, ".bin");
         else strcat (outfilename, ".bin");
     outfile = fopen (outfilename, "wb");
     outaddr = 0;
     outcount = 0;
 }
 /****************************************************/
+void
 send_output () {
 /*
 **  Write block to binary output file
@@ -104,23 +108,25 @@ send_output () {
     outcount = 0;
 }
 /****************************************************/
-output_word (addr,word) 
+void
+output_word (addr2,word) 
 /*
 **  Write word to binary output file
 */
-long addr;
+long addr2;
 long word;
 {
-    if (outcount && (outaddr + outcount) != addr) {
+    if (outcount && (outaddr + outcount) != addr2) {
         send_output();
     }
-    if (!outcount) outaddr = addr;
+    if (!outcount) outaddr = addr2;
     outbuf[outcount++] = word;
     if (outcount == outbufsize) {
         send_output();
     }
 }
 /****************************************************/
+void
 finish_output () {
 /*
 **  Finish current output block, write trailing leader,
@@ -133,6 +139,7 @@ finish_output () {
     printf ("Output is in %s\n", outfilename);
 }
 /****************************************************/
+void
 emit (code)
 long code;
 {
@@ -147,6 +154,7 @@ long code;
     addr++;
 }
 /****************************************************/
+void
 err (text)
 char *text;
 {
@@ -221,6 +229,7 @@ long *value;
     *value=0;
 }
 /****************************************************/
+void
 show_labels () 
 {
     long i;
@@ -279,6 +288,7 @@ int double_to_hp (num, a, b)
     return (0);
 }
 /****************************************************/
+void
 parse_digits (base, out) 
 int base;
 long *out;
@@ -293,6 +303,7 @@ long *out;
     *out = val;
 }
 /****************************************************/
+void
 parse_const (out)
 long *out;
 {
@@ -308,6 +319,7 @@ long *out;
     *out = val;
 }
 /****************************************************/
+void
 parse_sym (out)
 long *out;
 {
@@ -335,6 +347,7 @@ long *out;
     }
 }
 /****************************************************/
+void
 parse_term (out)
 long *out;
 {
@@ -349,6 +362,7 @@ long *out;
     }
 }
 /****************************************************/
+void
 parse_neg (out)
 long *out;
 {
@@ -365,6 +379,7 @@ long *out;
     }
 }
 /****************************************************/
+void
 parse_sum (out)
 long *out;
 {
@@ -379,6 +394,7 @@ long *out;
     *out = v1 & 0xFFFF;
 }  
 /****************************************************/
+void
 parse_arg (out)
 long *out;
 {
@@ -387,6 +403,7 @@ long *out;
     parse_sum (out);
 }
 /****************************************************/
+void
 parse_oct (out)
 long *out;
 {
@@ -401,6 +418,7 @@ long *out;
     *out =val;
 }
 /****************************************************/
+void
 parse_dec (out, nbwords)
 long *out, *nbwords;
 {
@@ -428,6 +446,7 @@ long *out, *nbwords;
     }
 }
 /****************************************************/
+void
 mem_group (opcode, code) 
 int opcode;
 long *code;
@@ -449,6 +468,7 @@ long *code;
     code[0] = out;
 }
 /****************************************************/
+void
 io_group (opcode, code)
 int opcode;
 long *code;
@@ -467,6 +487,7 @@ long *code;
     code[0] = out;
 }
 /****************************************************/
+void
 overflow_group (opcode, code)
 int opcode;
 long *code;
@@ -479,6 +500,7 @@ long *code;
     }
 }
 /****************************************************/
+void
 parse_label (label)
 char *label;
 {
@@ -705,6 +727,7 @@ long *code;
     return (ok);
 }
 /****************************************************/
+void
 asm_pass (f)
 FILE *f;
 {
@@ -858,6 +881,7 @@ FILE *f;
     }
 }       
 /****************************************************/
+int
 main (argc,argv)
 int argc;
 char *argv[];
@@ -896,7 +920,7 @@ char *argv[];
             fflush (stdout);
             asm_pass (f1);
             fclose (f1);
-            printf ("%d lines\n", line_count);
+            printf ("%ld lines\n", line_count);
         }
     }
 
@@ -914,7 +938,7 @@ char *argv[];
             printf ("%s ", argv[ii]);
             fflush (stdout);
             asm_pass (f1);
-            printf ("%d lines\n", line_count);
+            printf ("%ld lines\n", line_count);
             fclose (f1);
         }
     }

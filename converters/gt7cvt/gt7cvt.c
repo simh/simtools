@@ -31,7 +31,7 @@
 #define FLPSIZ 65536
 unsigned char fzero[4] = { 0 };
 
-int dump_rec (FILE *of, int bc, char *buf)
+int dump_rec (FILE *of, int bc, unsigned char *buf)
 {
 unsigned char buc[4];
 
@@ -62,7 +62,7 @@ if ((argc < 2) || (argv[0] == NULL)) {
 
 for (i = 1; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".tap");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".tap");
             else strcat (oname, ".tap");
 	ifile = fopen (argv[i], "rb");
 	if (ifile == NULL) {

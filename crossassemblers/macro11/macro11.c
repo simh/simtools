@@ -717,8 +717,8 @@ static void list_source(STREAM *str, char *cp)
 			binline = memcheck(malloc(sizeof(LSTFORMAT) + 16));
 
 		sprintf(binline, "%*s%*d",
-			SIZEOF_MEMBER(LSTFORMAT, flag), "",
-			SIZEOF_MEMBER(LSTFORMAT, line_number), str->line);
+			(int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
+			(int)SIZEOF_MEMBER(LSTFORMAT, line_number), str->line);
 	}
 }
 
@@ -765,15 +765,15 @@ static void list_fit(STREAM *str, unsigned addr)
 		listline[0] = 0;
 		binline[0] = 0;
 		sprintf(binline, "%*s %6.6o",
-			offsetof(LSTFORMAT, pc), "",
+			(int)offsetof(LSTFORMAT, pc), "",
 			addr);
 		padto(binline, offsetof(LSTFORMAT, words));
 	}
 	else if(strlen(binline) <= col2)
 	{
 		sprintf(binline, "%*s%*d %6.6o",
-			SIZEOF_MEMBER(LSTFORMAT, flag), "",
-			SIZEOF_MEMBER(LSTFORMAT, line_number), str->line,
+			(int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
+			(int)SIZEOF_MEMBER(LSTFORMAT, line_number), str->line,
 			addr);
 		padto(binline, offsetof(LSTFORMAT, words));
 	}
@@ -788,8 +788,8 @@ static void list_value(STREAM *str, unsigned word)
 		/* Print the value and go */
 		binline[0] = 0;
 		sprintf(binline, "%*s%*d %6.6o",
-			SIZEOF_MEMBER(LSTFORMAT, flag), "",
-			SIZEOF_MEMBER(LSTFORMAT, line_number), str->line,
+			(int)SIZEOF_MEMBER(LSTFORMAT, flag), "",
+			(int)SIZEOF_MEMBER(LSTFORMAT, line_number), str->line,
 			word & 0177777);
 	}
 }
@@ -999,7 +999,7 @@ int parse_float(char *cp, char **endp, int size, unsigned *flt)
 		}
 	}
 
-	flt[0] = (unsigned) (sign | (exp << 7) | (ufrac >> 48) & 0x7F);
+	flt[0] = (unsigned) (sign | (exp << 7) | ((ufrac >> 48) & 0x7F));
 	if(size > 1)
 	{
 		flt[1] = (unsigned) ((ufrac >> 32) & 0xffff);
@@ -1220,7 +1220,7 @@ static char *get_symbol(char *cp, char **endp, int *islocal)
 			if(symcp[len-1] == '$')
 			{
 				char *newsym = memcheck(malloc(32));	/* Overkill */
-				sprintf(newsym, "%d$%d", strtol(symcp, NULL, 10), lsb);
+				sprintf(newsym, "%d$%d", (int)strtol(symcp, NULL, 10), lsb);
 				free(symcp);
 				symcp = newsym;
 				if(islocal)
@@ -2519,6 +2519,7 @@ void implicit_gbl(EX_TREE *value)
 	case EX_NEG:
 		implicit_gbl(value->data.child.left);
 		break;
+	case EX_TEMP_SYM:
 	case EX_ERR:
 		if(value->data.child.left)
 			implicit_gbl(value->data.child.left);
@@ -3143,7 +3144,7 @@ MACRO *defmacro(char *cp, STACK *stack, int called)
 	while(!EOL(*cp))
 	{
 		arg = new_arg();
-		if(arg->locsym = (*cp == '?')) /* special argument flag? */
+		if((arg->locsym = (*cp == '?'))) /* special argument flag? */
 			cp++;
 		arg->label = get_symbol(cp, &cp, NULL);
 		if(arg->label == NULL)
@@ -3247,7 +3248,7 @@ BUFFER *subst_args(BUFFER *text, ARG *args)
 			label = get_symbol(in, &next, NULL);
 			if(label)
 			{
-				if(arg = find_arg(args, label))
+				if((arg = find_arg(args, label)))
 				{
 					/* An apostrophy may appear before or after the symbol. */
 					/* In either case, remove it from the expansion. */
@@ -4482,7 +4483,7 @@ reassemble:
 							else
 							{
 								strncpy(macfile, label, sizeof(macfile));
-								strncat(macfile, ".MAC", sizeof(macfile) - strlen(macfile));
+								strncat(macfile, ".MAC", sizeof(macfile) - strlen(macfile) - 1);
 								my_searchenv(macfile, "MCALL", hitfile, sizeof(hitfile));
 								if(hitfile[0])
 									macstr = new_file_stream(hitfile);

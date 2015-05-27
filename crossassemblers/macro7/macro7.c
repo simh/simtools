@@ -125,7 +125,7 @@
 #define OP_CODE        0740000
 
 /* Macro to get the number of elements in an array.                           */
-#define DIM(a) (sizeof(a)/sizeof(a[0]))
+#define DIM(a) ((int)(sizeof(a)/sizeof(a[0])))
 
 /* Macro to get the address plus one of the end of an array.                  */
 #define BEYOND(a) ((a) + DIM(A))
@@ -1544,7 +1544,7 @@ void readLine()
       if( islower( mc ))        /* Encoded argument number?                   */
       {
         ix = mc - 'a';          /* Convert to index.                          */
-        if( iy = mac_arg_pos[ix] )
+        if(( iy = mac_arg_pos[ix] ))
         {
           do                    /* Copy argument string.                      */
             {
@@ -1667,7 +1667,7 @@ void printPageBreak()
 /*  Synopsis:  Output a line to the listing file with new page if necessary.  */
 /*                                                                            */
 /******************************************************************************/
-void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
+void printLine( char *outline, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
 {
   if( listfile == NULL )
   {
@@ -1684,7 +1684,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
   default:
   case LINE:
     fprintf( listfile, "%5d                   ", lineno );
-    fputs( line, listfile );
+    fputs( outline, listfile );
     listed = TRUE;
     break;
 
@@ -1692,7 +1692,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
     if( !listed )
     {
       fprintf( listfile, "%5d       %6.6o      ", lineno, val );
-      fputs( line, listfile );
+      fputs( outline, listfile );
       listed = TRUE;
     }
     else
@@ -1712,7 +1712,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
       {
         fprintf( listfile, "%5d %5.5o %6.6o      ", lineno, loc, val );
       }
-      fputs( line, listfile );
+      fputs( outline, listfile );
       listed = TRUE;
     }
     else
@@ -1916,6 +1916,7 @@ void punchLiteralPool( LPOOL_T *p, WORD32 lpool_page )
 WORD32 insertLiteral( LPOOL_T *p, WORD32 pool_page, WORD32 value )
 {
   WORD32  ix;
+  (void)pool_page; /* unused */
 
   /* Search the literal pool for any occurence of the needed value.           */
   ix = LIT_BASE - 1;

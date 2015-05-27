@@ -1,9 +1,9 @@
 # all of these can be over-ridden on the "make" command line if they don't suit your environment.
 TOOL=macro8x
-CFLAGS=-O2 -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
+CFLAGS=-O2 -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow -Wno-missing-field-initializers
 BIN=/usr/local/bin
 INSTALL=install
-CC=gcc
+#CC=gcc
 
 $(TOOL): $(TOOL).c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $(TOOL) $(TOOL).c $(LDLIBS)

@@ -597,7 +597,7 @@ void got_rld(char *cp, int len)
 
 void got_isd(char *cp, int len)
 {
-	printf("ISD len=%o\n");
+	printf("ISD len=%o\n", len);
 }
 
 void got_endmod(char *cp, int len)

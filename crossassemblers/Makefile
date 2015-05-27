@@ -3,7 +3,7 @@
 CFLAGS=-O2 -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
 BIN=/usr/local/bin
 INSTALL=install
-CC=gcc
+#CC=gcc
 
 .PHONY: all clean install uninstall
 
