@@ -813,7 +813,7 @@ static int assemble(
                                 free_tree(tvalue);
                                 ok = FALSE;     /* Pick something. */
                             } else {
-                                unsigned        word = 0;
+                                unsigned        word;
 
                                 /* Convert to signed and unsigned words */
                                 sword = tvalue->data.lit & 0x7fff;
