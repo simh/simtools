@@ -150,7 +150,7 @@
 #define NAMELEN             128
 #define SYMBOL_COLUMNS        5
 #define SYMLEN                7
-/*#define SYMSIG	      4		/* EXP: significant chars in a symbol */
+/*#define SYMSIG	      4		*//* EXP: significant chars in a symbol */
 #define SYMBOL_TABLE_SIZE  8192
 #define MAC_MAX_ARGS         20
 #define MAC_MAX_LENGTH     8192
@@ -169,7 +169,7 @@
 #define CONCISE_UC 074
 
 /* Macro to get the number of elements in an array. */
-#define DIM(a) (sizeof(a)/sizeof(a[0]))
+#define DIM(a) ((int)(sizeof(a)/sizeof(a[0])))
 
 #define ISBLANK(c) ((c==' ') || (c=='\f'))
 #define ISEND(c)   ((c=='\0')|| (c=='\n') || (c == '\t'))
@@ -1938,7 +1938,7 @@ void printPageBreak()
 
 /*  Function:  printLine */
 /*  Synopsis:  Output a line to the listing file with new page if necessary. */
-void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
+void printLine( char *outline, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
 {
   if( listfile == NULL )
   {
@@ -1955,7 +1955,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
   default:
   case LINE:
     fprintf( listfile, "%5d                   ", lineno );
-    fputs( line, listfile );
+    fputs( outline, listfile );
     listed = TRUE;
     break;
 
@@ -1963,7 +1963,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
     if( !listed )
     {
       fprintf( listfile, "%5d       %6.6o      ", lineno, val );
-      fputs( line, listfile );
+      fputs( outline, listfile );
       listed = TRUE;
     }
     else
@@ -1976,7 +1976,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
     if( !listed )
     {
       fprintf( listfile, "%5d %5.5o             ", lineno, loc );
-      fputs( line, listfile );
+      fputs( outline, listfile );
       listed = TRUE;
     }
     else
@@ -1989,7 +1989,7 @@ void printLine( char *line, WORD32 loc, WORD32 val, LINESTYLE_T linestyle )
     if( !listed )
     {
       fprintf( listfile, "%5d %5.5o %6.6o      ", lineno, loc, val );
-      fputs( line, listfile );
+      fputs( outline, listfile );
       listed = TRUE;
     }
     else
@@ -2154,8 +2154,8 @@ void punchLocObject( WORD32 loc, WORD32 val )
 {
     if (!rim_mode) {
 	if ((loc & LOADERBUFMASK) == 0 || /* full/force alignment */
-	    loaderbufcount > 0 &&
-	    loc != loaderbufstart + loaderbufcount) /* disjoint */
+	    (loaderbufcount > 0 &&
+	    loc != loaderbufstart + loaderbufcount)) /* disjoint */
 	    flushLoader();
 	if (loaderbufcount == 0)
 	    loaderbufstart = loc;

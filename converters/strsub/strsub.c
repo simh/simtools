@@ -44,7 +44,7 @@ rmvlen = strlen (rmv);
 ins = argv[2];
 for (i = 3; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".new");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".new");
             else strcat (oname, ".new");
 	ifile = fopen (argv[i], "r");
 	if (ifile == NULL) {

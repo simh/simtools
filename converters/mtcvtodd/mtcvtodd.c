@@ -43,7 +43,7 @@ if ((argc < 2) || (argv[0] == NULL)) {
 
 for (i = 1; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".new");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".new");
                 else strcat (oname, ".new");
 	ifile = fopen (argv[i], "rb");
 	if (ifile == NULL) {

@@ -224,7 +224,7 @@ int main (int    argc,
         rewind (fin);
         file_size = fread (sig_fwd, 1, SIGNATURE_SIZE, fin);
 
-        for (i = 0; i < SIGNATURE_SIZE; i = i + 2) {
+        for (i = 0; (size_t)i < SIGNATURE_SIZE; i = i + 2) {
             sig_rev [i]     = sig_fwd [i + 1];
             sig_rev [i + 1] = sig_fwd [i];
             }
@@ -311,7 +311,7 @@ int main (int    argc,
         while (!feof (fin)) {
             record_size = fread (cylinder, 1, CYLINDER_SIZE, fin);
 
-            for (i = 0; i < record_size; i = i + 2) {
+            for (i = 0; (size_t)i < record_size; i = i + 2) {
                 hold = cylinder [i];
                 cylinder [i] = cylinder [i + 1];
                 cylinder [i + 1] = hold;
@@ -363,7 +363,7 @@ int main (int    argc,
 
 /* Swap the bytes. */
 
-                for (i = 0; i < record_size; i = i + 2) {
+                for (i = 0; (size_t)i < record_size; i = i + 2) {
                     hold = cylinder [i];
                     cylinder [i] = cylinder [i + 1];
                     cylinder [i + 1] = hold;

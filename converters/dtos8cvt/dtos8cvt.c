@@ -42,7 +42,7 @@ if ((argc < 2) || (argv[0] == NULL)) {
 
 for (i = 1; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".dt8");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".dt8");
                 else strcat (oname, ".dt8");
 	ifile = fopen (argv[i], "rb");
 	if (ifile == NULL) {

@@ -43,7 +43,7 @@ if ((argc < 2) || (argv[0] == NULL)) {
 
 for (i = 1; i < argc; i++) {
 	strcpy (oname, argv[i]);
-        if (ppos = strrchr (oname, '.')) strcpy (ppos, ".tap");
+        if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".tap");
                 else strcat (oname, ".tap");
 	ifile = fopen (argv[i], "rb");
 	if (ifile == NULL) {

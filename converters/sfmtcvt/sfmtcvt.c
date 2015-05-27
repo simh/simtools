@@ -97,7 +97,7 @@ for (i = 1, numf = 0; i < argc; i++) {
 			maxaddr[0], k, maxaddr[k]);
 		    return 0;  }  }
 	    strcpy (oname, argv[i]);
-            if (ppos = strrchr (oname, '.')) strcpy (ppos, ".bin");
+            if ((ppos = strrchr (oname, '.'))) strcpy (ppos, ".bin");
             else strcat (oname, ".bin");
 	    ofile = fopen (oname, "wb");
 	    if (ofile == NULL) {

@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define RANK_LNT	34	
 
@@ -57,12 +58,14 @@ char *namtab[RANK_LNT] = {
 
 int main (int argc, char *argv[])
 {
+(void)argc; /* unused */
+(void)argv; /* unused */
 for ( ;; ) {
     for (i = 0; i < RANK_LNT; i++) numctl[i] = 0;
     printf ("Enter configuration data\n");
     for ( ;; ) {
 	printf ("Name:\t");
-	if (gets (inp) == NULL) return 0;
+	if (fgets (inp, sizeof inp, stdin) == NULL) return 0;
 	if (*inp == 0) break;
 	for (cp = inp; *cp != 0; cp++) *cp = toupper (*cp);
 	for (rank = 0; rank < RANK_LNT; rank++) {
@@ -75,7 +78,7 @@ for ( ;; ) {
 	    printf ("\n");
 	    continue;  }
 	printf ("Number:\t");
-	gets (inp);
+	fgets (inp, sizeof inp, stdin);
 	errno = 0;
 	num = strtoul (inp, &ocp, 10);
 	if (errno || (inp == ocp)) {
@@ -101,7 +104,7 @@ for ( ;; ) {
 	    for (j = 1; j < numctl[i]; j++) {
 		printf ("\t\t  %d\t%06o\n", j + 1, csr);
 		csr = (csr + modtab[i] + 1) & ~modtab[i];  }
-	    printf (" %\t\tgap\t%06o\n", csr);
+	    printf (" %%\t\tgap\t%06o\n", csr);
 	    }
 	if ((i + 1) < RANK_LNT) csr = (csr + modtab[i+1] + 1) & ~modtab[i+1];
 	}
