@@ -182,23 +182,23 @@ static int assemble(
 
             if (strcmp(label, ".") == 0) {
                 if (current_pc->section->flags & PSECT_REL) {
-                    SYMBOL         *sym;
+                    SYMBOL         *symb;
                     unsigned        offset;
 
                     /* Express the given expression as a symbol and an
                        offset. The symbol must not be global, the
                        section must = current. */
 
-                    if (!express_sym_offset(value, &sym, &offset)) {
+                    if (!express_sym_offset(value, &symb, &offset)) {
                         report(stack->top, "Illegal ORG\n");
-                    } else if ((sym->flags & (SYMBOLFLAG_GLOBAL | SYMBOLFLAG_DEFINITION)) == SYMBOLFLAG_GLOBAL) {
+                    } else if ((symb->flags & (SYMBOLFLAG_GLOBAL | SYMBOLFLAG_DEFINITION)) == SYMBOLFLAG_GLOBAL) {
                         report(stack->top, "Can't ORG to external location\n");
-                    } else if (sym->flags & SYMBOLFLAG_UNDEFINED) {
+                    } else if (symb->flags & SYMBOLFLAG_UNDEFINED) {
                         report(stack->top, "Can't ORG to undefined sym\n");
-                    } else if (sym->section != current_pc->section) {
+                    } else if (symb->section != current_pc->section) {
                         report(stack->top, "Can't ORG to alternate section " "(use PSECT)\n");
                     } else {
-                        DOT = sym->value + offset;
+                        DOT = symb->value + offset;
                         list_value(stack->top, DOT);
                         change_dot(tr, 0);
                     }
@@ -379,9 +379,9 @@ static int assemble(
                     {
                         STREAM         *str;
                         MACRO_STREAM   *mstr;
-                        int             local;
+                        int             islocal;
 
-                        label = get_symbol(cp, &cp, &local);
+                        label = get_symbol(cp, &cp, &islocal);
 
                         if (label == NULL) {
                             report(stack->top, "Bad .NARG syntax\n");
@@ -401,7 +401,7 @@ static int assemble(
 
                         mstr = (MACRO_STREAM *) str;
 
-                        add_sym(label, mstr->nargs, SYMBOLFLAG_DEFINITION | local, &absolute_section,
+                        add_sym(label, mstr->nargs, SYMBOLFLAG_DEFINITION | islocal, &absolute_section,
                                 &symbol_st);
                         free(label);
                         list_value(stack->top, mstr->nargs);
@@ -411,9 +411,9 @@ static int assemble(
                 case P_NCHR:
                     {
                         char           *string;
-                        int             local;
+                        int             islocal;
 
-                        label = get_symbol(cp, &cp, &local);
+                        label = get_symbol(cp, &cp, &islocal);
 
                         if (label == NULL) {
                             report(stack->top, "Bad .NCHR syntax\n");
@@ -424,7 +424,7 @@ static int assemble(
 
                         string = getstring(cp, &cp);
 
-                        add_sym(label, strlen(string), SYMBOLFLAG_DEFINITION | local, &absolute_section,
+                        add_sym(label, strlen(string), SYMBOLFLAG_DEFINITION | islocal, &absolute_section,
                                 &symbol_st);
                         free(label);
                         free(string);
@@ -434,9 +434,9 @@ static int assemble(
                 case P_NTYPE:
                     {
                         ADDR_MODE       mode;
-                        int             local;
+                        int             islocal;
 
-                        label = get_symbol(cp, &cp, &local);
+                        label = get_symbol(cp, &cp, &islocal);
                         if (label == NULL) {
                             report(stack->top, "Bad .NTYPE syntax\n");
                             return 0;
@@ -450,7 +450,7 @@ static int assemble(
                             return 0;
                         }
 
-                        add_sym(label, mode.type, SYMBOLFLAG_DEFINITION | local, &absolute_section, &symbol_st);
+                        add_sym(label, mode.type, SYMBOLFLAG_DEFINITION | islocal, &absolute_section, &symbol_st);
                         free_addr_mode(&mode);
                         free(label);
 
@@ -760,8 +760,6 @@ static int assemble(
                             free_tree(value);
                         } else if (strcmp(label, "B") == 0 ||
                                    strcmp(label, "NB") == 0) {
-                            char           *thing;
-
                             cp = skipwhite(cp);
                             if (EOL(*cp)) {
                                 ok = 1;
@@ -805,28 +803,28 @@ static int assemble(
                         } else {
                             int             sword;
                             unsigned        uword;
-                            EX_TREE        *value = parse_expr(cp, 0);
+                            EX_TREE        *tvalue = parse_expr(cp, 0);
 
-                            cp = value->cp;
+                            cp = tvalue->cp;
 
-                            if (value->type != EX_LIT) {
+                            if (tvalue->type != EX_LIT) {
                                 report(stack->top, "Bad .IF expression\n");
                                 list_value(stack->top, 0);
-                                free_tree(value);
+                                free_tree(tvalue);
                                 ok = FALSE;     /* Pick something. */
                             } else {
-                                unsigned        word;
+                                unsigned        word = 0;
 
                                 /* Convert to signed and unsigned words */
-                                sword = value->data.lit & 0x7fff;
+                                sword = tvalue->data.lit & 0x7fff;
 
                                 /* FIXME I don't know if the following
                                    is portable enough.  */
-                                if (value->data.lit & 0x8000)
+                                if (tvalue->data.lit & 0x8000)
                                     sword |= ~0xFFFF;   /* Render negative */
 
                                 /* Reduce unsigned value to 16 bits */
-                                uword = value->data.lit & 0xffff;
+                                uword = tvalue->data.lit & 0xffff;
 
                                 if (strcmp(label, "EQ") == 0 || strcmp(label, "Z") == 0)
                                     ok = (uword == 0), word = uword;
@@ -840,10 +838,12 @@ static int assemble(
                                     ok = (sword < 0), word = sword;
                                 else if (strcmp(label, "LE") == 0)
                                     ok = (sword <= 0), word = sword;
+                                else
+                                    ok = 0, word = 0;
 
                                 list_value(stack->top, word);
 
-                                free_tree(value);
+                                free_tree(tvalue);
                             }
                         }
 
@@ -936,7 +936,7 @@ static int assemble(
                     {
                         SYMBOL         *sectsym;
                         SECTION        *sect;
-                        unsigned int    old_flags = ~0;
+                        unsigned int    old_flags = ~0u;
                         int             unnamed_csect = 0;
 
                         label = get_symbol(cp, &cp, NULL);
@@ -1019,7 +1019,7 @@ static int assemble(
                              * first time.
                              * See page 6-38 of AA-KX10A-TC_PDP-11_MACRO-11_Reference_Manual_May88.pdf .
                              */
-                            if (old_flags != ~0 && sect->flags != old_flags) {
+                            if (old_flags != ~0u && sect->flags != old_flags) {
                                 /* The manual also says that any different
                                  * flags are ignored, and an error issued.
                                  * Apparently, that isn't true.
@@ -1535,7 +1535,6 @@ static int assemble(
                             EX_TREE        *value;
                             unsigned        reg;
                             unsigned        word;
-                            int             ok = 1;
 
                             value = parse_expr(cp, 0);
                             cp = value->cp;
@@ -1544,7 +1543,6 @@ static int assemble(
                             if (reg == NO_REG || reg > 4) {
                                 report(stack->top, "Illegal source register\n");
                                 reg = 0;
-                                ok = 0;
                             }
 
                             cp = skipwhite(cp);

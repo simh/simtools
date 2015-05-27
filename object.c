@@ -163,7 +163,7 @@ static int gsd_write(
     char           *cp;
     unsigned        radtbl[2];
 
-    if (gsd->offset > sizeof(gsd->buf) - 8) {
+    if (gsd->offset > (int)sizeof(gsd->buf) - 8) {
         if (!gsd_flush(gsd))
             return 0;
     }
@@ -220,6 +220,10 @@ int gsd_xfer(
     char *name,
     unsigned value)
 {
+    /*
+     * MACRO V05.05 uses 050 as flags.
+     * The Task Builder Manual shows them to be 0.
+     */
     return gsd_write(gsd, name, 010, GSD_XFER, value);
 }
 
@@ -328,8 +332,9 @@ static int text_fit(
     int txtsize,
     int rldsize)
 {
-    if (tr->txt_offset + txtsize <= sizeof(tr->text) && tr->rld_offset + rldsize <= sizeof(tr->rld)
-        && (txtsize == 0 || tr->txt_addr + tr->txt_offset - 4 == addr))
+    if (tr->txt_offset + txtsize <= (int)sizeof(tr->text) &&
+        tr->rld_offset + rldsize <= (int)sizeof(tr->rld) &&
+        (txtsize == 0 || tr->txt_addr + tr->txt_offset - 4 == addr))
         return 1;                      /* All's well. */
 
     if (!text_flush(tr))
@@ -792,7 +797,7 @@ static char    *text_complex_fit(
 {
     int             len;
 
-    if (tx->len + size > sizeof(tx->accum))
+    if (tx->len + size > (int)sizeof(tx->accum))
         return NULL;                   /* Expression has grown too complex. */
 
     len = tx->len;

@@ -338,7 +338,7 @@ BUFFER         *subst_args(
     for (begin = in = text->buffer; in < text->buffer + text->length;) {
         char           *next;
 
-        if (issym(*in)) {
+        if (issym((unsigned char)*in)) {
             label = get_symbol(in, &next, NULL);
             if (label) {
                 if ((arg = find_arg(args, label))) {

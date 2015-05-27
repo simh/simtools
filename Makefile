@@ -1,4 +1,10 @@
-CFLAGS ?= -O -g
+#####
+#
+# Makefile for macro11 and dumpobj
+#
+
+WARNS ?= -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
+CFLAGS ?= -O -ggdb -std=gnu99 $(WARNS)
 
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\

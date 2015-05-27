@@ -724,6 +724,9 @@ EX_TREE        *evaluate(
             res->data.child.right = right;
         }
         break;
+    default:
+        fprintf(stderr, "Invalid tree\n");
+        return NULL;
     }
 
     res->cp = cp;

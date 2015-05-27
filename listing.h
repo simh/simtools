@@ -31,8 +31,6 @@ extern int      list_bex;       /* option to show binary */
 extern int      list_level;     /* Listing control level.  .LIST
                                    increments; .NLIST decrements */
 
-//extern                               char   *listline;               /* Source lines */
-
 extern FILE    *lstfile;
 
 extern int      list_pass_0;    /* Also list what happens during the first pass */

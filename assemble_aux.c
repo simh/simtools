@@ -209,11 +209,9 @@ void implicit_gbl(
     switch (value->type) {
     case EX_UNDEFINED_SYM:
         {
-            SYMBOL         *sym;
-
             if (!(value->data.symbol->flags & SYMBOLFLAG_LOCAL)) {      /* Unless it's a
                                                                            local symbol, */
-                sym = add_sym(value->data.symbol->label, 0, SYMBOLFLAG_GLOBAL, &absolute_section, &implicit_st);
+                add_sym(value->data.symbol->label, 0, SYMBOLFLAG_GLOBAL, &absolute_section, &implicit_st);
             }
         }
         break;
@@ -587,6 +585,8 @@ void go_section(
     TEXT_RLD *tr,
     SECTION *sect)
 {
+    (void)tr;
+
     if (current_pc->section == sect)
         return;                        /* This is too easy */
 
@@ -756,13 +756,13 @@ void write_globals(
     if (xfer_address->type == EX_LIT) {
         gsd_xfer(&gsd, ". ABS.", xfer_address->data.lit);
     } else {
-        SYMBOL         *sym;
+        SYMBOL         *lsym;
         unsigned        offset;
 
-        if (!express_sym_offset(xfer_address, &sym, &offset)) {
+        if (!express_sym_offset(xfer_address, &lsym, &offset)) {
             report(NULL, "Illegal program transfer address\n");
         } else {
-            gsd_xfer(&gsd, sym->section->label, sym->value + offset);
+            gsd_xfer(&gsd, lsym->section->label, lsym->value + offset);
         }
     }
 

@@ -210,7 +210,7 @@ void upcase(
     char *str)
 {
     while (*str) {
-        *str = toupper(*str);
+        *str = toupper((unsigned char)*str);
         str++;
     }
 }

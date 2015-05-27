@@ -72,7 +72,7 @@ char           *readrec(
 
     if (c != 1) {
         fprintf(stderr, "Improperly formatted OBJ file (1)\n");
-        return NULL;                   // Not a properly formatted file.
+        return NULL;                   /* Not a properly formatted file. */
     }
 
     chksum -= c;
@@ -80,10 +80,10 @@ char           *readrec(
     c = fgetc(fp);
     if (c != 0) {
         fprintf(stderr, "Improperly formatted OBJ file (2)\n");
-        return NULL;                   // Not properly formatted
+        return NULL;                   /* Not properly formatted */
     }
 
-    chksum -= c;                       // even though for 0 the checksum isn't changed...
+    chksum -= c;                       /* even though for 0 the checksum isn't changed... */
 #endif /* RT11 */
 
     c = fgetc(fp);
@@ -108,7 +108,7 @@ char           *readrec(
     chksum -= c;
 
 #if RT11
-    *len -= 4;                         // Subtract header and length bytes from length
+    *len -= 4;                         /* Subtract header and length bytes from length */
 #endif
     if (*len < 0) {
         fprintf(stderr, "Improperly formatted OBJ file (5)\n");
@@ -118,7 +118,7 @@ char           *readrec(
     buf = malloc(*len);
     if (buf == NULL) {
         fprintf(stderr, "Out of memory allocating %d bytes\n", *len);
-        return NULL;                   // Bad alloc
+        return NULL;                   /* Bad alloc */
     }
 
     i = fread(buf, 1, *len, fp);
@@ -403,6 +403,9 @@ void got_endgsd(
 {
     int             i;
 
+    (void)cp;
+    (void)len;
+
     qsort(all_gsds, nr_gsds, sizeof(char *), compare_gsdlines);
 
     printf("GSD:\n");
@@ -530,7 +533,7 @@ void got_rld(
         case 014:
             rad50name(cp + i + 2, name);
 
-            printf("\tPSECT displaced%s %o=%s+%o\n", byte, addr, name, word);
+            printf("\tPSECT displaced%s %o=%s\n", byte, addr, name);
             i += 6;
             badbin = 1;
             break;
@@ -633,6 +636,7 @@ void got_isd(
     char *cp,
     int len)
 {
+    (void)cp;
     printf("ISD len=%o\n", len);
 }
 
@@ -640,6 +644,8 @@ void got_endmod(
     char *cp,
     int len)
 {
+    (void)cp;
+    (void)len;
     printf("ENDMOD\n");
 }
 
@@ -647,6 +653,8 @@ void got_libhdr(
     char *cp,
     int len)
 {
+    (void)cp;
+    (void)len;
     printf("LIBHDR\n");
 }
 
@@ -654,6 +662,8 @@ void got_libend(
     char *cp,
     int len)
 {
+    (void)cp;
+    (void)len;
     printf("LIBEND\n");
 }
 
@@ -665,10 +675,15 @@ int main(
     FILE           *fp;
     char           *cp;
 
+    if (argc < 2) {
+        fprintf(stderr, "Usage: dumpobj input.obj [ output.obj ]\n");
+        exit(1);
+    }
+
     fp = fopen(argv[1], "rb");
     if (fp == NULL)
         return EXIT_FAILURE;
-    if (argv[2]) {
+    if (argc > 2 && argv[2]) {
         bin = fopen(argv[2], "wb");
         if (bin == NULL)
             return EXIT_FAILURE;

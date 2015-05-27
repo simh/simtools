@@ -191,7 +191,7 @@ SYMBOL         *add_sym(
     SYMBOL         *sym;
     char            label[SYMMAX_MAX + 1];      // big size
 
-    if (isdigit(labelraw[0])) {
+    if (isdigit((unsigned char)labelraw[0])) {
         // Don't truncate local labels
         strncpy(label, labelraw, SYMMAX_MAX);
         label[SYMMAX_MAX] = 0;

@@ -75,7 +75,7 @@ static void enable_tf(
         list_md = tf;
 }
 
-//JH:
+/*JH:*/
 static void print_version(
     FILE *strm)
 {
@@ -178,14 +178,14 @@ int main(
                 /* Followed by options to enable */
                 /* Since /SHOW and /ENABL option names don't overlap,
                    I consolidate. */
-                if(arg >= argc-1 || !isalpha(*argv[arg+1])) {
+                if(arg >= argc-1 || !isalpha((unsigned char)*argv[arg+1])) {
                     usage("-e must be followed by an option to enable\n");
                 }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 1);
             } else if (!stricmp(cp, "d")) {
                 /* Followed by an option to disable */
-                if(arg >= argc-1 || !isalpha(*argv[arg+1])) {
+                if(arg >= argc-1 || !isalpha((unsigned char)*argv[arg+1])) {
                     usage("-d must be followed by an option to disable\n");
                 }
                 upcase(argv[++arg]);
@@ -253,13 +253,13 @@ int main(
                    into individual .MAC files in the current
                    directory.  No assembly of input is done.  This
                    must be the last command line option.  */
-                int             i;
+                int             m;
 
                 if(arg != argc-1) {
                     usage("-x must be the last option\n");
                 }
-                for (i = 0; i < nr_mlbs; i++)
-                    mlb_extract(mlbs[i]);
+                for (m = 0; m < nr_mlbs; m++)
+                    mlb_extract(mlbs[m]);
                 return EXIT_SUCCESS;
             } else if (!stricmp(cp, "ysl")) {
                 /* set symbol_len */

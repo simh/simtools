@@ -59,7 +59,7 @@ unsigned rad50(
     if (!*cp)                          /* Got to check for end-of-string manually, because strchr will call it a hit.  :-/ */
         return acc;
 
-    rp = strchr(radtbl, toupper(*cp));
+    rp = strchr(radtbl, toupper((unsigned char)*cp));
     if (rp == NULL)                    /* Not a RAD50 character */
         return acc;
     acc = ((int) (rp - radtbl)) * 03100;        /* Convert */
@@ -71,7 +71,7 @@ unsigned rad50(
         *endp = cp;
     if (!*cp)
         return acc;
-    rp = strchr(radtbl, toupper(*cp));
+    rp = strchr(radtbl, toupper((unsigned char)*cp));
     if (rp == NULL)
         return acc;
     acc += ((int) (rp - radtbl)) * 050;
@@ -81,7 +81,7 @@ unsigned rad50(
         *endp = cp;
     if (!*cp)
         return acc;
-    rp = strchr(radtbl, toupper(*cp));
+    rp = strchr(radtbl, toupper((unsigned char)*cp));
     if (rp == NULL)
         return acc;
     acc += (int) (rp - radtbl);

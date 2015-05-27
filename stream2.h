@@ -42,48 +42,48 @@ struct stream;
 typedef struct stream_vtbl {
     void            (
     *delete)        (
-    struct stream * stream);    // Destructor
+    struct stream * stream);    /* Destructor */
     char           *(
     *gets)          (
-    struct stream * stream);    // "gets" function
+    struct stream * stream);    /* "gets" function */
     void            (
     *rewind)        (
-    struct stream * stream);    // "rewind" function
+    struct stream * stream);    /* "rewind" function */
 } STREAM_VTBL;
 
 typedef struct stream {
-    STREAM_VTBL    *vtbl;       // Pointer to dispatch table
-    char           *name;       // Stream name
-    int             line;       // Current line number in stream
-    struct stream  *next;       // Next stream in stack
+    STREAM_VTBL    *vtbl;       /* Pointer to dispatch table */
+    char           *name;       /* Stream name */
+    int             line;       /* Current line number in stream */
+    struct stream  *next;       /* Next stream in stack */
 } STREAM;
 
 typedef struct file_stream {
-    STREAM          stream;     // Base class
-    FILE           *fp;         // File pointer
-    char           *buffer;     // Line buffer
+    STREAM          stream;     /* Base class */
+    FILE           *fp;         /* File pointer */
+    char           *buffer;     /* Line buffer */
 } FILE_STREAM;
 
 typedef struct buffer {
-    char           *buffer;     // Pointer to text
-    int             size;       // Size of buffer
-    int             length;     // Occupied size of buffer
-    int             use;        // Number of users of buffer
+    char           *buffer;     /* Pointer to text */
+    int             size;       /* Size of buffer */
+    int             length;     /* Occupied size of buffer */
+    int             use;        /* Number of users of buffer */
 } BUFFER;
 
-#define GROWBUF_INCR 1024              // Buffers grow by leaps and bounds
+#define GROWBUF_INCR 1024       /* Buffers grow by leaps and bounds */
 
 typedef struct buffer_stream {
-    STREAM          stream;     // Base class
-    BUFFER         *buffer;     // text buffer
-    int             offset;     // Current read offset
+    STREAM          stream;     /* Base class */
+    BUFFER         *buffer;     /* text buffer */
+    int             offset;     /* Current read offset */
 } BUFFER_STREAM;
 
 typedef struct stack {
-    STREAM         *top;        // Top of stacked stream pieces
+    STREAM         *top;        /* Top of stacked stream pieces */
 } STACK;
 
-#define STREAM_BUFFER_SIZE 1024        // This limits the max size of an input line.
+#define STREAM_BUFFER_SIZE 1024 /* This limits the max size of an input line. */
 BUFFER         *new_buffer(
     void);
 BUFFER         *buffer_clone(

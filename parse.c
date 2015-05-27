@@ -99,7 +99,7 @@ char           *getstring_fn(
         return NULL;
     }
 
-    if (!ispunct(*cp)) {
+    if (!ispunct((unsigned char)*cp)) {
         return NULL;
     }
 
@@ -339,7 +339,7 @@ int parse_float(
     int             i;          /* Number of fields converted by sscanf */
     int             n;          /* Number of characters converted by sscanf */
     int             sexp;       /* Signed exponent */
-    unsigned        exp;        /* Unsigned excess-128 exponent */
+    unsigned        uexp;       /* Unsigned excess-128 exponent */
     unsigned        sign = 0;   /* Sign mask */
 
     i = sscanf(cp, "%lf%n", &d, &n);
@@ -359,8 +359,8 @@ int parse_float(
     if (sexp < -128 || sexp > 127)
         return 0;                      /* Exponent out of range. */
 
-    exp = sexp + 128;                  /* Make excess-128 mode */
-    exp &= 0xff;                       /* express in 8 bits */
+    uexp = sexp + 128;                  /* Make excess-128 mode */
+    uexp &= 0xff;                       /* express in 8 bits */
 
     if (frac < 0) {
         sign = 0100000;                /* Negative sign */
@@ -377,11 +377,11 @@ int parse_float(
 
         if (ufrac > 0x200000000000) {  /* Overflow? */
             ufrac >>= 1;               /* Normalize */
-            exp--;
+            uexp--;
         }
     }
 
-    flt[0] = (unsigned) (sign | (exp << 7) | ((ufrac >> 48) & 0x7F));
+    flt[0] = (unsigned) (sign | (uexp << 7) | ((ufrac >> 48) & 0x7F));
     if (size > 1) {
         flt[1] = (unsigned) ((ufrac >> 32) & 0xffff);
         if (size > 2) {
@@ -530,15 +530,15 @@ char           *get_symbol(
 
     cp = skipwhite(cp);                /* Skip leading whitespace */
 
-    if (!issym(*cp))
+    if (!issym((unsigned char)*cp))
         return NULL;
 
     digits = 0;
-    if (isdigit(*cp))
+    if (isdigit((unsigned char)*cp))
         digits = 2;                    /* Think about digit count */
 
-    for (symcp = cp + 1; issym(*symcp); symcp++) {
-        if (!isdigit(*symcp))          /* Not a digit? */
+    for (symcp = cp + 1; issym((unsigned char)*symcp); symcp++) {
+        if (!isdigit((unsigned char)*symcp)) /* Not a digit? */
             digits--;                  /* Make a note. */
     }
 
@@ -569,15 +569,15 @@ char           *get_symbol(
                 char           *newsym = memcheck(malloc(32));  /* Overkill */
 
                 sprintf(newsym, "%ld$%d", strtol(symcp, NULL, 10), lsb);
-		if (enabl_debug && lstfile) {
-		    fprintf(lstfile, "lsb %d: %s -> %s\n",
-			    lsb, symcp, newsym);
-		}
+                if (enabl_debug && lstfile) {
+                    fprintf(lstfile, "lsb %d: %s -> %s\n",
+                            lsb, symcp, newsym);
+                }
                 free(symcp);
                 symcp = newsym;
                 if (islocal)
                     *islocal = SYMBOLFLAG_LOCAL;
-		lsb_used++;
+                lsb_used++;
             } else {
                 free(symcp);
                 return NULL;
@@ -585,7 +585,7 @@ char           *get_symbol(
         }
     } else {
         /* disallow local label format */
-        if (isdigit(*symcp)) {
+        if (isdigit((unsigned char)*symcp)) {
             free(symcp);
             return NULL;
         }
@@ -708,7 +708,7 @@ EX_TREE        *parse_unary(
     if (*cp == '^') {
         int             save_radix;
 
-        switch (tolower(cp[1])) {
+        switch (tolower((unsigned char)cp[1])) {
         case 'c':
             /* ^C, ones complement */
             tp = new_ex_tree();
@@ -775,7 +775,7 @@ EX_TREE        *parse_unary(
             }
         }
 
-        if (ispunct(cp[1])) {
+        if (ispunct((unsigned char)cp[1])) {
             char           *ecp;
 
             /* oddly-bracketed expression like this: ^/expression/ */
@@ -827,7 +827,7 @@ EX_TREE        *parse_unary(
 
     /* Numeric constants are trickier than they need to be, */
     /* since local labels start with a digit too. */
-    if (isdigit(*cp)) {
+    if (isdigit((unsigned char)*cp)) {
         char           *label;
         int             local;
 
@@ -840,7 +840,7 @@ EX_TREE        *parse_unary(
                local label.  */
 
             /* Look for a trailing period, to indicate decimal... */
-            for (endcp = cp; isdigit(*endcp); endcp++) ;
+            for (endcp = cp; isdigit((unsigned char)*endcp); endcp++) ;
             if (*endcp == '.')
                 rad = 10;
 
