@@ -1,0 +1,41 @@
+;;;;;
+;
+; Test nested macros and name on .ENDM
+;
+
+    .macro      M1
+    .word       1
+    .endm       M1      ; ok
+
+    M1
+
+    .macro      M2
+    .word       2
+    .macro      M3
+    .word       3
+    .endm       M3      ; ok
+    .endm       M2      ; ok
+
+    M2
+    M3
+
+    .macro      M4
+    .word       4
+    .macro      M4
+    .endm       M4      ; ok
+    .endm       M4      ; ok
+
+    M4
+    M4                  ; should be empty now
+
+    .macro      M5
+    .word       5
+    .macro      M5
+    .endm       notM5   ; wrong; detected when M5 is expanded
+    .endm       M5      ; ok
+
+    M5
+    M5
+
+    .macro      M6
+    .endm       notM6   ; wrong

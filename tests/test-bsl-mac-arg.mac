@@ -1,0 +1,24 @@
+        .list me
+        .macro test x
+        .blkb x               ; test some directive that wants an expression
+        .endm
+
+        size = 10
+        foo = 2
+
+    ; likes:
+
+        test size             ; not replaced by "10"
+        test \size            ; replaced by "10"
+        test \<size>          ; ditto
+        test \<size + foo>    ; replaced by "12"
+        test ^/size + foo/    ; arg is "size + foo", not "12"
+
+    ; dislikes:
+
+        test <\size>          ; parameter is \size, which might be ok for
+                              ; macros where the argument is used differently.
+        test size + foo       ; gets split at the space
+        test /size + foo/     ; gets split at the space
+        test \/size + foo/    ; invalid expression with division operator
+        test \^/size + foo/   ; original dislikes this, but we accept it.

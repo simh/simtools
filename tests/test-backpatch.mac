@@ -1,0 +1,17 @@
+;;;;
+;
+; Test backpatching (seen in Kermit sources).
+
+        .psect  modinf  ,ro,d,lcl,rel,con
+
+label = .
+        .blkb   50              ; create some data
+
+        .byte   50,51,52        ; and some more
+        .save                   ; we're at 53 now
+        .psect  modinf
+        . = label + 6
+        .word   6               ; stored at 6
+        .restore                ; . gets restored to 53
+        .byte   53
+

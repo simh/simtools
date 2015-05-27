@@ -1,0 +1,12 @@
+;;;;;
+;
+; Test delimiters of .ASCII and .ASCIZ
+
+CR = 13.
+LF = 10.
+SOH = 1
+
+	.asciz <cr><lf>/<SOH>/		; 2 bytes and a string
+	.asciz /<cr><lf><SOH>/		; only a string
+	.asciz |<cr><lf><SOH>|		; the same string
+	.asciz <cr><lf><SOH>		; 3 bytes

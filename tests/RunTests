@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Run some regression test cases.
+#
+# If there is a .lst.ok file, it compares the listing.
+# If there is a .objd.ok file, it compares the result of dumpobj.
+#
+
+TESTS="test-asciz test-backpatch test-bsl-mac-arg test-complex-reloc test-endm test-include test-locals test-macro-comma test-undef test-word-comma"
+
+for t in $TESTS
+do
+    ../macro11 -l "$t".lst -o "$t".obj "$t".mac 2>/dev/null
+
+    if [ -e "$t".lst.ok ]
+    then
+        diff -u "$t".lst.ok "$t".lst
+    fi
+
+    if [ -e "$t".objd.ok ]
+    then
+        ../dumpobj "$t".obj >"$t".objd
+        diff -u "$t".objd.ok "$t".objd
+    fi
+done
