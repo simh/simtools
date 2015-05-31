@@ -1474,6 +1474,12 @@ static int assemble(
                                 free_tree(value);
                                 return 0;
                             }
+
+                            if ((mode.type & 070) == 0) {
+                                report(stack->top, "JSR Rn,Rm is illegal\n");
+                                /* But encode it anyway... */
+                            }
+
                             word = op->value | mode.type | (reg << 6);
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
