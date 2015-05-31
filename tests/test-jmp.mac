@@ -1,0 +1,17 @@
+;;;;;
+;
+; Tests the addressing modes for JMP.
+; JMP Rx is not allowed, all other modes are.
+;
+
+start:  jmp     end
+        jmp     r1              ; must fail
+        jmp     (r1)
+        jmp     (r1)+
+        jmp     @(r1)+
+        jmp     -(r1)
+        jmp     @-(r1)
+        jmp     1234(r1)
+        jmp     @1234(r1)
+
+end:
