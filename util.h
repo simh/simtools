@@ -79,6 +79,9 @@ typedef unsigned long long ulong64;
 void            upcase(
     char *str);
 
+void            downcase(
+    char *str);
+
 void            padto(
     char *str,
     int to);

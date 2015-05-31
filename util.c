@@ -55,6 +55,18 @@ DAMAGE.
 #include <unistd.h>
 #endif
 
+static void my_searchenv1(
+    char *name,
+    char *envname,
+    char *hitfile,
+    int hitlen);
+
+static void my_searchenv2(
+    char *name,
+    char *envname,
+    char *hitfile,
+    int hitlen);
+
 /* Sure, the library typically provides some kind of
     ultoa or _ultoa function.  But since it's merely typical
     and not standard, and since the function is so simple,
@@ -118,12 +130,69 @@ char           *my_ltoa(
   environment variable.  I duplicate that function for portability.
   Note also that mine avoids destination buffer overruns.
 
-  Note: uses strtok.  This means it'll screw you up if you
-  expect your strtok context to remain intact when you use
-  this function.
+  Added functionality to lowercase the file name and to remove the
+  device name and directory.
 */
 
 void my_searchenv(
+    char *name,
+    char *envname,
+    char *hitfile,
+    int hitlen)
+{
+    my_searchenv1(name, envname, hitfile, hitlen);
+    if (*hitfile) {
+        return;
+    }
+
+    char *copy = memcheck(strdup(name));
+    downcase(copy);
+    my_searchenv1(copy, envname, hitfile, hitlen);
+    free(copy);
+}
+
+static void my_searchenv1(
+    char *name,
+    char *envname,
+    char *hitfile,
+    int hitlen)
+{
+    my_searchenv2(name, envname, hitfile, hitlen);
+    if (*hitfile) {
+        return;
+    }
+
+    /*
+     * Parse DEV:[DIR]NAME
+     * while re-trying the search after DEV: and after [DIR].
+     *
+     * Let's not be too critical about the characters we allow in those.
+     */
+    char *p = name;
+    char c;
+
+    while ((c = *p++)) {
+        if (c == ':') {
+            my_searchenv2(p, envname, hitfile, hitlen);
+            if (*hitfile) {
+                return;
+            }
+        }
+        if (c == '[') {
+            char *enddir = strchr(p, ']');
+            if (enddir == NULL) {
+                return; /* weird syntax */
+            }
+            p = enddir + 1;
+            my_searchenv2(p, envname, hitfile, hitlen);
+            return;
+        }
+    }
+
+    return;
+}
+
+static void my_searchenv2(
     char *name,
     char *envname,
     char *hitfile,
@@ -211,6 +280,17 @@ void upcase(
 {
     while (*str) {
         *str = toupper((unsigned char)*str);
+        str++;
+    }
+}
+
+/* downcase turns a string to lower case */
+
+void downcase(
+    char *str)
+{
+    while (*str) {
+        *str = tolower((unsigned char)*str);
         str++;
     }
 }
