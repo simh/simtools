@@ -86,8 +86,31 @@ static void print_version(
     fprintf(strm, "  modified 2015 by Olaf 'Rhialto' Seibert.\n");
 }
 
+static void append_env(
+    char *envname,
+    char *value)
+{
+    char           *env = getenv(envname);
+    char           *temp;
 
-//JH:
+    if (env == NULL)
+        env = "";
+
+    temp = memcheck(malloc(strlen(envname) +
+                           1 +
+                           strlen(env) +
+                           1 +
+                           strlen(value) +
+                           1));
+    strcpy(temp, envname);
+    strcat(temp, "=");
+    strcat(temp, env);
+    strcat(temp, PATHSEP);
+    strcat(temp, value);
+    putenv(temp);
+}
+
+/*JH:*/
 static void print_help(
     void)
 {
@@ -116,6 +139,8 @@ static void print_help(
     printf("-o  gives the object file name (.OBJ)\n");
     printf("-p  gives the name of a directory in which .MCALLed macros may be found.\n");
     printf("    Sets environment variable \"MCALL\".\n");
+    printf("-I  gives the name of a directory in which .included files may be found.\n");
+    printf("    Sets environment variable \"INCLUDE\".\n");
 
     printf("-v  print version\n");
     printf("    Violates DEC standard, but sometimes needed\n");
@@ -210,22 +235,24 @@ int main(
                 /* P for search path */
                 /* The -p option gives the name of a directory in
                    which .MCALLed macros may be found.  */  {
-                    char           *env = getenv("MCALL");
-                    char           *temp;
 
                     if(arg >= argc-1 || *argv[arg+1] == '-') {
                         usage("-p must be followed by a macro search directory\n");
                     }
 
-                    if (env == NULL)
-                        env = "";
+                    append_env("MCALL", argv[arg+1]);
+                    arg++;
+                }
+            } else if (!stricmp(cp, "I")) {
+                /* I for include path */
+                /* The -I option gives the name of a directory in
+                   which .included files may be found.  */  {
 
-                    temp = memcheck(malloc(strlen(env) + strlen(argv[arg + 1]) + 8));
-                    strcpy(temp, "MCALL=");
-                    strcat(temp, env);
-                    strcat(temp, PATHSEP);
-                    strcat(temp, argv[arg + 1]);
-                    putenv(temp);
+                    if(arg >= argc-1 || *argv[arg+1] == '-') {
+                        usage("-I must be followed by a include file search directory\n");
+                    }
+                    append_env("INCLUDE", argv[arg+1]);
+
                     arg++;
                 }
             } else if (!stricmp(cp, "o")) {

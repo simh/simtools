@@ -461,20 +461,26 @@ static int assemble(
                     {
                         char           *name = getstring_fn(cp, &cp);
                         STREAM         *incl;
+                        char            hitfile[FILENAME_MAX];
 
                         if (name == NULL) {
                             report(stack->top, "Bad .INCLUDE file name\n");
                             return 0;
                         }
 
-                        incl = new_file_stream(name);
-                        if (incl == NULL) {
-                            report(stack->top, "Unable to open .INCLUDE file %s\n", name);
-                            free(name);
+                        my_searchenv(name, "INCLUDE", hitfile, sizeof(hitfile));
+                        free(name);
+
+                        if (hitfile[0] == '\0') {
+                            report(stack->top, "Unable to find .INCLUDE file \"%s\"\n", name);
                             return 0;
                         }
 
-                        free(name);
+                        incl = new_file_stream(hitfile);
+                        if (incl == NULL) {
+                            report(stack->top, "Unable to open .INCLUDE file \"%s\"\n", hitfile);
+                            return 0;
+                        }
 
                         stack_push(stack, incl);
 
