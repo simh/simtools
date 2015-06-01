@@ -6,7 +6,18 @@
 # If there is a .objd.ok file, it compares the result of dumpobj.
 #
 
-TESTS="test-asciz test-backpatch test-bsl-mac-arg test-complex-reloc test-endm test-include test-jmp test-locals test-macro-comma test-undef test-word-comma"
+TESTS="test-asciz \
+    test-backpatch \
+    test-bsl-mac-arg \
+    test-complex-reloc \
+    test-endm \
+    test-impword \
+    test-include \
+    test-jmp \
+    test-locals \
+    test-macro-comma \
+    test-undef \
+    test-word-comma"
 
 for t in $TESTS
 do

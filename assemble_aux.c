@@ -653,9 +653,14 @@ int do_word(
         } else {
             EX_TREE        *value = parse_expr(cp, 0);
 
-            store_value(stack, tr, size, value);
+            if (value->cp > cp) {
+                store_value(stack, tr, size, value);
 
-            cp = value->cp;
+                cp = value->cp;
+            } else {
+                report(stack->top, "Invalid expression in .WORD\n");
+                cp = "";                /* force loop to end */
+            }
 
             free_tree(value);
         }
