@@ -780,7 +780,8 @@ static int assemble(
                             if (label[0] == 'N') {
                                 ok = !ok;
                             }
-                        } else if (strcmp(label, "IDN") == 0) {
+                        } else if (strcmp(label, "IDN") == 0 ||
+                                   strcmp(label, "DIF") == 0) {
                             char           *thing1,
                                            *thing2;
 
@@ -791,19 +792,9 @@ static int assemble(
                             else
                                 thing2 = memcheck(strdup(""));
                             ok = (strcmp(thing1, thing2) == 0);
-                            free(thing1);
-                            free(thing2);
-                        } else if (strcmp(label, "DIF") == 0) {
-                            char           *thing1,
-                                           *thing2;
-
-                            thing1 = getstring(cp, &cp);
-                            cp = skipdelim(cp);
-                            if (!EOL(*cp))
-                                thing2 = getstring(cp, &cp);
-                            else
-                                thing2 = memcheck(strdup(""));
-                            ok = (strcmp(thing1, thing2) != 0);
+                            if (label[0] == 'D') {
+                                ok = !ok;
+                            }
                             free(thing1);
                             free(thing2);
                         } else {
