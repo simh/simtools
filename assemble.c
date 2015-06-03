@@ -543,7 +543,7 @@ static int assemble(
                                 nr_mlbs++;
                             }
                         } else {
-                            report(stack->top, "Unable to locale macro library \"%s\"\n", name);
+                            report(stack->top, "Unable to locate macro library \"%s\"\n", name);
                         }
                         free(name);
                     }
@@ -797,6 +797,10 @@ static int assemble(
                             }
                             free(thing1);
                             free(thing2);
+                        } else if (strcmp(label, "P1") == 0) {
+                            ok = (pass == 0);
+                        } else if (strcmp(label, "P2") == 0) {
+                            ok = (pass == 1);
                         } else {
                             int             sword;
                             unsigned        uword;
