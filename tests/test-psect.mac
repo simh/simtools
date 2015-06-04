@@ -1,0 +1,12 @@
+;;;;;
+;
+; Contrary to what the manual says, flags in .PSECT directives
+; are merged. They do not need to be identical every time.
+;
+
+      .psect  $pdata
+      .iif P1, .psect  $pdata  ,ro,d,lcl,rel,con
+      .psect  $PDATA  ,D
+
+; and ends up with
+; $PDATA  000000    002   (RO,D,LCL,REL,CON)

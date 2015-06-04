@@ -83,6 +83,9 @@ char           *getstring(
  * but not
  * .include ^/name/ <name> name =name= :name:
  * .include :name: seems to be silently ignored.
+ *
+ * This should probably follow the exact same rules as .ASCII
+ * although that is not mentioned in the manual,
  */
 char           *getstring_fn(
     char *cp,
@@ -94,7 +97,6 @@ char           *getstring_fn(
 
     switch (*cp) {
     case '<':
-    case '=':
     case ':':
         return NULL;
     }

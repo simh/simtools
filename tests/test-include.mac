@@ -13,5 +13,5 @@
 
         .include <incl.mac>
         .include <incl.mac<
-        .include =incl.mac=
-        .include :incl.mac:
+        .include =incl.mac=             ; looks like assignment
+        .include :incl.mac:             ; looks like a label
