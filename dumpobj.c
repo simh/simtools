@@ -47,8 +47,10 @@ DAMAGE.
 
 #define WORD(cp) ((*(cp) & 0xff) + ((*((cp)+1) & 0xff) << 8))
 
+#define NPSECTS 256
+
 int             psectid = 0;
-char           *psects[256];
+char           *psects[NPSECTS];
 FILE           *bin = NULL;
 int             badbin = 0;
 int             xferad = 1;
@@ -367,6 +369,7 @@ void got_gsd(
                     flags);
             psects[psectid] = strdup(name);
             trim(psects[psectid++]);
+            psectid %= NPSECTS;
             break;
         case 6:
             sprintf(gsdline, "\tIDENT %s=%o flags=%o\n", name, value, flags);
@@ -406,6 +409,10 @@ void got_endgsd(
     (void)cp;
     (void)len;
 
+    if (nr_gsds == 0) {
+        return;
+    }
+
     qsort(all_gsds, nr_gsds, sizeof(char *), compare_gsdlines);
 
     printf("GSD:\n");
@@ -418,6 +425,9 @@ void got_endgsd(
     printf("ENDGSD\n");
 
     free(all_gsds);
+    all_gsds = NULL;
+    nr_gsds = 0;
+    gsdsize = 0;
 }
 
 unsigned        last_text_addr = 0;
