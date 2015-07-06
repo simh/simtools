@@ -31,14 +31,25 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
+modified 2009 by Joerg Hoppe,
+modified 2015 by Olaf 'Rhialto' Seibert.
 
 Files:
-    macro11.c       This is the vast bulk of the code
-    object.c        Functions for writing RT-11 compatible .OBJ files
-    mlb.c           Classes (!) for reading RT-11 macro libraries
-    stream2.c       Functions for managing input streams and buffers
-    rad50.c         Functions for converting text to and from RAD50
-    util.c          A few general utility fuctions
+    macro11.c       Command line parsing and driving the passes.
+    assemble.c      Handles all of the opcodes and directives.
+    assemble_aux.c  Helper functions mostly called from assemble().
+    assemble_globals.c Global variables for assemble().
+    extree.c        Expression tree: memory management and evaluation.
+    listing.c       Listing generation.
+    macros.c        Define macros and make them available as stream2s.
+    parse.c         Basic parsing for numbers, labels, strings, expressions
+    rept_irpc.c     stream2 subclass for processing .REPT and .IREPT.
+    object.c        Functions for writing RSX-11 compatible .OBJ files.
+    mlb-rsx.c       Classes (!) for reading RSX-11 macro libraries.
+    mlb.c           Classes (!) for reading RT-11 macro libraries.
+    stream2.c       Functions for managing input streams and buffers.
+    rad50.c         Functions for converting text to and from RAD50.
+    util.c          A few general utility fuctions.
 
     macro11.h, object.h, mlb.h, stream2.h, rad50.h, util.h
                     types and symbols exported from the associated sources.
@@ -47,12 +58,12 @@ Files:
                     RT-11's MACRO.SAV program and compare it with my
                     own output.
 
-    makefile, depends
-                    A simple makfile for Linux; simple enough, it
+    Makefile        A GNU makefile for Linux; simple enough, it
                     should be convertible to any Unix.
+                    Contains automatic dependency generation.
 
     macro11.dsp, dumpobj.dsp, macro11.dsw
-                    Visual Studio 6 projects
+                    Visual Studio 6 projects. Out of date.
 
     README          This file
 
@@ -69,10 +80,17 @@ Sorry, I am a believer in 4 column hardware tabs, for a number of
 reasons, mostly regarding editing convenience.  (I did untabify this
 README file though.)
 
-The bulk of my development was done in Microsoft Visual Studio 6, but
-I also have a Linux partition and the Cygnus Windows toolkit, so you
-can send me "patches" and I will be able to apply them with the
-"patch" utility.
+The bulk of Richard's development was done in Microsoft Visual Studio 6,
+but currently Olaf maintains it using a Unix (NetBSD) system. I build
+with gcc and a lot of warning options, and from time to time check with
+a Linux system which has a different gcc version, and clang. The Visual
+Studio project files are out of date.
+
+Richard used the MACRO11 from RT-11 as reference, but I use the one
+from RSX-11M+. It turns out there are some small file format
+differences. I used the dumpobj command to compare the output of this
+macro11 with the reference version when assembling Kermit-11 source
+files, and currently there seem to be no significant differences.
 
 The macro11 command line:
 
@@ -104,6 +122,15 @@ Options:
                     options appends a directory name to the MCALL
                     path.
 
+    -I incpath      For any .INCLUDE <file> directive, macro11 will
+                    search the INCLUDE path for a file named <file>
+                    to include. The INCLUDE path works like the MCALL
+                    path. If not specified at all, the default is the
+                    current directory.  If <file> contains a drive
+                    and/or directory in RSX/RT-11 form
+                    (DEV:[DIR]FILE.EXT) then the search is also tried
+                    without DEV: and without DEV:[DIR].
+
     -o objname      Gives the name of the object file.  No extension
                     is assumed; if you want .OBJ you have to say it.
                     With no -o option, no object file is generated.
@@ -119,10 +146,24 @@ Options:
                     macro libraries into individual .MAC files in the
                     current directory.  This should be the last option
                     given, as none following will be processed.
+                    This also works for extracting an object library
+                    (.OLB) file.
+
+    Various options starting with -y enable extensions:
+
+    -ysl <num>      Allow longer symbols up to the given length.
+                    The maximal allowed value is 64.
+
+    -yus            Allow underscore in symbol names.
+
+    -yl1            Include the processing of the first pass in the
+                    listing file. This may be useful for finding
+                    phase errors.
 
     files...        Any number of input files.  They will be assembled
                     as if they were concatenated together.
 
 
-You may define the MCALL environment variable prior to invoking
-macro11, as a path to directories containing macros.
+You may define the MCALL and INCLUDE environment variable prior to
+invoking macro11, as a path to directories containing macros or files to
+be included, respectively.
