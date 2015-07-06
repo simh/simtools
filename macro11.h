@@ -1,9 +1,17 @@
 #ifndef MACRO11_H
 #define MACRO11_H
 
-#define VERSIONSTR "0.4wip (22 May 2015)"
+#include "git-info.h"
+
+#define BASE_VERSION "0.4wip"
+
+#if defined(GIT_VERSION)
+#define VERSIONSTR BASE_VERSION" ("GIT_VERSION"\n\t"GIT_AUTHOR_DATE")"
+#else
+#define VERSIONSTR BASE_VERSION" (21 June 2015)"
 /*#define VERSIONSTR "0.3 (April 21, 2009)" */
 /*#define VERSIONSTR "0.2   July 15, 2001"  */
+#endif
 
 
 /*

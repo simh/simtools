@@ -1,0 +1,21 @@
+#!/bin/sh
+
+desc=$(git describe --tags)
+
+if [ "$desc" = "" ]
+then
+    echo "#undef GIT_VERSION" > new-git-info.h
+else
+    auth=$(git log -n 1 "--pretty=format:%an <%ae> %aD")
+
+    echo "#define GIT_VERSION      "'"'"$desc"'"' >new-git-info.h
+    echo "#define GIT_AUTHOR_DATE  "'"'"$auth"'"' >>new-git-info.h
+fi
+
+# move-if-different
+if diff new-git-info.h git-info.h >/dev/null 2>&1
+then
+    rm new-git-info.h
+else
+    mv new-git-info.h git-info.h
+fi

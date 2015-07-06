@@ -24,7 +24,7 @@ all: macro11 dumpobj
 tags: macro11 dumpobj
 	ctags *.c *.h
 
-macro11: $(MACRO11_OBJS) Makefile
+macro11: git-info.h $(MACRO11_OBJS) Makefile
 	$(CC) $(CFLAGS) -o macro11 $(MACRO11_OBJS) -lm
 
 dumpobj: $(DUMPOBJ_OBJS) Makefile
@@ -33,9 +33,13 @@ dumpobj: $(DUMPOBJ_OBJS) Makefile
 $(MACRO11_OBJS): Makefile
 $(DUMPOBJ_OBJS): Makefile
 
+git-info.h:
+	./make-git-info
+
 clean:
 	-rm -f $(MACRO11_OBJS) $(DUMPOBJ_OBJS) macro11 dumpobj
 	-rm -f *.d
+	-rm -f git-info.h
 
 # Since the only tests we have so far are for crashes,
 # just try to assemble. Later, we will need expected/actual tests.
@@ -63,8 +67,10 @@ tests: macro11 argtests
 
 -include $(ALL_SRCS:.c=.d)
 
-%.d: %.c
-	@set -e; rm -f $@; \
+# Make .d files as side effect of compiling .c to .o
+%.d %.o: %.c
+	$(CC) $(CFLAGS) -c -o $*.o $<
+	@set -e; rm -f $*.d; \
 	    $(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
-	    sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	    sed 's,\($*\)\.o[ :]*,\1.o \1.d : ,g' < $@.$$$$ > $*.d; \
 	    rm -f $@.$$$$
