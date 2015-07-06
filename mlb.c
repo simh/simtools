@@ -57,8 +57,6 @@ DAMAGE.
 
 #define BYTEPOS(rec) ((WORD((rec)+4) & 32767) * 512 + (WORD((rec)+6) & 511))
 
-extern FILE    *lstfile;
-
 /* compare_position is the qsort callback function that compares byte
    locations within the macro library */
 static int compare_position(

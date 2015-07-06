@@ -165,15 +165,10 @@ DAMAGE.
 
 #define WORD(cp) ((*(cp) & 0xff) + ((*((cp)+1) & 0xff) << 8))
 
-/* BYTEPOS calculates the byte position within the macro libray file.
-   I use this to sort the entries by their start position, in order to
-   be able to calculate the entries' sizes, which isn't actually
-   stored in the directory. */
+/* BYTEPOS calculates the byte position within the macro libray file. */
 
 #define BYTEPOS(rec) (((WORD((rec)+4) & 32767) - 1) * BLOCKSIZE + \
                        (WORD((rec)+6) & 511))
-
-extern FILE    *lstfile;
 
 /* trim removes trailing blanks from a string. */
 static void trim(
@@ -252,8 +247,7 @@ MLB            *mlb_open(
         return NULL;
     }
 
-    /* Shift occupied directory entries to the front of the array
-       before sorting */
+    /* Shift occupied directory entries to the front of the array */
     {
         int             j;
 
