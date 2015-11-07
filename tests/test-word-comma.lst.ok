@@ -1,0 +1,24 @@
+       1                                
+       2 000000 000123                  start:  .word   123    ; 1 word
+       3 000002 000000                          .word          ; 1 word
+       4 000004 000001  000000                  .word   1,     ; 2 words
+       5 000010 000000  000002                  .word   ,2     ; 2 words
+       6 000014 000000  000000                  .word   ,      ; 2 words
+       7 000020 000000  000000  000000          .word   ,,     ; 3 words
+       8 000026 000001  000000  000000          .word   1,,    ; 3 words
+       9 000034 000000  000000  000003          .word   ,,3    ; 3 words
+      10 000042 000001  000000  000003          .word   1,,3   ; 3 words
+      11 000050 000001  000002  000003          .word   1,2,3  ; 3 words
+      12                                
+      12                                
+
+
+Symbol table
+
+.      ******R      001 START  000000R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000056    001   (RW,I,LCL,REL,CON,NOSAV)

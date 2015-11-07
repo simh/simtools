@@ -1,0 +1,26 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test the implied .word construction
+       4                                ;
+       5                                
+       6 000000 000003                  start:	3
+       7 000002 000000'                 	start
+       8                                        ; The following could be a macro which by accident is not defined
+       9                                        ; which takes arguments that don't parse as expressions.
+test-impword.mac:10: ***ERROR Invalid expression in .WORD
+      10 000004 000000G                 	macro	8-BIT,1,2,3
+      11                                        ; The following can by accident be parsed as an expression.
+      12 000006 000000G 150007  000001  	macro	7-BIT,1,2,3
+         000014 000002  000003          
+      12                                
+
+
+Symbol table
+
+.      ******R      001 MACRO =****** GX        START  000000R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000020    001   (RW,I,LCL,REL,CON,NOSAV)

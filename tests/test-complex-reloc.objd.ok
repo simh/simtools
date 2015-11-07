@@ -1,0 +1,26 @@
+GSD:
+	GLOBAL IE.ITS=0 REF ABS flags=100
+	GLOBAL IE.MON=0 REF ABS flags=100
+	MODNAME .MAIN.=0 flags=0
+	PSECT       =30  CON RW REL LCL I flags=40
+	PSECT . ABS.=0  OVR RW ABS GBL I flags=104
+	XFER . ABS.=1 flags=10
+ENDGSD
+RLD
+	Location counter definition +0
+TEXT ADDR=0 LEN=30
+	000000: 012767 000000 000000 000000 ........
+	000010: 000000 000000 000000 000000 ........
+	000020: 000000 000000 000000 000000 ........
+RLD
+	Complex 2=IE.ITS neg store 
+	Global 6=IE.ITS
+	Complex 10=IE.ITS neg store 
+	Complex 12=IE.ITS ^C store 
+	Complex 14=IE.ITS IE.MON + store 
+	Complex 16=IE.ITS IE.MON - store 
+	Complex 20=IE.ITS IE.MON * store 
+	Complex 22=IE.ITS IE.MON / store 
+	Complex 24=IE.ITS IE.MON & store 
+	Complex 26=IE.ITS IE.MON ! store 
+ENDMOD

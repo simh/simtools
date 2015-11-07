@@ -1,0 +1,49 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Tests the addressing modes for JMP.
+       4                                ; JMP Rx is not allowed, all other modes are.
+       5                                ;
+       6                                
+       7 000000 000167  000104          start:  jmp     label           ; rel(pc)       jumps to label
+       8 000004 000177  000100                  jmp     @label          ; @rel(pc)      does something else!
+       9 000010 000127  000110'                 jmp     #label          ; (pc)+         does something else!
+      10 000014 000137  000110'                 jmp     @#label         ; @(pc)+        jumps to label
+      11                                
+test-jmp.mac:12: ***ERROR JMP Rn is illegal
+      12 000020 000101                          jmp     r1              ; must fail
+      13 000022 000112                          jmp     (r2)
+      14 000024 000121                          jmp     (r1)+
+      15 000026 000131                          jmp     @(r1)+
+      16 000030 000141                          jmp     -(r1)
+      17 000032 000151                          jmp     @-(r1)
+      18 000034 000161  001234                  jmp     1234(r1)
+      19 000040 000171  001234                  jmp     @1234(r1)
+      20                                
+      21 000044 004067  000040          secnd:  jsr     r0,label        ; rel(pc)       jumps to label
+      22 000050 004077  000034                  jsr     r0,@label       ; @rel(pc)      does something else!
+      23 000054 004027  000110'                 jsr     r0,#label       ; (pc)+         does something else!
+      24 000060 004037  000110'                 jsr     r0,@#label      ; @(pc)+        jumps to label
+      25                                
+test-jmp.mac:26: ***ERROR JSR Rn,Rm is illegal
+      26 000064 004201                          jsr     r2,r1           ; must fail
+      27 000066 004312                          jsr     r3,(r2)
+      28 000070 004421                          jsr     r4,(r1)+
+      29 000072 004531                          jsr     r5,@(r1)+
+      30 000074 004241                          jsr     r2,-(r1)
+      31 000076 004351                          jsr     r3,@-(r1)
+      32 000100 004461  001234                  jsr     r4,1234(r1)
+      33 000104 004571  001234                  jsr     r5,@1234(r1)
+      34                                
+      35 000110 000207                  label:  rts     pc
+      35                                
+
+
+Symbol table
+
+.      ******R      001 LABEL  000110R      001 SECND  000044R      001 START  000000R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000112    001   (RW,I,LCL,REL,CON,NOSAV)

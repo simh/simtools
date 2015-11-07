@@ -1,0 +1,49 @@
+       1                                        .list me
+       2                                        .macro test x
+       3                                        .blkb x               ; test some directive that wants an expression
+       4                                        .endm
+       5                                
+       6        000010                          size = 10
+       7        000002                          foo = 2
+       8                                
+       9                                    ; likes:
+      10                                
+      11 000000                                 test size             ; not replaced by "10"
+       1        000000                          .blkb size               ; test some directive that wants an expression
+      12 000010                                 test \size            ; replaced by "10"
+       1        000010                          .blkb 10               ; test some directive that wants an expression
+      13 000020                                 test \<size>          ; ditto
+       1        000020                          .blkb 10               ; test some directive that wants an expression
+      14 000030                                 test \<size + foo>    ; replaced by "12"
+       1        000030                          .blkb 12               ; test some directive that wants an expression
+      15 000042                                 test ^/size + foo/    ; arg is "size + foo", not "12"
+       1        000042                          .blkb size + foo               ; test some directive that wants an expression
+      16                                
+      17                                    ; dislikes:
+      18                                
+      19 000054                                 test <\size>          ; parameter is \size, which might be ok for
+test-bsl-mac-arg.mac:19->TEST:1: ***ERROR Argument to .BLKB/.BLKW must be constant
+       1                                        .blkb \size               ; test some directive that wants an expression
+      20                                                              ; macros where the argument is used differently.
+      21 000054                                 test size + foo       ; gets split at the space
+       1        000054                          .blkb size               ; test some directive that wants an expression
+      22 000064                                 test /size + foo/     ; gets split at the space
+test-bsl-mac-arg.mac:22->TEST:1: ***ERROR Argument to .BLKB/.BLKW must be constant
+       1                                        .blkb /size               ; test some directive that wants an expression
+test-bsl-mac-arg.mac:23: ***ERROR Constant value required
+      23 000064                                 test \/size + foo/    ; invalid expression with division operator
+       1        000064                          .blkb 0               ; test some directive that wants an expression
+      24 000064                                 test \^/size + foo/   ; original dislikes this, but we accept it.
+       1        000064                          .blkb 12               ; test some directive that wants an expression
+      24                                
+
+
+Symbol table
+
+.      ******R      001 FOO   =000002           SIZE  =000010           
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000076    001   (RW,I,LCL,REL,CON,NOSAV)

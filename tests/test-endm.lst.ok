@@ -1,0 +1,67 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test nested macros and name on .ENDM
+       4                                ;
+       5                                
+       6                                    .macro      M1
+       7                                    .word       1
+       8                                    .endm       M1      ; ok
+       9                                
+      10 000000                             M1
+       1 000000 000001                      .word       1
+      11                                
+      12                                    .macro      M2
+      13                                    .word       2
+      14                                    .macro      M3
+      15                                    .word       3
+      16                                    .endm       M3      ; ok
+      17                                    .endm       M2      ; ok
+      18                                
+      19 000002                             M2
+       1 000002 000002                      .word       2
+       2                                    .macro      M3
+       3                                    .word       3
+       4                                    .endm       M3      ; ok
+      20 000004                             M3
+       1 000004 000003                      .word       3
+      21                                
+      22                                    .macro      M4
+      23                                    .word       4
+      24                                    .macro      M4
+      25                                    .endm       M4      ; ok
+      26                                    .endm       M4      ; ok
+      27                                
+      28 000006                             M4
+       1 000006 000004                      .word       4
+       2                                    .macro      M4
+       3                                    .endm       M4      ; ok
+      29 000010                             M4                  ; should be empty now
+      30                                
+      31                                    .macro      M5
+      32                                    .word       5
+      33                                    .macro      M5
+      34                                    .endm       notM5   ; wrong; detected when M5 is expanded
+      35                                    .endm       M5      ; ok
+      36                                
+      37 000010                             M5
+       1 000010 000005                      .word       5
+       2                                    .macro      M5
+test-endm.mac:37->M5:3: ***ERROR .ENDM 'NOTM5' does not match .MACRO 'M5'
+       3                                    .endm       notM5   ; wrong; detected when M5 is expanded
+      38 000012                             M5
+      39                                
+      40                                    .macro      M6
+test-endm.mac:41: ***ERROR .ENDM 'NOTM6' does not match .MACRO 'M6'
+      41                                    .endm       notM6   ; wrong
+      41                                
+
+
+Symbol table
+
+.      ******R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000012    001   (RW,I,LCL,REL,CON,NOSAV)
