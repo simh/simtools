@@ -446,10 +446,7 @@ EX_TREE        *evaluate(
             }
 
             /* Anything else returns verbatim */
-            res = new_ex_tree();
-            res->type = EX_ADD;
-            res->data.child.left = left;
-            res->data.child.right = right;
+            res = new_ex_bin(EX_ADD, left, right);
         }
         break;
 
@@ -525,10 +522,7 @@ EX_TREE        *evaluate(
             }
 
             /* Anything else returns verbatim */
-            res = new_ex_tree();
-            res->type = EX_SUB;
-            res->data.child.left = left;
-            res->data.child.right = right;
+            res = new_ex_bin(EX_SUB, left, right);
         }
         break;
 
@@ -590,10 +584,7 @@ EX_TREE        *evaluate(
             }
 
             /* Anything else returns verbatim */
-            res = new_ex_tree();
-            res->type = EX_MUL;
-            res->data.child.left = left;
-            res->data.child.right = right;
+            res = new_ex_bin(EX_MUL, left, right);
         }
         break;
 
@@ -621,10 +612,7 @@ EX_TREE        *evaluate(
             }
 
             /* Anything else returns verbatim */
-            res = new_ex_tree();
-            res->type = EX_DIV;
-            res->data.child.left = left;
-            res->data.child.right = right;
+            res = new_ex_bin(EX_DIV, left, right);
         }
         break;
 
@@ -669,10 +657,7 @@ EX_TREE        *evaluate(
             }
 
             /* Anything else returns verbatim */
-            res = new_ex_tree();
-            res->type = EX_AND;
-            res->data.child.left = left;
-            res->data.child.right = right;
+            res = new_ex_bin(EX_AND, left, right);
         }
         break;
 
@@ -717,10 +702,7 @@ EX_TREE        *evaluate(
             }
 
             /* Anything else returns verbatim */
-            res = new_ex_tree();
-            res->type = EX_OR;
-            res->data.child.left = left;
-            res->data.child.right = right;
+            res = new_ex_bin(EX_OR, left, right);
         }
         break;
     default:
@@ -773,3 +755,21 @@ EX_TREE        *new_ex_lit(
 
     return tp;
 }
+
+/* Create an EX_TREE representing a binary expression */
+
+EX_TREE        *new_ex_bin(
+    int type,
+    EX_TREE *left,
+    EX_TREE *right)
+{
+    EX_TREE        *tp;
+
+    tp = new_ex_tree();
+    tp->type = type;
+    tp->data.child.left = left;
+    tp->data.child.right = right;
+
+    return tp;
+}
+

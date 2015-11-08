@@ -434,10 +434,7 @@ EX_TREE        *parse_binary(
                 return leftp;
 
             rightp = parse_binary(cp + 1, term, ADD_PREC);
-            tp = new_ex_tree();
-            tp->type = EX_ADD;
-            tp->data.child.left = leftp;
-            tp->data.child.right = rightp;
+            tp = new_ex_bin(EX_ADD, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;
@@ -447,10 +444,7 @@ EX_TREE        *parse_binary(
                 return leftp;
 
             rightp = parse_binary(cp + 1, term, ADD_PREC);
-            tp = new_ex_tree();
-            tp->type = EX_SUB;
-            tp->data.child.left = leftp;
-            tp->data.child.right = rightp;
+            tp = new_ex_bin(EX_SUB, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;
@@ -460,10 +454,7 @@ EX_TREE        *parse_binary(
                 return leftp;
 
             rightp = parse_binary(cp + 1, term, MUL_PREC);
-            tp = new_ex_tree();
-            tp->type = EX_MUL;
-            tp->data.child.left = leftp;
-            tp->data.child.right = rightp;
+            tp = new_ex_bin(EX_MUL, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;
@@ -473,10 +464,7 @@ EX_TREE        *parse_binary(
                 return leftp;
 
             rightp = parse_binary(cp + 1, term, MUL_PREC);
-            tp = new_ex_tree();
-            tp->type = EX_DIV;
-            tp->data.child.left = leftp;
-            tp->data.child.right = rightp;
+            tp = new_ex_bin(EX_DIV, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;
@@ -486,10 +474,7 @@ EX_TREE        *parse_binary(
                 return leftp;
 
             rightp = parse_binary(cp + 1, term, OR_PREC);
-            tp = new_ex_tree();
-            tp->type = EX_OR;
-            tp->data.child.left = leftp;
-            tp->data.child.right = rightp;
+            tp = new_ex_bin(EX_OR, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;
@@ -499,10 +484,7 @@ EX_TREE        *parse_binary(
                 return leftp;
 
             rightp = parse_binary(cp + 1, term, AND_PREC);
-            tp = new_ex_tree();
-            tp->type = EX_AND;
-            tp->data.child.left = leftp;
-            tp->data.child.right = rightp;
+            tp = new_ex_bin(EX_AND, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;

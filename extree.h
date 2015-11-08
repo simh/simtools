@@ -57,6 +57,10 @@ EX_TREE        *new_ex_lit(
 EX_TREE        *ex_err(
     EX_TREE *tp,
     char *cp);
+EX_TREE        *new_ex_bin(
+    int type,
+    EX_TREE *left,
+    EX_TREE *right);
 
 EX_TREE        *evaluate(
     EX_TREE *tp,
