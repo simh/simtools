@@ -130,21 +130,20 @@ void free_tree(
     case EX_TEMP_SYM:
         free(tp->data.symbol->label);
         free(tp->data.symbol);
+        break;
+
     case EX_LIT:
     case EX_SYM:
-        free(tp);
         break;
 
     case EX_COM:
     case EX_NEG:
         free_tree(tp->data.child.left);
-        free(tp);
         break;
 
     case EX_ERR:
         if (tp->data.child.left)
             free_tree(tp->data.child.left);
-        free(tp);
         break;
 
     case EX_ADD:
@@ -155,9 +154,9 @@ void free_tree(
     case EX_OR:
         free_tree(tp->data.child.left);
         free_tree(tp->data.child.right);
-        free(tp);
         break;
     }
+    free(tp);
 }
 
 /* new_temp_sym allocates a new EX_TREE entry of type "TEMPORARY
