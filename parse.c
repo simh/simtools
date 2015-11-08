@@ -792,9 +792,7 @@ EX_TREE        *parse_unary(
     if (*cp == '\'') {
         /* 'x single ASCII character */
         cp++;
-        tp = new_ex_tree();
-        tp->type = EX_LIT;
-        tp->data.lit = *cp & 0xff;
+        tp = new_ex_lit(*cp & 0xff);
         tp->cp = ++cp;
         return tp;
     }
@@ -802,9 +800,7 @@ EX_TREE        *parse_unary(
     if (*cp == '\"') {
         /* "xx ASCII character pair */
         cp++;
-        tp = new_ex_tree();
-        tp->type = EX_LIT;
-        tp->data.lit = (cp[0] & 0xff) | ((cp[1] & 0xff) << 8);
+        tp = new_ex_lit((cp[0] & 0xff) | ((cp[1] & 0xff) << 8));
         tp->cp = cp + 2;
         return tp;
     }
@@ -832,9 +828,7 @@ EX_TREE        *parse_unary(
             if (*endcp == '.')
                 endcp++;
 
-            tp = new_ex_tree();
-            tp->type = EX_LIT;
-            tp->data.lit = value;
+            tp = new_ex_lit(value);
             tp->cp = endcp;
 
             return tp;
