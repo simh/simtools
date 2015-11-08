@@ -485,7 +485,7 @@ EX_TREE        *parse_binary(
             if (depth >= OR_PREC)
                 return leftp;
 
-            rightp = parse_binary(cp + 1, term, 2);
+            rightp = parse_binary(cp + 1, term, OR_PREC);
             tp = new_ex_tree();
             tp->type = EX_OR;
             tp->data.child.left = leftp;
