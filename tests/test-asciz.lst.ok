@@ -43,7 +43,10 @@ test-asciz.mac:20: ***ERROR Invalid expression
 test-asciz.mac:20: ***ERROR Invalid expression
       20 000076 000000  000000  000000          .asciz :###:                    ; syntax error: colon not allowed
          000104 000000                  
-      20                                
+      21 000106    043     043     043          .asciz ^###^                    ; previous versions of this macro11
+         000111    000                  
+      22                                	; used ^/.../ quoting as an extension; however this should be ^...^.
+      22                                
 
 
 Symbol table
@@ -54,4 +57,4 @@ Symbol table
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000106    001   (RW,I,LCL,REL,CON,NOSAV)
+        000112    001   (RW,I,LCL,REL,CON,NOSAV)

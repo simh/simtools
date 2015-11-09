@@ -1122,11 +1122,10 @@ static int assemble(
                 case P_ASCIZ:
                 case P_ASCII:
                     {
-                        EX_TREE        *value;
-
                         do {
                             cp = skipwhite(cp);
-                            if (*cp == '<' || *cp == '^') {
+                            if (*cp == '<') {
+                                EX_TREE        *value;
                                 /* A byte value */
                                 value = parse_unary_expr(cp, 0);
                                 cp = value->cp;

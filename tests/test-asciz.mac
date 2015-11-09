@@ -18,3 +18,5 @@ SOH = 1
         .asciz =###=                    ; syntax error: assignment
         .asciz :SOH:                    ; syntax error: colon not allowed
         .asciz :###:                    ; syntax error: colon not allowed
+        .asciz ^###^                    ; previous versions of this macro11
+	; used ^/.../ quoting as an extension; however this should be ^...^.
