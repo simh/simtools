@@ -152,13 +152,8 @@ DAMAGE.
 #include <string.h>
 
 #include "rad50.h"
-
 #include "stream2.h"
-
 #include "mlb.h"
-
-#include "macro11.h"
-
 #include "util.h"
 
 #define BLOCKSIZE               512

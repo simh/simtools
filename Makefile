@@ -36,6 +36,10 @@ $(DUMPOBJ_OBJS): Makefile
 git-info.h:
 	./make-git-info
 
+# Bootstrap dependency on the git header file, which otherwise
+# gets generated too late.
+macro11.o: git-info.h
+
 clean:
 	-rm -f $(MACRO11_OBJS) $(DUMPOBJ_OBJS) macro11 dumpobj
 	-rm -f *.d
@@ -65,7 +69,9 @@ tests: macro11 argtests
 
 # Automatic dependency generation
 
+ifneq ($(MAKECMDGOALS),clean)
 -include $(ALL_SRCS:.c=.d)
+endif
 
 # Make .d files as side effect of compiling .c to .o
 %.d %.o: %.c
