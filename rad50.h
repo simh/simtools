@@ -46,4 +46,11 @@ extern void     unrad50(
     unsigned word,
     char *cp);
 
+int ascii2rad50(
+    char c);
+
+unsigned packrad50word(
+    char *cp,
+    int len);
+
 #endif /* RAD50_H */

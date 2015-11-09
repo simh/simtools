@@ -118,3 +118,43 @@ void unrad50(
     } else
         cp[0] = cp[1] = cp[2] = ' ';
 }
+
+/* ascii2rad50 - convert a single character to a RAD50 character */
+
+int ascii2rad50(
+    char c)
+{
+    char           *rp;
+
+    if (c == '\0')                     /* Not a RAD50 character */
+        return -1;
+    rp = strchr(radtbl, toupper((unsigned char)c));
+    if (rp == NULL)                    /* Not a RAD50 character */
+        return -1;
+    return (int) (rp - radtbl);        /* Convert */
+}
+
+/* packrad50word - packs up to 3 characters into a RAD50 word.
+ *
+ * The characters should be in the range [0, 050),
+ * such as having been converted by ascii2rad50().
+ */
+
+unsigned packrad50word(
+    char *cp,
+    int len)
+{
+    unsigned long   acc = 0;
+
+    if (len >= 1) {
+        acc += (cp[0] % 050) * 050 * 050;
+    }
+    if (len >= 2) {
+        acc += (cp[1] % 050) * 050;
+    }
+    if (len >= 3) {
+        acc += cp[2] % 050;
+    }
+
+    return acc;
+}

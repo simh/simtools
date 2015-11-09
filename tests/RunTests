@@ -17,6 +17,7 @@ TESTS="test-asciz \
     test-locals \
     test-macro-comma \
     test-psect \
+    test-rad50 \
     test-undef \
     test-word-comma"
 

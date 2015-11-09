@@ -1154,33 +1154,60 @@ static int assemble(
                         report(stack->top, ".RAD50 on odd " "boundary\n");
                         DOT++;         /* Fix it */
                     }
-
-                    while (!EOL(*cp)) {
-                        char            endstr[6];
-                        int             len;
+                    {
                         char           *radstr;
-                        char           *radp;
+                        int             i, len;
 
-                        endstr[0] = *cp++;
-                        endstr[1] = '\n';
-                        endstr[2] = 0;
+                        /*
+                         * Allocate storage sufficient for the rest of
+                         * the line.
+                         */
+                        radstr = memcheck(malloc(strlen(cp)));
+                        len = 0;
 
-                        len = strcspn(cp, endstr);
-                        radstr = memcheck(malloc(len + 1));
-                        memcpy(radstr, cp, len);
-                        radstr[len] = 0;
-                        cp += len;
-                        if (*cp && *cp != '\n')
-                            cp++;
-                        for (radp = radstr; *radp;) {
-                            unsigned        rad;
+                        do {
+                            cp = skipwhite(cp);
+                            if (*cp == '<') {
+                                EX_TREE        *value;
+                                /* A byte value */
+                                value = parse_unary_expr(cp, 0);
+                                cp = value->cp;
+                                if (value->type != EX_LIT) {
+                                    report(stack->top, "expression must be constant\n");
+                                    radstr[len++] = 0;
+                                } else if (value->data.lit >= 050) {
+                                    report(stack->top, "invalid character value %o\n", value->data.lit);
+                                    radstr[len++] = 0;
+                                } else {
+                                    radstr[len++] = value->data.lit;
+                                }
+                                free_tree(value);
+                            } else {
+                                char            quote = *cp++;
 
-                            rad = rad50(radp, &radp);
-                            store_word(stack->top, tr, 2, rad);
+                                while (*cp && *cp != '\n' && *cp != quote) {
+                                    int         ch = ascii2rad50(*cp++);
+
+                                    if (ch == -1) {
+                                        report(stack->top, "invalid character '%c'\n", cp[-1]);
+                                        radstr[len++] = 0;
+                                    } else {
+                                        radstr[len++] = ch;
+                                    }
+
+                                }
+                                cp++;  /* Skip closing quote */
+                            }
+
+                            cp = skipwhite(cp);
+                        } while (!EOL(*cp));
+
+                        for (i = 0; i < len; i += 3) {
+                            int word = packrad50word(radstr + i, len - i);
+                            store_word(stack->top, tr, 2, word);
                         }
-                        free(radstr);
 
-                        cp = skipwhite(cp);
+                        free(radstr);
                     }
                     return 1;
 

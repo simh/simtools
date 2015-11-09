@@ -1,0 +1,47 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test .rad50 directive
+       4                                ;
+       5                                ;
+       6                                ; 0	space
+       7                                ; 01-32	A-Z
+       8                                ; 33	$
+       9                                ; 34	.
+      10                                ; 35	(undefined)
+      11                                ; 36-47	0-9
+      12                                ;
+      13                                ; radix-50 value: ((C1 * 50) + C2) * 50) + C3	; everything octal of course
+      14                                ; example: ABC => ((1*50)+2)*50+3 = 3223
+      15                                
+      16 000000 003223                  	.rad50	/ABC/		; Packs ABC into one word
+      17 000002 003223                  	.rad50	^ABC^		; Packs ABC into one word
+      18 000004 003220                  	.rad50	/AB/		; Packs AB (SPACE) into one word
+      19 000006 003223  014400          	.rad50	/ABCD/		; Packs ABC into first word and
+      20                                				; D (SPACE) (SPACE) into second word.
+      21 000012 003223  014716          	.rad50	/ABCDEF/	; Packs ABC into first word, DEF into
+      22                                				; second word.
+      23 000016 003255                  	.rad50	/AB/<35>	; stores 3255 in one word
+test-rad50.mac:24: ***ERROR invalid character '?'
+test-rad50.mac:24: ***ERROR invalid character '!'
+test-rad50.mac:24: ***ERROR invalid character '='
+      24 000020 000000                  	.rad50	/?!=/ 		; invalid characters
+test-rad50.mac:25: ***ERROR invalid character value 50
+test-rad50.mac:25: ***ERROR invalid character value 37777777777
+      25 000022 000000                  	.rad50 <0><50><-1>	; invalid characters
+      26        000001                  	CHR1=1
+      27        000002                  	CHR2=2
+      28        000003                  	CHR3=3
+      29 000024 003223                  	.RAD50	<1><2><3>	; Equivalent to .RAD50 /ABC/
+      30 000026 003223                  	.RAD50	<CHR1><CHR2><CHR3>	; Equivalent to .RAD50 /ABC/
+      30                                
+
+
+Symbol table
+
+.      ******R      001 CHR1  =000001           CHR2  =000002           CHR3  =000003           
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000030    001   (RW,I,LCL,REL,CON,NOSAV)
