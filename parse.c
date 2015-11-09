@@ -722,7 +722,7 @@ EX_TREE        *parse_unary(
             radix = save_radix;
             return tp;
         case 'x':
-            /* An enhancement!  ^X, hexadecimal radix modifier */
+            /* ^X, hexadecimal radix modifier */
             save_radix = radix;
             radix = 16;
             tp = parse_unary(cp + 2);
@@ -735,7 +735,7 @@ EX_TREE        *parse_unary(
                 char           *endcp;
                 unsigned        value;
 
-                cp += 2;
+                cp += 2; /* bracketed range is an extension */
                 if (brackrange(cp, &start, &len, &endcp))
                     value = rad50(cp + start, NULL);
                 else
