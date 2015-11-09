@@ -16,6 +16,7 @@ TESTS="test-asciz \
     test-jmp \
     test-locals \
     test-macro-comma \
+    test-prec \
     test-psect \
     test-rad50 \
     test-undef \
