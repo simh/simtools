@@ -1,0 +1,14 @@
+        ; test complex relocations
+
+        ; .globl  IE.ITS,IE.MON ; implicit
+        mov     #-IE.ITS, space
+
+space:  .word   IE.ITS    ; the only simple relocation
+        .word   -IE.ITS   ; all others are complex relocations
+        .word   ^C<IE.ITS>
+        .word   IE.ITS + IE.MON
+        .word   IE.ITS - IE.MON
+        .word   IE.ITS * IE.MON
+        .word   IE.ITS / IE.MON
+        .word   IE.ITS & IE.MON
+        .word   IE.ITS ! IE.MON

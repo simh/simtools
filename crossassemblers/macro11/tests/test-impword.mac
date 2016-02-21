@@ -1,0 +1,12 @@
+;;;;;
+;
+; Test the implied .word construction
+;
+
+start:	3
+	start
+        ; The following could be a macro which by accident is not defined
+        ; which takes arguments that don't parse as expressions.
+	macro	8-BIT,1,2,3
+        ; The following can by accident be parsed as an expression.
+	macro	7-BIT,1,2,3

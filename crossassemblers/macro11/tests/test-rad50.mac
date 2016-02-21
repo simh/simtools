@@ -1,0 +1,30 @@
+;;;;;
+;
+; Test .rad50 directive
+;
+;
+; 0	space
+; 01-32	A-Z
+; 33	$
+; 34	.
+; 35	(undefined)
+; 36-47	0-9
+;
+; radix-50 value: ((C1 * 50) + C2) * 50) + C3	; everything octal of course
+; example: ABC => ((1*50)+2)*50+3 = 3223
+
+	.rad50	/ABC/		; Packs ABC into one word
+	.rad50	^ABC^		; Packs ABC into one word
+	.rad50	/AB/		; Packs AB (SPACE) into one word
+	.rad50	/ABCD/		; Packs ABC into first word and
+				; D (SPACE) (SPACE) into second word.
+	.rad50	/ABCDEF/	; Packs ABC into first word, DEF into
+				; second word.
+	.rad50	/AB/<35>	; stores 3255 in one word
+	.rad50	/?!=/ 		; invalid characters
+	.rad50 <0><50><-1>	; invalid characters
+	CHR1=1
+	CHR2=2
+	CHR3=3
+	.RAD50	<1><2><3>	; Equivalent to .RAD50 /ABC/
+	.RAD50	<CHR1><CHR2><CHR3>	; Equivalent to .RAD50 /ABC/

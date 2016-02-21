@@ -1,0 +1,60 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test delimiters of .ASCII and .ASCIZ
+       4                                
+       5        000015                  CR = 13.
+       6        000012                  LF = 10.
+       7        000001                  SOH = 1
+       8                                
+       9 000000    015     012     074          .asciz <cr><lf>/<SOH>/          ; 2 bytes and a string
+         000003    123     117     110  
+         000006    076     000          
+      10 000010    074     143     162          .asciz /<cr><lf><SOH>/          ; only a string
+         000013    076     074     154  
+         000016    146     076     074  
+         000021    123     117     110  
+         000024    076     000          
+      11 000026    074     143     162          .asciz |<cr><lf><SOH>|          ; the same string
+         000031    076     074     154  
+         000034    146     076     074  
+         000037    123     117     110  
+         000042    076     000          
+      12 000044    015     012     001          .ascii <cr><lf><SOH>            ; 3 bytes
+      13                                
+      14 000047    101     102     103          .asciz ;ABC;/DEF/               ; ABCDEF, not recommended practice
+         000052    104     105     106  
+         000055    000                  
+      15 000056    101     102     103          .asciz /ABC/;DEF;               ; ABC, not recommended practice
+         000061    000                  
+      16 000062    101     102     103          .asciz /ABC/=DEF=               ; ABCDEF, not recommended practice
+         000065    104     105     106  
+         000070    000                  
+test-asciz.mac:17: ***ERROR Complex expression cannot be assigned to a symbol
+      17                                        .asciz =DEF=                    ; syntax error: assignment
+test-asciz.mac:18: ***ERROR Complex expression cannot be assigned to a symbol
+      18                                        .asciz =###=                    ; syntax error: assignment
+test-asciz.mac:19: ***ERROR .WORD on odd boundary
+test-asciz.mac:19: ***ERROR Invalid expression
+      19 000071    000  000001  000000          .asciz :SOH:                    ; syntax error: colon not allowed
+test-asciz.mac:20: ***ERROR Illegal symbol definition .ASCIZ
+test-asciz.mac:20: ***ERROR Invalid expression
+test-asciz.mac:20: ***ERROR Invalid expression
+test-asciz.mac:20: ***ERROR Invalid expression
+test-asciz.mac:20: ***ERROR Invalid expression
+      20 000076 000000  000000  000000          .asciz :###:                    ; syntax error: colon not allowed
+         000104 000000                  
+      21 000106    043     043     043          .asciz ^###^                    ; previous versions of this macro11
+         000111    000                  
+      22                                	; used ^/.../ quoting as an extension; however this should be ^...^.
+      22                                
+
+
+Symbol table
+
+.      ******R      001 .ASCIZ 000071R      001 CR    =000015           LF    =000012           SOH   =000001           
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000112    001   (RW,I,LCL,REL,CON,NOSAV)

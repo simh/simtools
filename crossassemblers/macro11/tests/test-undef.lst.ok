@@ -1,0 +1,14 @@
+test-undef.mac:1: ***ERROR MACRO .TTYOU not found
+       1                                        .MCALL  .TTYOUT
+       1                                
+
+
+Symbol table
+
+.      ******R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)

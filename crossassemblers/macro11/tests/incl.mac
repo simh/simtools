@@ -1,0 +1,5 @@
+;;;;;
+;
+; file to be included
+
+	.word	1	; to show it is included

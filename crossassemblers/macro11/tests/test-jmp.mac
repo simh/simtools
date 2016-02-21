@@ -1,0 +1,35 @@
+;;;;;
+;
+; Tests the addressing modes for JMP.
+; JMP Rx is not allowed, all other modes are.
+;
+
+start:  jmp     label           ; rel(pc)       jumps to label
+        jmp     @label          ; @rel(pc)      does something else!
+        jmp     #label          ; (pc)+         does something else!
+        jmp     @#label         ; @(pc)+        jumps to label
+
+        jmp     r1              ; must fail
+        jmp     (r2)
+        jmp     (r1)+
+        jmp     @(r1)+
+        jmp     -(r1)
+        jmp     @-(r1)
+        jmp     1234(r1)
+        jmp     @1234(r1)
+
+secnd:  jsr     r0,label        ; rel(pc)       jumps to label
+        jsr     r0,@label       ; @rel(pc)      does something else!
+        jsr     r0,#label       ; (pc)+         does something else!
+        jsr     r0,@#label      ; @(pc)+        jumps to label
+
+        jsr     r2,r1           ; must fail
+        jsr     r3,(r2)
+        jsr     r4,(r1)+
+        jsr     r5,@(r1)+
+        jsr     r2,-(r1)
+        jsr     r3,@-(r1)
+        jsr     r4,1234(r1)
+        jsr     r5,@1234(r1)
+
+label:  rts     pc

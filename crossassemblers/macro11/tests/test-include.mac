@@ -1,0 +1,17 @@
+;;;;;
+;
+; Test some delimiters for the .INCLUDE directive
+;
+
+        .include "incl.mac"
+        .include /incl.mac/
+        .include \incl.mac\
+        .include ?incl.mac?
+        .include >incl.mac>
+
+; these are errors: (in MACRO V05.05, some terminate the assembler)
+
+        .include <incl.mac>
+        .include <incl.mac<
+        .include =incl.mac=             ; looks like assignment
+        .include :incl.mac:             ; looks like a label

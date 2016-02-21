@@ -1,0 +1,30 @@
+       1                                ;;;;
+       2                                ;
+       3                                ; Test backpatching (seen in Kermit sources).
+       4                                
+       5 000000                                 .psect  modinf  ,ro,d,lcl,rel,con
+       6                                
+       7        000000                  label = .
+       8        000000                          .blkb   50              ; create some data
+       9                                
+      10 000050    050     051     052          .byte   50,51,52        ; and some more
+      11                                        .save                   ; we're at 53 now
+      12 000053                                 .psect  modinf
+      13        000006                          . = label + 6
+      14 000006 000006                          .word   6               ; stored at 6
+      15 000053                                 .restore                ; . gets restored to 53
+      16 000053    053                          .byte   53
+      17                                
+      17                                
+
+
+Symbol table
+
+.      ******R      002 LABEL  000000R      002 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+MODINF  000054    002   (RO,D,LCL,REL,CON,NOSAV)

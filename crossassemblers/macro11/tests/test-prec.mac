@@ -1,0 +1,58 @@
+;;;;;
+;
+; Test operator precedencce
+; or rather the lack thereof
+;
+	.word	1 + 2 + 3	; 6
+	.word	1 + 2 * 3	; 3*3 = 11
+	.word	1 & 2 ! 4	; 0 ! 4 = 4
+	.word	1 ! 2 & 4	; 3 & 4 = 0
+	.word	1 ! 2 & 7	; 3 & 7 = 3
+	.word	1+1 ! 2+3	; 2!2+3 = 2+3 = 5
+
+;;;;;
+;
+; Test all operators at least once
+;
+	.word	3 + 4		; 000007
+	.word	4 - 3		; 000001
+	.word	3 * 4		; 000014
+	.word	12. / 4		; 000003
+	.word	123 & 771	; 000121
+	.word	123121 ! 322	; 123323
+
+	.word	- 377		; 177401
+	.word	+ 377		; 000377
+
+	.word	^C 377		; 177400
+	.word	^c 377		; 177400
+	.word	^B 0101010101010101	; 052525
+	.word	^b 1010101010101010	; 125252
+	.word	^d 100		; 000144
+	.word	100.		; 000144
+	.word	^x 100		; 000400 hexadecimal is an extension
+	.word	^rRAD		; 070254 up to 3 characters; no leading spaces
+	.word	^rA		; 003100 up to 3 characters
+	.word	^r A		; 000050 up to 3 characters
+	.word	^r  A		; 000001 up to 3 characters
+	.word	^r AA		; 000051
+	.word	^rA A		; 003101
+	.word	^rAA		; 003150
+	.word	^r^/AAA/	; bracketed strings are an extension
+	.word	^r<RAD>		; bracketed strings are an extension
+	.word	^r< AD>		; bracketed strings are an extension
+	.word	^r<  D>		; bracketed strings are an extension
+	.word	^r<R D>		; bracketed strings are an extension
+	.word	^r<RA >		; bracketed strings are an extension
+	.word	^R50.		; 157614 there is no whitespace in between.
+	.word	^f 1.5		; 040140
+
+;;;;;
+;
+; Test bracketing
+;
+	.word	1 + < 2 * 3 >	; 1 + 6 = 7
+	.word	1 + ^! 2 * 3 !	; 1 + 6 = 7
+	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
+	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
+	.word	1 + ^* 2 * 3 *	; Invalid expression

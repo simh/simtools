@@ -1,0 +1,72 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test operator precedencce
+       4                                ; or rather the lack thereof
+       5                                ;
+       6 000000 000006                  	.word	1 + 2 + 3	; 6
+       7 000002 000011                  	.word	1 + 2 * 3	; 3*3 = 11
+       8 000004 000004                  	.word	1 & 2 ! 4	; 0 ! 4 = 4
+       9 000006 000000                  	.word	1 ! 2 & 4	; 3 & 4 = 0
+      10 000010 000003                  	.word	1 ! 2 & 7	; 3 & 7 = 3
+      11 000012 000005                  	.word	1+1 ! 2+3	; 2!2+3 = 2+3 = 5
+      12                                
+      13                                ;;;;;
+      14                                ;
+      15                                ; Test all operators at least once
+      16                                ;
+      17 000014 000007                  	.word	3 + 4		; 000007
+      18 000016 000001                  	.word	4 - 3		; 000001
+      19 000020 000014                  	.word	3 * 4		; 000014
+      20 000022 000003                  	.word	12. / 4		; 000003
+      21 000024 000121                  	.word	123 & 771	; 000121
+      22 000026 123323                  	.word	123121 ! 322	; 123323
+      23                                
+      24 000030 177401                  	.word	- 377		; 177401
+      25 000032 000377                  	.word	+ 377		; 000377
+      26                                
+      27 000034 177400                  	.word	^C 377		; 177400
+      28 000036 177400                  	.word	^c 377		; 177400
+      29 000040 052525                  	.word	^B 0101010101010101	; 052525
+      30 000042 125252                  	.word	^b 1010101010101010	; 125252
+      31 000044 000144                  	.word	^d 100		; 000144
+      32 000046 000144                  	.word	100.		; 000144
+      33 000050 000400                  	.word	^x 100		; 000400 hexadecimal is an extension
+      34 000052 070254                  	.word	^rRAD		; 070254 up to 3 characters; no leading spaces
+      35 000054 003100                  	.word	^rA		; 003100 up to 3 characters
+      36 000056 000050                  	.word	^r A		; 000050 up to 3 characters
+      37 000060 000001                  	.word	^r  A		; 000001 up to 3 characters
+      38 000062 000051                  	.word	^r AA		; 000051
+      39 000064 003101                  	.word	^rA A		; 003101
+      40 000066 003150                  	.word	^rAA		; 003150
+      41 000070 003151                  	.word	^r^/AAA/	; bracketed strings are an extension
+      42 000072 070254                  	.word	^r<RAD>		; bracketed strings are an extension
+      43 000074 000054                  	.word	^r< AD>		; bracketed strings are an extension
+      44 000076 000004                  	.word	^r<  D>		; bracketed strings are an extension
+      45 000100 070204                  	.word	^r<R D>		; bracketed strings are an extension
+      46 000102 070250                  	.word	^r<RA >		; bracketed strings are an extension
+      47 000104 157614                  	.word	^R50.		; 157614 there is no whitespace in between.
+      48 000106 040140                  	.word	^f 1.5		; 040140
+      49                                
+      50                                ;;;;;
+      51                                ;
+      52                                ; Test bracketing
+      53                                ;
+      54 000110 000007                  	.word	1 + < 2 * 3 >	; 1 + 6 = 7
+      55 000112 000007                  	.word	1 + ^! 2 * 3 !	; 1 + 6 = 7
+      56 000114 000007                  	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
+      57 000116 000007                  	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
+test-prec.mac:58: ***ERROR Invalid expression
+      58 000120 000003  000000  000000G 	.word	1 + ^* 2 * 3 *	; Invalid expression
+         000126 000000G                 
+      58                                
+
+
+Symbol table
+
+.      ******R      001 EXPRES=****** GX        INVALI=****** GX        
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000130    001   (RW,I,LCL,REL,CON,NOSAV)

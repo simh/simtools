@@ -1,0 +1,33 @@
+;;;;;
+;
+; Test long local labels
+;
+
+lab1:   beq     1$
+1$:     bne     lab1
+
+; -- new scope
+    
+lab2a:  beq     12345$
+12345$: bne     lab2a
+
+; -- new scope
+    
+lab2b:  beq     12345$
+12345$: bne     lab2b
+
+; -- new scope
+
+lab3:   beq     1$
+1$:     bne     2$
+2$:     beq     3$
+3$:     beq     4$
+4$:     beq     lab3
+
+; -- new scope
+
+lab4:   beq     1$
+1$:     bne     2$
+2$:     beq     3$
+3$:     beq     4$
+4$:     beq     lab4
