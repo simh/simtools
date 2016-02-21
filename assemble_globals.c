@@ -59,7 +59,7 @@ EX_TREE        *xfer_address = NULL;    /* The transfer address */
 SYMBOL         *current_pc;     /* The current program counter */
 
 unsigned        last_dot_addr;  /* Last coded PC... */
-SECTION        *last_dot_section;       /* ...and it's program section */
+SECTION        *last_dot_section;       /* ...and its program section */
 
 /* The following are dummy psects for symbols which have meaning to
 the assembler: */

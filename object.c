@@ -786,7 +786,7 @@ void text_complex_begin(
 }
 
 /* text_complex_fit checks if a complex expression will fit and
-   returns a pointer to it's location */
+   returns a pointer to its location */
 
 static char    *text_complex_fit(
     TEXT_COMPLEX *tx,

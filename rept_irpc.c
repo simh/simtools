@@ -29,7 +29,7 @@ typedef struct rept_stream {
 
 /* rept_stream_gets gets a line from a repeat stream.  At the end of
    each count, the coutdown is decreated and the stream is reset to
-   it's beginning. */
+   its beginning. */
 
 char           *rept_stream_gets(
     STREAM *str)

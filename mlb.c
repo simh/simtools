@@ -278,7 +278,7 @@ BUFFER         *mlb_entry(
     return buf;
 }
 
-/* mlb_extract - walk thru a macro library and store it's contents
+/* mlb_extract - walk thru a macro library and store its contents
    into files in the current directory.
 
    See, I had decided not to bother writing macro library maintenance

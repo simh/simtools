@@ -591,7 +591,7 @@ MACRO          *new_macro(
     return mac;
 }
 
-/* free a macro, it's args, it's text, etc. */
+/* free a macro, its args, its text, etc. */
 void free_macro(
     MACRO *mac)
 {

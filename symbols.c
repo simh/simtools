@@ -97,7 +97,7 @@ void free_sym(
     free(sym);
 }
 
-/* remove_sym removes a symbol from it's symbol table. */
+/* remove_sym removes a symbol from its symbol table. */
 
 void remove_sym(
     SYMBOL *sym,

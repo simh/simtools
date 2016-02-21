@@ -67,7 +67,7 @@ extern EX_TREE *xfer_address;   /* The transfer address */
 extern SYMBOL  *current_pc;     /* The current program counter */
 
 extern unsigned last_dot_addr;  /* Last coded PC... */
-extern SECTION *last_dot_section;       /* ...and it's program section */
+extern SECTION *last_dot_section;       /* ...and its program section */
 
 /* The following are dummy psects for symbols which have meaning to
    the assembler: */

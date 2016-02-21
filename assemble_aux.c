@@ -553,7 +553,7 @@ int eval_undefined(
 }
 
 /* push_cond - a new conditional (.IF) block has been activated.  Push
-   it's context. */
+   its context. */
 
 void push_cond(
     int ok,
@@ -731,7 +731,7 @@ void write_globals(
     if (ident)
         gsd_ident(&gsd, ident);
 
-    /* write out each PSECT with it's global stuff */
+    /* write out each PSECT with its global stuff */
     /* Sections must be written out in the order that they
        appear in the assembly file.  */
     for (isect = 0; isect < sector; isect++) {
