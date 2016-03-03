@@ -20,15 +20,26 @@ http://simh.trailing-edge.com/docs/simh_magtape.pdf
 Naoki Hamada
 nao at tom hyphen yam dot or dot jp
 
+Mar 2016
+Add different blocking/padding behaviours
+rhialto at falu dot nl
+
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+#define	BLOCKING_WARN	0
+#define BLOCKING_PAD	1
+#define BLOCKING_SILENT	2
+
 void usage()
 {
   fprintf(stderr, "usage: mktape [-b blocklen] [file1] [-b blocklen] [file2] ...\n");
+  fprintf(stderr, "       -bw # warn if last block is short (and pad) (default)\n");
+  fprintf(stderr, "       -bp # pad final block if it is short\n");
+  fprintf(stderr, "       -bs # silently ignore shortness of final block\n");
   exit(1);
 }
 
@@ -52,7 +63,7 @@ void wl(int len)
  read from file and write blocked data to stdout
  */
 
-void fblock(char *name, int blen)
+void fblock(char *name, size_t blen, int blocking)
 {
     FILE *f;
     size_t ret;
@@ -61,7 +72,7 @@ void fblock(char *name, int blen)
     f = fopen(name, "r");
     if (f == NULL) {
       perror(name);
-      exit(1);
+      usage();
     }
     b = malloc(blen);
     if (b == NULL) {
@@ -70,18 +81,25 @@ void fblock(char *name, int blen)
     }
     while (!feof(f)) {
       memset(b, 0, blen);
-      ret = fread(b, blen, 1, f);
+      ret = fread(b, 1, blen, f);
       if (ret < blen) {
-	if (ferror(f)) {
-	  perror(name);
-	  exit(1);
+	switch (blocking) {
+	  case BLOCKING_WARN:
+	    fprintf(stderr, "warning: file %s has incomplete last block (%ld < %ld)\n", name, (long)ret, (long)blen);
+	    ret = blen;
+	    break;
+	  case BLOCKING_PAD:
+	    ret = blen;
+	    break;
+	  case BLOCKING_SILENT:
+	    break;
 	}
       }
       if (ret == 0)
 	continue;
-      wl(blen);
-      fwrite(b, blen, 1, stdout);
-      wl(blen);
+      wl(ret);
+      fwrite(b, ret, 1, stdout);
+      wl(ret);
     }
     if (fclose(f) != 0) {
       perror(name);
@@ -93,16 +111,27 @@ int main(int argc, char **argv)
 {
   int i = 0;
   int blen = 512;
+  int blocking = BLOCKING_WARN;
 
   while (++i < argc) {
     if (strcmp(argv[i], "-b") == 0){
       if (++i == argc)
 	usage();
-      blen = atoi(argv[i++]);
+      blen = atoi(argv[i]);
       if (blen <= 0)
 	usage();
+      continue;
+    } else if (strcmp(argv[i], "-bw") == 0){
+	blocking = BLOCKING_WARN;
+	continue;
+    } else if (strcmp(argv[i], "-bp") == 0){
+	blocking = BLOCKING_PAD;
+	continue;
+    } else if (strcmp(argv[i], "-bs") == 0){
+	blocking = BLOCKING_SILENT;
+	continue;
     }
-    fblock(argv[i], blen);
+    fblock(argv[i], blen, blocking);
     wl(0);
   }
   wl(0);
