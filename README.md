@@ -28,6 +28,7 @@ hpconvert | Convert an HP disc image between SIMH and HPDrive formats
 indent | Convert simulator sources to 4-column tabs
 littcvt | Remove density maker from litt format tapes
 m8376 | Assembles 8 PROM files into a 32bit binary file
+mktape | Convert one or more files to a SIMH file; allows different block sizes.
 mt2tpc | Convert a simh simulated magtape to TPC format
 mtcvtfix | Fix a SIMH magtape containing a misread EOF
 mtcvtodd | Convert an E11 magtape (with odd record sizes) to SIMH
