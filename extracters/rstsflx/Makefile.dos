@@ -1,0 +1,133 @@
+# *** NOTE ***
+# This makefile is set up for DOS (DJGPP).  It will need some (small)
+# changes to build under Unix.  See notes in comments below, marked with ***
+
+# sources
+# *** note the first one, that's the absolute I/O source module.  Change
+# *** this to the one appropriate for your OS, for example unxabsio.c
+# *** in the case of Unix.
+
+SRCS=\
+	djabsio.c \
+	rstsflx.c \
+	fip.c \
+	rtime.c \
+	filename.c \
+	doget.c \
+	dolist.c \
+	doalloc.c \
+	docomp.c \
+	dotype.c \
+	doput.c \
+	dodump.c \
+	dodelete.c \
+	dorename.c \
+	dorts.c \
+	doprot.c \
+	dodir.c \
+	doident.c \
+	doinit.c \
+	dohook.c \
+	scancmd.c \
+	fileio.c \
+	diskio.c
+
+# prototype header files (none for rstsflx.c and scancmd.c)
+PROTOS=\
+	rstsflx.h \
+        platform.h \
+	fip.h \
+	rtime.h \
+	filename.h \
+	doget.h \
+	dolist.h \
+	doalloc.h \
+	docomp.h \
+	dotype.h \
+	doput.h \
+	dodump.h \
+	dodelete.h \
+	dorename.h \
+	dorts.h \
+	doprot.h \
+	dodir.h \
+	doident.h \
+	doinit.h \
+	doinit.h \
+	scancmd.h \
+	fileio.h \
+	diskio.h
+
+# objects
+OBJS=\
+	rstsflx.o \
+	fip.o \
+	rtime.o \
+	filename.o \
+	doget.o \
+	dolist.o \
+	doalloc.o \
+	docomp.o \
+	dotype.o \
+	doput.o \
+	dodump.o \
+	dodelete.o \
+	dorename.o \
+	dorts.o \
+	doprot.o \
+	dodir.o \
+	doident.o \
+	doinit.o \
+	dohook.o \
+	scancmd.o \
+	doclean.o \
+	fileio.o \
+	diskio.o \
+	absio.o
+
+# Flags and the like
+
+# *** change the three lines below as needed for your C compiler.
+CC= gcc
+CFLAGS= -O3 -Wall
+LFLAGS=
+
+# Rules
+
+# ***  comment out or delete this first rule if not building on DOS
+#flx.exe: flx
+#	strip flx
+#	coff2exe flx
+
+flx.exe: $(OBJS)
+	$(CC) -o flx.exe $(OBJS) -lreadline $(LFLAGS)
+
+# *** the rule below builds absio.o.  You need to use as source file
+# *** an appropriate file; in Unix that's probably unxabsio.c but check
+# *** the source file to be sure.
+
+absio.o: djabsio.c
+	$(CC) -c -o absio.o $(CFLAGS) $<
+
+# general build rule for all other object files:
+.c.o:
+	$(CC) -c $(CFLAGS) $<
+
+kit:
+	tar cvzf ../flx.tar.gz flx.exe \
+	Makefile* *.c *.h *.doc *.ps *.txt *.html \
+	README COPYING BUGS HISTORY
+	zip ../flx.zip flx.exe \
+	Makefile* *.c *.h *.doc *.ps *.txt *.html \
+	README COPYING BUGS HISTORY
+
+clean:
+	del *.o
+	del flx
+	del flx.exe
+
+depend:
+	gcc -MM *.c > flx.dep
+
+# the one below is created by make depend
+include flx.dep

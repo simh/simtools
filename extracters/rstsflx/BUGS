@@ -1,0 +1,7 @@
+open bugs:
+- delete does not honor priv (erase on delete) bit
+- no readline support in dos
+- filename completion does host file system completion, which is usually
+  the wrong thing
+- "put" should pre-extend the output file if in binary copy mode.
+- need error checking on I/O

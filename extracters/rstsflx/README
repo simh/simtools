@@ -1,0 +1,25 @@
+README file for FLX 1/11/2000
+
+What you have here is the set of sources needed to build FLX, a
+Makefile to do it, and documentation (in PostScript and the source in
+MS Word format).
+
+Note on the Makefile: it has been used both with Mips Ultrix "cc" and
+with gcc (with DOS and with Linux), but "make proto" only works with
+cc since gcc doesn't support the -protoi switch.  Don't worry about
+that unless you change the sources in a way that affects the procedure
+prototype declarations.  (If you do, edit the .h file of the same name
+as the .c file to reflect the changed prototypes.)
+
+As far as I know, everything that's described in flx.ps should work.
+Let me know if you find problems.  (I'll admit that I haven't tested
+all the cases.  For example, RDS0.0 support has had limited testing.
+And I don't have a "large" disk to test large DCS support!)
+
+I've had very little feedback on this program.  If you use it, even
+if you have no comments on it, I'd appreciate a short note.  And of
+course if you do have comments, bug reports, or suggestions, then
+definitely let me know!
+
+	paul koning
+	ni1d@arrl.net

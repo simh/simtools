@@ -13,6 +13,7 @@ all:
 	cd mmdir && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
 	cd mtdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
 	cd rawcopy && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
+	cd rstsflx && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
 	cd sdsdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
 	cd tpdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
 
@@ -21,6 +22,7 @@ clean:
 	cd mmdir && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
 	cd mtdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
 	cd rawcopy && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
+	cd rstsflx && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
 	cd sdsdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
 	cd tpdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
 
@@ -29,6 +31,7 @@ install:
 	cd mmdir && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
 	cd mtdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
 	cd rawcopy && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
+	cd rstsflx && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
 	cd sdsdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
 	cd tpdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
 
@@ -37,5 +40,6 @@ uninstall:
 	cd mmdir && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
 	cd mtdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
 	cd rawcopy && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
+	cd rstsflx && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
 	cd sdsdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
 	cd tpdump && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall

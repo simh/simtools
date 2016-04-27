@@ -1,0 +1,45 @@
+rstsflx.o: rstsflx.c version.h flx.h rstsflx.h platform.h fldef.h \
+  scancmd.h diskio.h
+fip.o: fip.c flx.h rstsflx.h platform.h fldef.h fip.h diskio.h rtime.h \
+  filename.h
+rtime.o: rtime.c flx.h rstsflx.h platform.h rtime.h fldef.h
+filename.o: filename.c flx.h rstsflx.h platform.h filename.h fldef.h
+doget.o: doget.c flx.h rstsflx.h platform.h fldef.h doget.h fip.h \
+  filename.h fileio.h scancmd.h
+dolist.o: dolist.c flx.h rstsflx.h platform.h fldef.h dolist.h fip.h \
+  rtime.h filename.h scancmd.h
+doalloc.o: doalloc.c flx.h rstsflx.h platform.h fldef.h doalloc.h fip.h
+docomp.o: docomp.c flx.h rstsflx.h platform.h fldef.h docomp.h diskio.h \
+  fip.h
+dotype.o: dotype.c flx.h rstsflx.h platform.h fldef.h dotype.h fip.h \
+  filename.h fileio.h scancmd.h
+doput.o: doput.c flx.h rstsflx.h platform.h fldef.h doput.h fip.h \
+  filename.h fileio.h scancmd.h
+dodump.o: dodump.c flx.h rstsflx.h platform.h fldef.h dodump.h fip.h \
+  filename.h diskio.h fileio.h scancmd.h
+dodelete.o: dodelete.c flx.h rstsflx.h platform.h fldef.h dodelete.h \
+  fip.h filename.h fileio.h scancmd.h
+dorename.o: dorename.c flx.h rstsflx.h platform.h fldef.h dorename.h \
+  fip.h filename.h fileio.h scancmd.h
+dorts.o: dorts.c flx.h rstsflx.h platform.h fldef.h dorts.h fip.h \
+  filename.h fileio.h scancmd.h
+doprot.o: doprot.c flx.h rstsflx.h platform.h fldef.h doprot.h fip.h \
+  filename.h fileio.h scancmd.h
+dodir.o: dodir.c flx.h rstsflx.h platform.h fldef.h dodir.h fip.h \
+  filename.h
+doident.o: doident.c flx.h rstsflx.h platform.h fldef.h doident.h fip.h \
+  rtime.h
+doinit.o: doinit.c flx.h rstsflx.h platform.h fldef.h doinit.h fip.h \
+  diskio.h filename.h
+dohook.o: dohook.c flx.h rstsflx.h platform.h fldef.h silfmt.h dohook.h \
+  fip.h filename.h fileio.h diskio.h
+scancmd.o: scancmd.c flx.h rstsflx.h platform.h fldef.h silfmt.h \
+  scancmd.h fip.h diskio.h filename.h doalloc.h doget.h doident.h \
+  dolist.h dotype.h dodump.h doput.h dodelete.h dorename.h dorts.h \
+  dodir.h doprot.h doinit.h dohook.h docomp.h doclean.h
+doclean.o: doclean.c flx.h rstsflx.h platform.h fldef.h diskio.h \
+  filename.h doclean.h fip.h rtime.h
+fileio.o: fileio.c flx.h rstsflx.h platform.h fldef.h fileio.h filename.h \
+  diskio.h fip.h
+diskio.o: diskio.c flx.h rstsflx.h platform.h diskio.h absio.h
+unxabsio.o: unxabsio.c flx.h rstsflx.h platform.h absio.h

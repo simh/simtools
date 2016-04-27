@@ -1,0 +1,68 @@
+Changes for V2.6:
+16.04.27	A couple of bugfixes.  Changed license to BSD.
+
+Changes for V2.5:
+00.08.24	Readline support for DOS now appears to be working,
+		thanks to a newer version of DJGPP.  It needs to
+		be checked out a bit more, though, and there
+		still seem to be some oddities.
+
+Changes for V2.4:
+00.01.16	Added upper limit check on INIT to hook command so
+		we don't try to hook an INIT that extends into the
+		space needed for the bootstrap.  This duplicates
+		a check that exists in hook.sav.
+00.01.18	Have "clean" display current dir and filename 
+		even if not -verbose, but all on a single line.
+00.01.23	Fix calculation of RE count in fileseek, which was
+		causing disk block out of range errors sometimes.
+
+Changes for V2.3:
+00.01.02	Fixed eof calculation for RMS fixed files (-rf switch)
+		Added support for RX50 format 5.25 inch floppy access
+		in Linux.  Added code to get size for raw disks
+		under Linux, so the -Size switch is no longer needed.
+		Changed date display format to use 4 digit years, and
+		fix some Y2K bugs.  :-(
+00.01.04	Fixed an elusive malloc bug.
+00.01.08	Fixed RX50 I/O.
+
+Changes for V2.2:
+99.12.02	Bugfix in RMS mode "get" for 32 bit int targets.
+		Use fgets instead of gets in scancmd.
+
+Changes for V2.0:
+
+- bugfix in protect command: allow file protection code changes even
+if P bit is set (as RSTS does)
+
+- bugfix in rename: disallow rename/replace if new file name == old
+name (previous code would delete the file and then crash)
+
+- bugfix in hook command for environments with 32-bit integers
+
+- fix platform.h so it may work better in Alphas (not tested for lack
+of hardware)
+
+- change abort handler to use setjmp/longjmp so failure no longer
+exits but goes back to command prompt if in prompting mode
+
+- added -noprotect as synonym for -unprotect
+
+- bugfix in list -summary: print correct ppns in per-directory summary
+line.
+
+- added clean (rebuild)
+
+- added -odt and -offset to hook command.
+
+- bugfix in hook command to set clustersize (for disks whose
+clustersize is not always the same)
+
+- bugfix in quota update if doing multiple directories since start of
+program
+
+- allow [n,*] and [*,*] for gfd and mfd in get and dump commands
+
+- use GNU readline package, with command line recall including history
+file.
