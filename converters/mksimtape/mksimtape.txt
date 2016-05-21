@@ -1,0 +1,28 @@
+mksimtape
+---------
+
+This program generates a SIMH-compatible tape image file, from one or
+more input files. It should be easily compiled using any reasonable C
+compiler, for example:
+
+  cc -o mksimtape mksimtape.c
+
+Once compiled, it is run by giving it the names of the files to be
+written to the image, in the same order that they should be written. The
+tape image is written to standard output, so a typical use might be
+this:
+
+  mksimtape file1 file2 file3 > tape.out
+
+Each 'file' on the tape is written with a block size of 10240 bytes,
+unless otherwise specified. To use a particular block size for a file,
+append it to the end of the filename, separated by a colon, viz.:
+
+  mksimtape file1:512 file2 file3 > tape.out
+
+This would write 'file1' with a block size of 512 bytes; 'file2' and
+'file3' would still be written with a block size of 10240 bytes.
+
+Bob Eager
+bob@eager.cx
+
