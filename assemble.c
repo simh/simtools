@@ -1468,7 +1468,7 @@ static int assemble(
                         return 1;
 
                     case OC_JSR:
-                        /* First op is register, second is gen. */  {
+                        /* For JSR and XOR, first op is register, second is gen. */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
                             unsigned        reg;
@@ -1496,7 +1496,7 @@ static int assemble(
                                 return 0;
                             }
 
-                            if ((mode.type & 070) == 0) {
+                            if (op->value == I_JSR && (mode.type & 070) == 0) {
                                 report(stack->top, "JSR Rn,Rm is illegal\n");
                                 /* But encode it anyway... */
                             }
