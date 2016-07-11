@@ -1,4 +1,4 @@
-<B>tu58em</B> is a ...
+<B>obj2hex.pl</B> is a PDP-11 object file translator / linker, transforming an .obj file as output from macro11 into an absolute binary load image file (.bin) or other useful formats (.hex).
 
 If run with no options, it prints a usage screen:
 
