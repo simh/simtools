@@ -766,6 +766,17 @@ static int assemble(
                             free_tree(value);
                         } else if (strcmp(label, "B") == 0 ||
                                    strcmp(label, "NB") == 0) {
+                            /*
+                             * Page 6-46 footnote 1 says
+                             * "A macro argument (a form of symbolic argument)
+                             * is enclosed within angle brackets or delimited
+                             * by the circumflex construction, as described in
+                             * section 7.3. For example,
+                             *   <A,B,C>
+                             *   ^/124/"
+                             * but we don't enforce that here (yet) by using
+                             * simply getstring().
+                             */
                             cp = skipwhite(cp);
                             if (EOL(*cp)) {
                                 ok = 1;
