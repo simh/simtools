@@ -1,0 +1,43 @@
+dbtap manipulates .tap magtape container files used by SIMH and written in
+DOS/BATCH-11 file format. dbtap is invoked by:
+
+        dbtap -lcae [-r len -A <list> -E -S -P pg,pj] container [...]
+
+To list the contents of one or more container files:
+
+        dbtap -l container ...
+
+To create a new container file and append file(s):
+
+        dbtap -c [-r len -A <list> -S -P pg,pj] container file ...
+
+To append file(s) to an existing container:
+
+        dbtap -a [-r len -A <list> -S -P pg,pj] container file ...
+
+To extract file(s) from container(s):
+
+        dbtap -e [-A <list> -E] container ...
+
+Switches:
+
+    -r len      Specify max tape record size when writing.
+                (512 <= len <= 65536).
+
+    -A <list>   By default, files are transferred in Binary mode. This switch
+                is used to specify file extensions which should be transferred
+                in Ascii mode (e.g. ".MAC:.BAT" or ".MAC,.BAT").
+
+    -E          Include prog,proj in filename when extracting.
+                (e.g. FILE_ggg_jjj.EXT").
+
+    -S          DOS/BATCH-11 uses 6+3 (name+extension) for filenames including
+                on magtape. Over time, the magtape definition changed to
+                allow 9+3 filenames by adding an extra word to the filename
+                record. By default, this program uses the 9+3 format but
+                the -S switch may be used to force 6+3 filenames when writing
+                to tape.
+
+    -P pg,pj    Specify prog,proj number when writing to tape. Numbers are in
+                octal. Default is [1,1].
+

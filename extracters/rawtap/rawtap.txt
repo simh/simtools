@@ -1,0 +1,24 @@
+rawtap manipulates .tap magtape container files used by SIMH. rawtap is
+invoked by:
+
+        rawtap -cae container [-r len] [...]
+
+To create a new container file and append file(s):
+
+        rawtap -c container [-r len] file ...
+
+To append file(s) to an existing container file:
+
+        rawtap -a container [-r len] file ...
+
+To extract files from container file(s):
+
+        rawtap -e container ...
+
+Switches:
+
+    -r len     Specify max tape record size when writing to tape.
+               (1 <= len <= 65536). The new record size applies to all
+               following files on the command line. There may be multiple
+               "-r len" on the command line if the record size needs to be
+               different across multiple files.

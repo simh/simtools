@@ -1,0 +1,42 @@
+cpytap manipulates a .tap magtape container file used by SIMH. It copies an
+existing .tap file to a newly created .tap while modifying its file level
+contents. While performing the copy, individual files may be skipped or
+replaced and new files may be inserted at specified positions or appended
+after the last source file has been copied. For files which are copied between
+the source and destination tapes, the internal record structure of each file
+is maintained. Replacement or inserted/appended files may only be written
+with a specified maximum record size.
+
+cpytap is invoked by:
+
+        cpytap src dst [-r len] [-I n,file] [-R n,file] [-S n] [-A file]
+
+Where:
+
+        -r len    Max record size to be used when writing new files to the
+                  destination tape. (1 <= len <= 65536, default 10240).
+                  There may be multiple "-r" switches on the command line.
+                  When a "-r" switch is specified, it takes effect on all
+                  following editing commands.
+
+        -I n,file Insert the specified file before file n of the source tape
+
+        -R n,file Replace file n of the source tape with the specified file
+
+        -S n      Skip file n of the source tape
+
+        -A file   Append the specified fie after all the files on the source
+                  tape have been copied to the destination tape.
+
+Files on the source tape are numbered 1 - n.
+
+When multiple -I commands reference the same source tape file or there are
+multiple -A commands, the files will be written to the destination tape in
+the order specified on the command line. If a -R command and a -I command
+reference the same source tape file, the -R file will be written first
+followed by the -I file(s).
+
+The editing control tables are pre-built into the executable. Edit commands
+may be issued for files 1 - 100, subsequent files will just be copied from
+source to destination. There may be up to 20 -I commands for each source tape
+file and up to 20 -A commands.

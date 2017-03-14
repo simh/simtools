@@ -1,0 +1,24 @@
+cosy manipulates files in the CDC1700 COSY format (note this is different from
+the CDC3000 series COSY format). COSY is a format used for containing card
+images as ASCII files using run length encoding of 3 or more spaces to reduce
+the amount of space required. Multiple card decks may be present in a single
+COSY file. File naming in the host environment makes use of the deck name
+which is optionally present in the CSY/ cards. For decompression, if a deck
+name is present, the host file will be named "deck_<deckname>" otherwise it
+will be named "nnnnn.deck" where nnnnn is the position number of the deck
+within the COSY file. On compression, source files named "deck_<deckname>"
+will result in the CSY/ deckname being filled in otherwise an empty name wil
+be used.
+
+To compress a COSY format file:
+
+        cosy -c <cosyFile> file ...
+
+To decompress a COSY format file:
+
+        cosy -d <cosyFile>
+
+When decompressing a COSY format file, CSY/ and END/ card images are removed
+from the output. On compression, a CSY/ card image is inserted at the start
+of the output and a END/ card is appended to the output. The resulting
+compressed file will be padded, with NULLs, to be a multiple of 384 bytes.
