@@ -193,7 +193,10 @@ int decompressCard(
 
   idx = 0;
 
-  while (((ch = fgetc(src)) != -1) && (ch != 0)) {
+  while ((ch = fgetc(src)) != -1) {
+    if (ch == 0)
+      continue;
+
     if (ch == PREFIX) {
       if ((ch = fgetc(src)) == -1)
         break;
