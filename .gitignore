@@ -2,6 +2,14 @@
 *~
 *.bak
 *.o
+*.obj
+*.exe
+*.user
+*.pch
+*.ncb
+*.suo
+[Dd]ebug*/
+[Rr]elease*/
 config11/config11
 converters/asc/asc
 converters/decsys/decsys
