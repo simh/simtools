@@ -15,8 +15,8 @@ Usage: ./obj2hex.pl [options...] arguments
        --bytes=N               bytes per block on output
        --nocrc                 inhibit output of CRC-16 in hex format
        --logfile=LOGFILE       logging message file
-       --objfile=OBJFILE       macro11 object .obj file
        --outfile=OUTFILE       output .hex/.txt/.bin file
+       OBJFILE...              macro11 object .obj file(s)
 Aborted due to command line errors.
 ```
 
@@ -28,8 +28,8 @@ NAME
 
 SYNOPSIS
     obj2hex.pl [--help] [--debug] [--verbose] [--boot] [--console] [--binary]
-    [--ascii] [--bytes=N] [--nocrc] [--logfile=LOGFILE] --objfile=OBJFILE
-    --outfile=BINFILE
+    [--ascii] [--bytes=N] [--nocrc] [--logfile=LOGFILE] --outfile=BINFILE
+    OBJFILE...
 
 DESCRIPTION
     Converts a Macro-11 object file to various output formats, including M9312
@@ -86,11 +86,11 @@ OPTIONS
     --logfile=FILENAME
         Generate debug output into this file.
 
-    --objfile=FILENAME
-        Input objject file in .obj format.
-
     --outfile=FILENAME
         Output binary file in format selected by user option.
+
+    OBJFILE...
+        Input object file(s) in .obj format.
 
 ERRORS
     The following diagnostic error messages can be produced on STDERR. The
@@ -124,9 +124,9 @@ EXAMPLES
 
       obj2hex.pl --help
 
-      obj2hex.pl --verbose --boot --in 23-751A9.obj --out 23-751A9.hex
+      obj2hex.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
 
-      obj2hex.pl --verbose --binary --in memtest.obj --out memtest.bin
+      obj2hex.pl --verbose --binary --out memtest.bin memtest.obj
 
 AUTHOR
     Don North - donorth <ak6dn _at_ mindspring _dot_ com>
@@ -140,4 +140,6 @@ HISTORY
       2016-01-20 v1.3 donorth - Initial support for linking multiple PSECTs.
       2016-01-22 v1.4 donorth - Added objfile/outfile/logfile switches vs stdio.
       2016-01-28 v1.5 donorth - Added RLD processing, especially complex.
+      2017-04-01 v2.0 donorth - Started to add capability to process multiple
+                                input object files ... still a work in progress.
 ```

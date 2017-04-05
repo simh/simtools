@@ -50,20 +50,22 @@ S<[--ascii]>
 S<[--bytes=N]>
 S<[--nocrc]>
 S<[--logfile=LOGFILE]>
-S<--objfile=OBJFILE>
 S<--outfile=BINFILE>
+S<OBJFILE>
 
 =head1 DESCRIPTION
 
-Converts a Macro-11 object file to various output formats,
+Converts a Macro-11 object files to various output formats,
 including M9312 boot and console PROM, straight binary records,
 ASCII format for M9312 console load commands, and loadable absolute
 binary program images (.BIN) files.
 
-Currently the program is limited to a single object input file that
-can be output in the selected format. Multiple .psect/.asect ops are
-supported, as well as all local (non-global) relocation directory
-entries. Multiple object files are (not yet) supported.
+Multiple .psect/.asect ops are supported, as well as all local
+(non-global) relocation directory entries.
+
+Multiple input object files are (not yet fully) supported - this
+part is work in progress. In particular definition and resolution
+of global symbols are not supported.
 
 =head1 OPTIONS
 
@@ -122,13 +124,13 @@ CRC-16 as the last word in the ROM.
 
 Generate debug output into this file.
 
-=item B<--objfile=FILENAME>
-
-Input objject file in .obj format.
-
 =item B<--outfile=FILENAME>
 
 Output binary file in format selected by user option.
+
+=item B<OBJFILE...>
+
+Input object file(s) in .obj format.
 
 =back
 
@@ -161,9 +163,9 @@ Some examples of common usage:
 
   obj2hex.pl --help
 
-  obj2hex.pl --verbose --boot --in 23-751A9.obj --out 23-751A9.hex
+  obj2hex.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
 
-  obj2hex.pl --verbose --binary --in memtest.obj --out memtest.bin
+  obj2hex.pl --verbose --binary --out memtest.bin memtest.obj
 
 =head1 AUTHOR
 
@@ -179,6 +181,8 @@ Modification history:
   2016-01-20 v1.3 donorth - Initial support for linking multiple PSECTs.
   2016-01-22 v1.4 donorth - Added objfile/outfile/logfile switches vs stdio.
   2016-01-28 v1.5 donorth - Added RLD processing, especially complex.
+  2017-04-01 v2.0 donorth - Started to add capability to process multiple
+                            input object files ... still a work in progress.
 
 =cut
 
@@ -199,7 +203,7 @@ BEGIN { unshift(@INC, $FindBin::Bin);
 # external local modules
 
 # generic defaults
-my $VERSION = 'v1.5'; # version of code
+my $VERSION = 'v2.0'; # version of code
 my $HELP = 0; # set to 1 for man page output
 my $DEBUG = 0; # set to 1 for debug messages
 my $VERBOSE = 0; # set to 1 for verbose messages
@@ -215,7 +219,6 @@ my $romfill; # rom fill pattern
 my $romtype = 'NONE'; # default rom type
 my $bytesper = -1; # bytes per block in output file
 my $nocrc = 0; # output CRC16 as last word unless set
-my $objfile = undef; # input filename
 my $outfile = undef; # output filename
 my $logfile = undef; # log filename
 
@@ -229,7 +232,6 @@ my $NOERROR = GetOptions( "help"        => \$HELP,
 			  "ascii"       => sub { $romtype = 'ASC9'; },
 			  "bytes=i"     => \$bytesper,
 			  "nocrc"       => \$nocrc,
-			  "objfile=s"   => \$objfile,
 			  "outfile=s"   => \$outfile,
 			  "logfile=s"   => \$logfile,
 			  );
@@ -253,8 +255,7 @@ if ($HELP) {
 
 # check for correct arguments present, print usage if errors
 unless ($NOERROR
-	&& scalar(@ARGV) == 0
-	&& defined($objfile)
+	&& scalar(@ARGV) >= 1
 	&& defined($outfile)
 	&& $romtype ne 'NONE'
     ) {
@@ -271,8 +272,8 @@ unless ($NOERROR
        --bytes=N               bytes per block on output
        --nocrc                 inhibit output of CRC-16 in hex format
        --logfile=LOGFILE       logging message file
-       --objfile=OBJFILE       macro11 object .obj file
        --outfile=OUTFILE       output .hex/.txt/.bin file
+       OBJFILE...              macro11 object .obj file(s)
 EOF
     # exit if errors...
     die "Aborted due to command line errors.\n";
@@ -290,6 +291,7 @@ sub chksum (@);
 sub rad2asc (@);
 sub crc (%);
 sub read_rec ($);
+sub parse_rec ($);
 
 #----------------------------------------------------------------------------------------------------
 
@@ -355,10 +357,6 @@ my $adrmsk = 0xFFFF; # 16b addr mask
 my $datmsk = 0xFFFF; # 16b data mask
 my $memmsk = 0xFF; # 8b memory data mask
     
-# open the input .obj file, die if error
-my $OBJ = FileHandle->new("< ".$objfile);
-die "Error: can't open input object file '$objfile'\n" unless defined $OBJ;
-
 # databases
 my %gblsym = ();
 my %psect = ();
@@ -373,380 +371,19 @@ my $textaddr = 0;
 $program{START}{VALUE} = 1;
 $program{START}{PSECT} = '. ABS.';
 
-# now parse all the records
-while (my @rec = &read_rec($OBJ)) {
+# process all object files
+while (my $objfile = shift(@ARGV)) {
 
-    # type is first byte of record
-    my $key = $rec[0];
+    # open the input .obj file, die if error
+    my $OBJ = FileHandle->new("< ".$objfile);
+    die "Error: can't open input object file '$objfile'\n" unless defined $OBJ;
 
-    if ($key == 001) { # GSD
+    # now parse all the records
+    while (my @rec = &read_rec($OBJ)) { &parse_rec(\@rec); }
 
-	# iterate over GSD subrecords
-	for (my $i = 2; $i < @rec; ) {
-	    # GSD records are fixed 8B length all in the same format
-	    my $nam = &rad2asc(($rec[$i+1]<<8)|($rec[$i+0]<<0), ($rec[$i+3]<<8)|($rec[$i+2]<<0));
-	    my $flg = $rec[$i+4];
-	    my $ent = $rec[$i+5];
-	    my $val = ($rec[$i+7]<<8)|($rec[$i+6]<<0);
-	    my @ent = ('MODULE','CSECT','INTSYM','XFRADR','GBLSYM','PSECT','IDENT','VSECT');
-	    if ($ent == 3) {
-		# XFRADR
-		$program{START}{PSECT} = $nam;
-		$program{START}{VALUE} = $val;
-	    } elsif ($ent == 4) {
-		# GBLSYM flags
-		$gblsym{$nam}{FLG}{$flg&(1<<0) ? "WEA" : "STR"}++;
-		$gblsym{$nam}{FLG}{$flg&(1<<3) ? "DEF" : "REF"}++;
-		$gblsym{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
-		$gblsym{$nam}{PSECT} = $psectname;
-		$gblsym{$nam}{VALUE} = $val;
-	    } elsif ($ent == 5) {
-		# PSECT flags
-		$psect[++$psectnumb] = $nam;
-		$psect{$nam}{NUMBER} = $psectnumb;
-		$psect{$nam}{FLG}{$flg&(1<<0) ? "GBL" : $flg&(1<<6) ? "GBL" : "LCL"}++;
-		$psect{$nam}{FLG}{$flg&(1<<2) ? "OVR" : "CAT"}++;
-		$psect{$nam}{FLG}{$flg&(1<<4) ? "R/O" : "R/W"}++;
-		$psect{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
-		$psect{$nam}{FLG}{$flg&(1<<7) ? "D"   : "I/D"}++;
-		if ($psect{$nam}{FLG}{CAT}) {
-		    $psect{$nam}{LENGTH} = $val;
-		    $psect{$nam}{START} = $psectaddr;
-		    $psectname = $nam;
-		    $psectaddr += $val;
-		} elsif ($psect{$nam}{FLG}{ABS}) {
-		    $psect{$nam}{LENGTH} = $val;
-		    $psect{$nam}{START} = 0;
-		    $psectname = $nam;
-		}
-	    }
-	    if ($DEBUG) {
-		printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, $nam, $val;
-		printf $LOG " flags=%s", join(",", sort(keys(%{$gblsym{$nam}{FLG}}))) if $ent == 4;
-		printf $LOG " flags=%s", join(",", sort(keys(%{$psect{$nam}{FLG}}))) if $ent == 5;
-		printf $LOG "\n";
-	    }
-	    $i += 8;
-	}
-
-    } elsif ($key == 002) { # ENDGSD
-
-	# just say we saw it
-	printf $LOG "..ENDGSD\n" if $DEBUG;
-
-	$program{END}{ADDRESS} = 0;
-	foreach my $nam (sort(keys(%psect))) {
-	    my $start = $psect{$nam}{START};
-	    my $length = $psect{$nam}{LENGTH};
-	    my $end = $length ? $start + $length - 1 : $start;
-	    $program{END}{ADDRESS} = $end if $end > $program{END}{ADDRESS};
-	    printf $LOG "..PSECT[%d](%s) START=%06o END=%06o LENGTH=%06o\n",
-	                $psect{$nam}{NUMBER}, $nam, $start, $end, $length if $length && $DEBUG;
-	}
-	$program{START}{ADDRESS} = $program{START}{VALUE} + $psect{$program{START}{PSECT}}{START};
-	printf $LOG "..PROG(ADDRESS) START=%06o END=%06o\n",
-	            $program{START}{ADDRESS}, $program{END}{ADDRESS} if $DEBUG;
-
-    } elsif ($key == 003) { # TXT
-
-	# process text record
-	my $off = ($rec[3]<<8)|($rec[2]<<0);
-	my $len = @rec-4;
-	my $base = $psect{$psectname}{START};
-	my $adr = ($base + $off) & $adrmsk;
-	foreach my $i (1..$len) { $mem[$adr+$i-1] = $rec[4+$i-1]; }
-	if ($DEBUG) {
-	    printf $LOG "..TXT OFFSET=%06o LENGTH=%o BASE=%06o PSECTNAME='%s'\n", $off, $len, $base, $psectname;
-	    for (my $i = 0; $i < $len; $i += 2) {
-		printf $LOG "      %06o: ", ($adr+$i)&~1 if $i%8 == 0;
-		printf $LOG " %03o...", $mem[$adr+$i++] if ($adr+$i)&1;
-		printf $LOG " %06o", ($mem[$adr+$i+1]<<8)|($mem[$adr+$i+0]<<0) if $i < $len-1;
-		printf $LOG " ...%03o", $mem[$adr+$i] if $i == $len-1;
-		printf $LOG "\n" if $i%8 >= 6 && $i < $len-2;
-	    }
-	    printf $LOG "\n";
-	}
-	$adrmin = $adr        if $adrmin eq '' || $adr        < $adrmin;
-	$adrmax = $adr+$len-1 if $adrmax eq '' || $adr+$len-1 > $adrmax;
-	$textaddr = $adr;
-
-    } elsif ($key == 004) { # RLD
-
-	# iterate over RLD subrecords
-	for (my $i = 2; $i < @rec; ) {
-	    # first byte is entry type and flags
-	    my $ent = $rec[$i+0] & 0x7F; # entry type
-	    my $flg = $rec[$i+0] & 0x80; # modification flag (0=word, 1=byte)
-	    # process an entry
-	    if ($ent == 001) {
-		# internal relocation ... OK
-		my $dis = $rec[$i+1];
-		my $con = ($rec[$i+3]<<8)|($rec[$i+2]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$psectname}{START} + $con);
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(IR):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
-		            $adr, $val, $dis, $con if $DEBUG;
-		$i += 4;
-	    } elsif ($ent == 002) {
-		# global relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		# process
-		printf $LOG "..RLD(GR):   dis=%06o nam='%s'\n",
-		            $dis, $nam if $DEBUG;
-		$i += 6;
-	    } elsif ($ent == 003) {
-		# internal displaced ... OK
-		my $dis = $rec[$i+1];
-		my $con = ($rec[$i+3]<<8)|($rec[$i+2]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($con - ($adr+2));
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(ID):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
-		            $adr, $val, $dis, $con if $DEBUG;
-		$i += 4;
-	    } elsif ($ent == 004) {
-		# global displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		# process
-		printf $LOG "..RLD(GDR):  dis=%06o nam='%s'\n",
-		            $dis, $nam if $DEBUG;
-		$i += 6;
-	    } elsif ($ent == 005) {
-		# global additive relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		my $con = ($rec[$i+7]<<8)|($rec[$i+6]<<0);
-		# process
-		printf $LOG "..RLD(GAR):  dis=%06o con=%06o nam='%s'\n",
-		            $dis, $con, $nam if $DEBUG;
-		$i += 8;
-	    } elsif ($ent == 006) {
-		# global additive displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		my $con = ($rec[$i+7]<<8)|($rec[$i+6]<<0);
-		# process
-		printf $LOG "..RLD(GADR): dis=%06o con=%06o nam='%s'\n",
-		            $dis, $con, $nam if $DEBUG;
-		$i += 8;
-	    } elsif ($ent == 007) {
-		# location counter definition ... OK
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		my $con = ($rec[$i+7]<<8)|($rec[$i+6]<<0);
-		# process
-		$psectname = $nam;
-		$textaddr = $datmsk & ($con);
-		printf $LOG "..RLD(LCD):  adr=%06o            ; dis=%06o con=%06o nam='%s'\n",
-		            $textaddr, $dis, $con, $nam if $DEBUG;
-		$i += 8;
-	    } elsif ($ent == 010) {
-		# location counter modification ... OK
-		my $dis = $rec[$i+1];
-		my $con = ($rec[$i+3]<<8)|($rec[$i+2]<<0);
-		# process
-		$textaddr = $datmsk & ($con);
-		printf $LOG "..RLD(LCM):  adr=%06o            ; dis=%06o con=%06o\n",
-		            $textaddr, $dis, $con if $DEBUG;
-		$i += 4;
-	    } elsif ($ent == 011) {
-		# program limits ... OK, mostly
-		my $dis = $rec[$i+1];
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ( 01000 ); # make this up, no easy way to compute it
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(LIM1): adr=%06o val=%06o ; dis=%06o\n",
-		            $adr, $val, $dis if $DEBUG;
-		$dis += 2;
-		$adr += 2;
-		$val = $datmsk & ($program{END}{ADDRESS});
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(LIM2): adr=%06o val=%06o ; dis=%06o\n",
-		            $adr, $val, $dis if $DEBUG;
-		$i += 2;
-	    } elsif ($ent == 012) {
-		# psect relocation ... OK
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START});
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PR):   adr=%06o val=%06o ; dis=%06o nam='%s'\n",
-		            $adr, $val, $dis, $nam if $DEBUG;
-		$i += 6;
-	    } elsif ($ent == 014) {
-		# psect displaced relocation ... OK
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START} - ($adr+2));
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PDR):  adr=%06o val=%06o ; dis=%06o nam='%s'\n",
-		            $adr, $val, $dis, $nam if $DEBUG;
-		$i += 6;
-	    } elsif ($ent == 015) {
-		# psect additive relocation ... OK
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		my $con = ($rec[$i+7]<<8)|($rec[$i+6]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START} + $con);
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PAR):  adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
-		            $adr, $val, $dis, $con, $nam if $DEBUG;
-		$i += 8;
-	    } elsif ($ent == 016) {
-		# psect additive displaced relocation ... OK
-		my $dis = $rec[$i+1];
-		my $nam = &rad2asc(($rec[$i+3]<<8)|($rec[$i+2]<<0), ($rec[$i+5]<<8)|($rec[$i+4]<<0));
-		my $con = ($rec[$i+7]<<8)|($rec[$i+6]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START} + $con - ($adr+2));
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PADR): adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
-		            $adr, $val, $dis, $con, $nam if $DEBUG;
-		$i += 8;
-	    } elsif ($ent == 017) {
-		# complex relocation ... OK
-		my $dis = $rec[$i+1];
-		my $nam = '. ABS.';
-		my $con = 0;
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $loc = 0;
-		my $val = 0;
-		my $opc = "";
-		my @stk = ();
-		my $dun = 0;
-		for ($i += 2; !$dun; $i += 1) {
-		    if ($rec[$i] == 000) {
-			$opc = "NOP";
-		    } elsif ($rec[$i] == 001) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[0] + $arg[1]);
-			$opc = "ADD";
-		    } elsif ($rec[$i] == 002) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[0] - $arg[1]);
-			$opc = "SUB";
-		    } elsif ($rec[$i] == 003) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[0] * $arg[1]);
-			$opc = "MUL";
-		    } elsif ($rec[$i] == 004) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[1] == 0 ? 0 : int($arg[0] / $arg[1]));
-			$opc = "DIV";
-		    } elsif ($rec[$i] == 005) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[0] & $arg[1]);
-			$opc = "AND";
-		    } elsif ($rec[$i] == 006) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[0] | $arg[1]);
-			$opc = "IOR";
-		    } elsif ($rec[$i] == 007) {
-			my @arg = splice(@stk,-2,2);
-			push(@stk, $arg[0] ^ $arg[1]);
-			$opc = "XOR";
-		    } elsif ($rec[$i] == 010) {
-			my @arg = splice(@stk,-1,1);
-			push(@stk, -$arg[0]);
-			$opc = "NEG";
-		    } elsif ($rec[$i] == 011) {
-			my @arg = splice(@stk,-1,1);
-			push(@stk, ~$arg[0]);
-			$opc = "COM";
-		    } elsif ($rec[$i] == 012) {
-			my @arg = splice(@stk,-1,1);
-			$val = $arg[0];
-			$opc = "STO";
-			$dun = 1;
-		    } elsif ($rec[$i] == 013) {
-			############## may need tweaking ################
-			my @arg = splice(@stk,-1,1);
-			$val = $arg[0];
-			$opc = "STO+DIS";
-			$dun = 1;
-		    } elsif ($rec[$i] == 016) {
-			############## may need tweaking ################
-			$nam = &rad2asc(($rec[$i+2]<<8)|($rec[$i+1]<<0),
-					($rec[$i+4]<<8)|($rec[$i+3]<<0));
-			$con = $gblsym{$nam}{VALUE};
-			push(@stk, $con);
-			$opc = sprintf("GLB[%s]=(%o)", &trim($nam), $con);
-			$i += 4;
-		    } elsif ($rec[$i] == 017) {
-			$nam = $psect[$rec[$i+1]];
-			$con = ($rec[$i+3]<<8) | ($rec[$i+2]<<0);
-			$loc = $psect{$nam}{START} + $con;
-			push(@stk, $loc);
-			$opc = sprintf("FET[%s+%o]=(%o)", &trim($nam), $con, $loc);
-			$i += 3;
-		    } elsif ($rec[$i] == 020) {
-			$con = ($rec[$i+2]<<8) | ($rec[$i+1]<<0);
-			push(@stk, $con);
-			$opc = "CON";
-			$i += 2;
-		    }
-		    $stk[-1] = $datmsk & $stk[-1] if @stk;
-		    printf $LOG "....OPC=%-20s STK=(%s)\n", $opc, join(",",map(sprintf("%o",$_),@stk)) if $DEBUG;
-		}
-		printf $LOG "..RLD(CMPX): adr=%06o val=%06o ; dis=%06o\n", $adr, $val, $dis if $DEBUG;
-	    } else {
-		die sprintf("Error: Unknown RLD entry 0%o (%d)", $ent, $ent);
-	    }
-	}
-
-    } elsif ($key == 005) { # ISD
-
-	# ignore
-	printf $LOG "..ISD: ignored\n" if $DEBUG;
-
-    } elsif ($key == 006) { # ENDMOD
-
-	# just say we saw it
-	printf $LOG "..ENDMOD\n\n\n" if $DEBUG;
-
-    } elsif ($key == 007) { # LIBHDR
-
-	# ignore
-	printf $LOG "..LIBHDR: ignored\n" if $DEBUG;
-
-    } elsif ($key == 010) { # LIBEND
-
-	# ignore
-	printf $LOG "..LIBEND: ignored\n" if $DEBUG;
-
-    } else { # unknown
-
-	# invalid record type in the object file
-	die sprintf("Error: unknown record type 0%o (%d)", $key, $key);
-
-    }
-
+    # done with object file
+    $OBJ->close;
 }
-
-# done with object file
-$OBJ->close;
 
 #----------------------------------------------------------------------------------------------------
 
@@ -889,6 +526,7 @@ $OUT->close;
 $LOG->close;
 exit;
 
+#----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
 
 # trim leading/trailing spaces on a string
@@ -1052,6 +690,384 @@ sub read_rec ($) {
 
     # all is well, return the record
     return @dat;
+}
+
+#----------------------------------------------------------------------------------------------------
+
+# parse an input object file record, update data structures
+
+sub parse_rec ($) {
+
+    my ($rec) = (@_);
+
+    # type is first byte of record
+    my $key = $rec->[0];
+
+    if ($key == 001) { # GSD
+
+	# iterate over GSD subrecords
+	for (my $i = 2; $i < scalar(@$rec); ) {
+	    # GSD records are fixed 8B length all in the same format
+	    my $nam = &rad2asc(($rec->[$i+1]<<8)|($rec->[$i+0]<<0), ($rec->[$i+3]<<8)|($rec->[$i+2]<<0));
+	    my $flg = $rec->[$i+4];
+	    my $ent = $rec->[$i+5];
+	    my $val = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+	    my @ent = ('MODULE','CSECT','INTSYM','XFRADR','GBLSYM','PSECT','IDENT','VSECT');
+	    if ($ent == 3) {
+		# XFRADR
+		$program{START}{PSECT} = $nam;
+		$program{START}{VALUE} = $val;
+	    } elsif ($ent == 4) {
+		# GBLSYM flags
+		$gblsym{$nam}{FLG}{$flg&(1<<0) ? "WEA" : "STR"}++;
+		$gblsym{$nam}{FLG}{$flg&(1<<3) ? "DEF" : "REF"}++;
+		$gblsym{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
+		$gblsym{$nam}{PSECT} = $psectname;
+		$gblsym{$nam}{VALUE} = $val;
+	    } elsif ($ent == 5) {
+		# PSECT flags
+		$psect[++$psectnumb] = $nam;
+		$psect{$nam}{NUMBER} = $psectnumb;
+		$psect{$nam}{FLG}{$flg&(1<<0) ? "GBL" : $flg&(1<<6) ? "GBL" : "LCL"}++;
+		$psect{$nam}{FLG}{$flg&(1<<2) ? "OVR" : "CAT"}++;
+		$psect{$nam}{FLG}{$flg&(1<<4) ? "R/O" : "R/W"}++;
+		$psect{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
+		$psect{$nam}{FLG}{$flg&(1<<7) ? "D"   : "I/D"}++;
+		if ($psect{$nam}{FLG}{CAT}) {
+		    $psect{$nam}{LENGTH} = $val;
+		    $psect{$nam}{START} = $psectaddr;
+		    $psectname = $nam;
+		    $psectaddr += $val;
+		} elsif ($psect{$nam}{FLG}{ABS}) {
+		    $psect{$nam}{LENGTH} = $val;
+		    $psect{$nam}{START} = 0;
+		    $psectname = $nam;
+		}
+	    }
+	    if ($DEBUG) {
+		printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, $nam, $val;
+		printf $LOG " flags=%s", join(",", sort(keys(%{$gblsym{$nam}{FLG}}))) if $ent == 4;
+		printf $LOG " flags=%s", join(",", sort(keys(%{$psect{$nam}{FLG}}))) if $ent == 5;
+		printf $LOG "\n";
+	    }
+	    $i += 8;
+	}
+
+    } elsif ($key == 002) { # ENDGSD
+
+	# just say we saw it
+	printf $LOG "..ENDGSD\n" if $DEBUG;
+
+	$program{END}{ADDRESS} = 0;
+	foreach my $nam (sort(keys(%psect))) {
+	    my $start = $psect{$nam}{START};
+	    my $length = $psect{$nam}{LENGTH};
+	    my $end = $length ? $start + $length - 1 : $start;
+	    $program{END}{ADDRESS} = $end if $end > $program{END}{ADDRESS};
+	    printf $LOG "..PSECT[%d](%s) START=%06o END=%06o LENGTH=%06o\n",
+	                $psect{$nam}{NUMBER}, $nam, $start, $end, $length if $length && $DEBUG;
+	}
+	$program{START}{ADDRESS} = $program{START}{VALUE} + $psect{$program{START}{PSECT}}{START};
+	printf $LOG "..PROG(ADDRESS) START=%06o END=%06o\n",
+	            $program{START}{ADDRESS}, $program{END}{ADDRESS} if $DEBUG;
+
+    } elsif ($key == 003) { # TXT
+
+	# process text record
+	my $off = ($rec->[3]<<8)|($rec->[2]<<0);
+	my $len = scalar(@$rec)-4;
+	my $base = $psect{$psectname}{START};
+	my $adr = ($base + $off) & $adrmsk;
+	foreach my $i (1..$len) { $mem[$adr+$i-1] = $rec->[4+$i-1]; }
+	if ($DEBUG) {
+	    printf $LOG "..TXT OFFSET=%06o LENGTH=%o BASE=%06o PSECTNAME='%s'\n", $off, $len, $base, $psectname;
+	    for (my $i = 0; $i < $len; $i += 2) {
+		printf $LOG "      %06o: ", ($adr+$i)&~1 if $i%8 == 0;
+		printf $LOG " %03o...", $mem[$adr+$i++] if ($adr+$i)&1;
+		printf $LOG " %06o", ($mem[$adr+$i+1]<<8)|($mem[$adr+$i+0]<<0) if $i < $len-1;
+		printf $LOG " ...%03o", $mem[$adr+$i] if $i == $len-1;
+		printf $LOG "\n" if $i%8 >= 6 && $i < $len-2;
+	    }
+	    printf $LOG "\n";
+	}
+	$adrmin = $adr        if $adrmin eq '' || $adr        < $adrmin;
+	$adrmax = $adr+$len-1 if $adrmax eq '' || $adr+$len-1 > $adrmax;
+	$textaddr = $adr;
+
+    } elsif ($key == 004) { # RLD
+
+	# iterate over RLD subrecords
+	for (my $i = 2; $i < scalar(@$rec); ) {
+	    # first byte is entry type and flags
+	    my $ent = $rec->[$i+0] & 0x7F; # entry type
+	    my $flg = $rec->[$i+0] & 0x80; # modification flag (0=word, 1=byte)
+	    # process an entry
+	    if ($ent == 001) {
+		# internal relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $con = ($rec->[$i+3]<<8)|($rec->[$i+2]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$psectname}{START} + $con);
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(IR):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
+		            $adr, $val, $dis, $con if $DEBUG;
+		$i += 4;
+	    } elsif ($ent == 002) {
+		# global relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		# process
+		printf $LOG "..RLD(GR):   dis=%06o nam='%s'\n",
+		            $dis, $nam if $DEBUG;
+		$i += 6;
+	    } elsif ($ent == 003) {
+		# internal displaced ... OK
+		my $dis = $rec->[$i+1];
+		my $con = ($rec->[$i+3]<<8)|($rec->[$i+2]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($con - ($adr+2));
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(ID):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
+		            $adr, $val, $dis, $con if $DEBUG;
+		$i += 4;
+	    } elsif ($ent == 004) {
+		# global displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		# process
+		printf $LOG "..RLD(GDR):  dis=%06o nam='%s'\n",
+		            $dis, $nam if $DEBUG;
+		$i += 6;
+	    } elsif ($ent == 005) {
+		# global additive relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		printf $LOG "..RLD(GAR):  dis=%06o con=%06o nam='%s'\n",
+		            $dis, $con, $nam if $DEBUG;
+		$i += 8;
+	    } elsif ($ent == 006) {
+		# global additive displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		printf $LOG "..RLD(GADR): dis=%06o con=%06o nam='%s'\n",
+		            $dis, $con, $nam if $DEBUG;
+		$i += 8;
+	    } elsif ($ent == 007) {
+		# location counter definition ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		$psectname = $nam;
+		$textaddr = $datmsk & ($con);
+		printf $LOG "..RLD(LCD):  adr=%06o            ; dis=%06o con=%06o nam='%s'\n",
+		            $textaddr, $dis, $con, $nam if $DEBUG;
+		$i += 8;
+	    } elsif ($ent == 010) {
+		# location counter modification ... OK
+		my $dis = $rec->[$i+1];
+		my $con = ($rec->[$i+3]<<8)|($rec->[$i+2]<<0);
+		# process
+		$textaddr = $datmsk & ($con);
+		printf $LOG "..RLD(LCM):  adr=%06o            ; dis=%06o con=%06o\n",
+		            $textaddr, $dis, $con if $DEBUG;
+		$i += 4;
+	    } elsif ($ent == 011) {
+		# program limits ... OK, mostly
+		my $dis = $rec->[$i+1];
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ( 01000 ); # make this up, no easy way to compute it
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(LIM1): adr=%06o val=%06o ; dis=%06o\n",
+		            $adr, $val, $dis if $DEBUG;
+		$dis += 2;
+		$adr += 2;
+		$val = $datmsk & ($program{END}{ADDRESS});
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(LIM2): adr=%06o val=%06o ; dis=%06o\n",
+		            $adr, $val, $dis if $DEBUG;
+		$i += 2;
+	    } elsif ($ent == 012) {
+		# psect relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START});
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PR):   adr=%06o val=%06o ; dis=%06o nam='%s'\n",
+		            $adr, $val, $dis, $nam if $DEBUG;
+		$i += 6;
+	    } elsif ($ent == 014) {
+		# psect displaced relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START} - ($adr+2));
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PDR):  adr=%06o val=%06o ; dis=%06o nam='%s'\n",
+		            $adr, $val, $dis, $nam if $DEBUG;
+		$i += 6;
+	    } elsif ($ent == 015) {
+		# psect additive relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START} + $con);
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PAR):  adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
+		            $adr, $val, $dis, $con, $nam if $DEBUG;
+		$i += 8;
+	    } elsif ($ent == 016) {
+		# psect additive displaced relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START} + $con - ($adr+2));
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PADR): adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
+		            $adr, $val, $dis, $con, $nam if $DEBUG;
+		$i += 8;
+	    } elsif ($ent == 017) {
+		# complex relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = '. ABS.';
+		my $con = 0;
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $loc = 0;
+		my $val = 0;
+		my $opc = "";
+		my @stk = ();
+		my $dun = 0;
+		for ($i += 2; !$dun; $i += 1) {
+		    if ($rec->[$i] == 000) {
+			$opc = "NOP";
+		    } elsif ($rec->[$i] == 001) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[0] + $arg[1]);
+			$opc = "ADD";
+		    } elsif ($rec->[$i] == 002) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[0] - $arg[1]);
+			$opc = "SUB";
+		    } elsif ($rec->[$i] == 003) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[0] * $arg[1]);
+			$opc = "MUL";
+		    } elsif ($rec->[$i] == 004) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[1] == 0 ? 0 : int($arg[0] / $arg[1]));
+			$opc = "DIV";
+		    } elsif ($rec->[$i] == 005) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[0] & $arg[1]);
+			$opc = "AND";
+		    } elsif ($rec->[$i] == 006) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[0] | $arg[1]);
+			$opc = "IOR";
+		    } elsif ($rec->[$i] == 007) {
+			my @arg = splice(@stk,-2,2);
+			push(@stk, $arg[0] ^ $arg[1]);
+			$opc = "XOR";
+		    } elsif ($rec->[$i] == 010) {
+			my @arg = splice(@stk,-1,1);
+			push(@stk, -$arg[0]);
+			$opc = "NEG";
+		    } elsif ($rec->[$i] == 011) {
+			my @arg = splice(@stk,-1,1);
+			push(@stk, ~$arg[0]);
+			$opc = "COM";
+		    } elsif ($rec->[$i] == 012) {
+			my @arg = splice(@stk,-1,1);
+			$val = $arg[0];
+			$opc = "STO";
+			$dun = 1;
+		    } elsif ($rec->[$i] == 013) {
+			############## may need tweaking ################
+			my @arg = splice(@stk,-1,1);
+			$val = $arg[0];
+			$opc = "STO+DIS";
+			$dun = 1;
+		    } elsif ($rec->[$i] == 016) {
+			############## may need tweaking ################
+			$nam = &rad2asc(($rec->[$i+2]<<8)|($rec->[$i+1]<<0),
+					($rec->[$i+4]<<8)|($rec->[$i+3]<<0));
+			$con = $gblsym{$nam}{VALUE};
+			push(@stk, $con);
+			$opc = sprintf("GLB[%s]=(%o)", &trim($nam), $con);
+			$i += 4;
+		    } elsif ($rec->[$i] == 017) {
+			$nam = $psect[$rec->[$i+1]];
+			$con = ($rec->[$i+3]<<8) | ($rec->[$i+2]<<0);
+			$loc = $psect{$nam}{START} + $con;
+			push(@stk, $loc);
+			$opc = sprintf("FET[%s+%o]=(%o)", &trim($nam), $con, $loc);
+			$i += 3;
+		    } elsif ($rec->[$i] == 020) {
+			$con = ($rec->[$i+2]<<8) | ($rec->[$i+1]<<0);
+			push(@stk, $con);
+			$opc = "CON";
+			$i += 2;
+		    }
+		    $stk[-1] = $datmsk & $stk[-1] if @stk;
+		    printf $LOG "....OPC=%-20s STK=(%s)\n", $opc, join(",",map(sprintf("%o",$_),@stk)) if $DEBUG;
+		}
+		printf $LOG "..RLD(CMPX): adr=%06o val=%06o ; dis=%06o\n", $adr, $val, $dis if $DEBUG;
+	    } else {
+		die sprintf("Error: Unknown RLD entry 0%o (%d)", $ent, $ent);
+	    }
+	}
+
+    } elsif ($key == 005) { # ISD
+
+	# ignore
+	printf $LOG "..ISD: ignored\n" if $DEBUG;
+
+    } elsif ($key == 006) { # ENDMOD
+
+	# just say we saw it
+	printf $LOG "..ENDMOD\n\n\n" if $DEBUG;
+
+    } elsif ($key == 007) { # LIBHDR
+
+	# ignore
+	printf $LOG "..LIBHDR: ignored\n" if $DEBUG;
+
+    } elsif ($key == 010) { # LIBEND
+
+	# ignore
+	printf $LOG "..LIBEND: ignored\n" if $DEBUG;
+
+    } else { # unknown
+
+	# invalid record type in the object file
+	die sprintf("Error: unknown record type 0%o (%d)", $key, $key);
+
+    }
+
+    return;
 }
 
 #----------------------------------------------------------------------------------------------------
