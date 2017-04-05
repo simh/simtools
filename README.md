@@ -3,7 +3,7 @@
 If run with no options, it prints a usage screen:
 
 ```
-obj2hex.pl v1.5 by Don North (perl 5.022)
+obj2hex.pl v2.0 by Don North (perl 5.022)
 Usage: ./obj2hex.pl [options...] arguments
        --help                  output manpage and exit
        --debug                 enable debug mode
