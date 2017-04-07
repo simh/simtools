@@ -142,4 +142,5 @@ HISTORY
       2016-01-28 v1.5 donorth - Added RLD processing, especially complex.
       2017-04-01 v2.0 donorth - Started to add capability to process multiple
                                 input object files ... still a work in progress.
+				Renamed from obj2hex.pl to obj2bin.pl
 ```
