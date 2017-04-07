@@ -35,11 +35,11 @@ require 5.008;
 
 =head1 NAME
 
-obj2hex.pl - Convert a Macro-11 program image to PROM/load format
+obj2bin.pl - Convert a Macro-11 program image to PROM/load format
 
 =head1 SYNOPSIS
 
-obj2hex.pl
+obj2bin.pl
 S<[--help]>
 S<[--debug]>
 S<[--verbose]>
@@ -161,11 +161,11 @@ C<Error: Bad checksum exp=0x%02X rcv=0x%02X> -- compare rcv'ed checksum vs exp'e
 
 Some examples of common usage:
 
-  obj2hex.pl --help
+  obj2bin.pl --help
 
-  obj2hex.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
+  obj2bin.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
 
-  obj2hex.pl --verbose --binary --out memtest.bin memtest.obj
+  obj2bin.pl --verbose --binary --out memtest.bin memtest.obj
 
 =head1 AUTHOR
 
@@ -183,6 +183,7 @@ Modification history:
   2016-01-28 v1.5 donorth - Added RLD processing, especially complex.
   2017-04-01 v2.0 donorth - Started to add capability to process multiple
                             input object files ... still a work in progress.
+                            Renamed from obj2hex.pl to obj2bin.pl
 
 =cut
 
@@ -259,7 +260,7 @@ unless ($NOERROR
 	&& defined($outfile)
 	&& $romtype ne 'NONE'
     ) {
-    printf STDERR "obj2hex.pl %s by Don North (perl %g)\n", $VERSION, $];
+    printf STDERR "obj2bin.pl %s by Don North (perl %g)\n", $VERSION, $];
     print STDERR "Usage: $0 [options...] arguments\n";
     print STDERR <<"EOF";
        --help                  output manpage and exit
@@ -368,6 +369,7 @@ my $psectnumb = -1;
 my $textaddr = 0;
 
 # program defaults
+$program{START}{ADDRESS} = 1;
 $program{START}{VALUE} = 1;
 $program{START}{PSECT} = '. ABS.';
 
@@ -729,11 +731,11 @@ sub parse_rec ($) {
 		$psect[++$psectnumb] = $nam;
 		$psect{$nam}{NUMBER} = $psectnumb;
 		$psect{$nam}{FLG}{$flg&(1<<0) ? "GBL" : $flg&(1<<6) ? "GBL" : "LCL"}++;
-		$psect{$nam}{FLG}{$flg&(1<<2) ? "OVR" : "CAT"}++;
+		$psect{$nam}{FLG}{$flg&(1<<2) ? "OVR" : "CON"}++;
 		$psect{$nam}{FLG}{$flg&(1<<4) ? "R/O" : "R/W"}++;
 		$psect{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
 		$psect{$nam}{FLG}{$flg&(1<<7) ? "D"   : "I/D"}++;
-		if ($psect{$nam}{FLG}{CAT}) {
+		if ($psect{$nam}{FLG}{CON}) {
 		    $psect{$nam}{LENGTH} = $val;
 		    $psect{$nam}{START} = $psectaddr;
 		    $psectname = $nam;
@@ -756,7 +758,7 @@ sub parse_rec ($) {
     } elsif ($key == 002) { # ENDGSD
 
 	# just say we saw it
-	printf $LOG "..ENDGSD\n" if $DEBUG;
+	printf $LOG "..ENDGSD\n\n" if $DEBUG;
 
 	$program{END}{ADDRESS} = 0;
 	foreach my $nam (sort(keys(%psect))) {
@@ -764,11 +766,13 @@ sub parse_rec ($) {
 	    my $length = $psect{$nam}{LENGTH};
 	    my $end = $length ? $start + $length - 1 : $start;
 	    $program{END}{ADDRESS} = $end if $end > $program{END}{ADDRESS};
-	    printf $LOG "..PSECT[%d](%s) START=%06o END=%06o LENGTH=%06o\n",
+	    printf $LOG "....PSECT[%02d](%s) START=%06o END=%06o LENGTH=%06o\n",
 	                $psect{$nam}{NUMBER}, $nam, $start, $end, $length if $length && $DEBUG;
 	}
-	$program{START}{ADDRESS} = $program{START}{VALUE} + $psect{$program{START}{PSECT}}{START};
-	printf $LOG "..PROG(ADDRESS) START=%06o END=%06o\n",
+	if ($program{START}{ADDRESS} == 1) {
+	    $program{START}{ADDRESS} = $program{START}{VALUE} + $psect{$program{START}{PSECT}}{START};
+	}
+	printf $LOG "\n....PROG(ADDRESS) START=%06o END=%06o\n",
 	            $program{START}{ADDRESS}, $program{END}{ADDRESS} if $DEBUG;
 
     } elsif ($key == 003) { # TXT
@@ -814,6 +818,68 @@ sub parse_rec ($) {
 		printf $LOG "..RLD(IR):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
 		            $adr, $val, $dis, $con if $DEBUG;
 		$i += 4;
+	    } elsif ($ent == 003) {
+		# internal displaced relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $con = ($rec->[$i+3]<<8)|($rec->[$i+2]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($con - ($adr+2));
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(IDR):  adr=%06o val=%06o ; dis=%06o con=%06o\n",
+		            $adr, $val, $dis, $con if $DEBUG;
+		$i += 4;
+	    } elsif ($ent == 012) {
+		# psect relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START});
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PR):   adr=%06o val=%06o ; dis=%06o nam='%s'\n",
+		            $adr, $val, $dis, $nam if $DEBUG;
+		$i += 6;
+	    } elsif ($ent == 014) {
+		# psect displaced relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START} - ($adr+2));
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PDR):  adr=%06o val=%06o ; dis=%06o nam='%s'\n",
+		            $adr, $val, $dis, $nam if $DEBUG;
+		$i += 6;
+	    } elsif ($ent == 015) {
+		# psect additive relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START} + $con);
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PAR):  adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
+		            $adr, $val, $dis, $con, $nam if $DEBUG;
+		$i += 8;
+	    } elsif ($ent == 016) {
+		# psect additive displaced relocation ... OK
+		my $dis = $rec->[$i+1];
+		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
+		# process
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($psect{$nam}{START} + $con - ($adr+2));
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		printf $LOG "..RLD(PADR): adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
+		            $adr, $val, $dis, $con, $nam if $DEBUG;
+		$i += 8;
 	    } elsif ($ent == 002) {
 		# global relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		my $dis = $rec->[$i+1];
@@ -822,18 +888,6 @@ sub parse_rec ($) {
 		printf $LOG "..RLD(GR):   dis=%06o nam='%s'\n",
 		            $dis, $nam if $DEBUG;
 		$i += 6;
-	    } elsif ($ent == 003) {
-		# internal displaced ... OK
-		my $dis = $rec->[$i+1];
-		my $con = ($rec->[$i+3]<<8)|($rec->[$i+2]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($con - ($adr+2));
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(ID):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
-		            $adr, $val, $dis, $con if $DEBUG;
-		$i += 4;
 	    } elsif ($ent == 004) {
 		# global displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		my $dis = $rec->[$i+1];
@@ -898,56 +952,6 @@ sub parse_rec ($) {
 		printf $LOG "..RLD(LIM2): adr=%06o val=%06o ; dis=%06o\n",
 		            $adr, $val, $dis if $DEBUG;
 		$i += 2;
-	    } elsif ($ent == 012) {
-		# psect relocation ... OK
-		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START});
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PR):   adr=%06o val=%06o ; dis=%06o nam='%s'\n",
-		            $adr, $val, $dis, $nam if $DEBUG;
-		$i += 6;
-	    } elsif ($ent == 014) {
-		# psect displaced relocation ... OK
-		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START} - ($adr+2));
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PDR):  adr=%06o val=%06o ; dis=%06o nam='%s'\n",
-		            $adr, $val, $dis, $nam if $DEBUG;
-		$i += 6;
-	    } elsif ($ent == 015) {
-		# psect additive relocation ... OK
-		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
-		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START} + $con);
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PAR):  adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
-		            $adr, $val, $dis, $con, $nam if $DEBUG;
-		$i += 8;
-	    } elsif ($ent == 016) {
-		# psect additive displaced relocation ... OK
-		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
-		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
-		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($psect{$nam}{START} + $con - ($adr+2));
-		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
-		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
-		printf $LOG "..RLD(PADR): adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
-		            $adr, $val, $dis, $con, $nam if $DEBUG;
-		$i += 8;
 	    } elsif ($ent == 017) {
 		# complex relocation ... OK
 		my $dis = $rec->[$i+1];
@@ -1034,7 +1038,7 @@ sub parse_rec ($) {
 		    $stk[-1] = $datmsk & $stk[-1] if @stk;
 		    printf $LOG "....OPC=%-20s STK=(%s)\n", $opc, join(",",map(sprintf("%o",$_),@stk)) if $DEBUG;
 		}
-		printf $LOG "..RLD(CMPX): adr=%06o val=%06o ; dis=%06o\n", $adr, $val, $dis if $DEBUG;
+		printf $LOG "..RLD(CPXR): adr=%06o val=%06o ; dis=%06o\n", $adr, $val, $dis if $DEBUG;
 	    } else {
 		die sprintf("Error: Unknown RLD entry 0%o (%d)", $ent, $ent);
 	    }

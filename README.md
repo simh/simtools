@@ -1,10 +1,10 @@
-<B>obj2hex.pl</B> is a PDP-11 object file translator / linker, transforming an .obj file as output from macro11 into an absolute binary load image file (.bin) or other useful formats (.hex).
+<B>obj2bin.pl</B> is a PDP-11 object file translator / linker, transforming an .obj file as output from macro11 into an absolute binary load image file (.bin) or other useful formats (.hex).
 
 If run with no options, it prints a usage screen:
 
 ```
-obj2hex.pl v2.0 by Don North (perl 5.022)
-Usage: ./obj2hex.pl [options...] arguments
+obj2bin.pl v2.0 by Don North (perl 5.022)
+Usage: ./obj2bin.pl [options...] arguments
        --help                  output manpage and exit
        --debug                 enable debug mode
        --verbose               verbose status reporting
@@ -24,10 +24,10 @@ If run with the --help option it prints a longer manual page:
 
 ```
 NAME
-    obj2hex.pl - Convert a Macro-11 program image to PROM/load format
+    obj2bin.pl - Convert a Macro-11 program image to PROM/load format
 
 SYNOPSIS
-    obj2hex.pl [--help] [--debug] [--verbose] [--boot] [--console] [--binary]
+    obj2bin.pl [--help] [--debug] [--verbose] [--boot] [--console] [--binary]
     [--ascii] [--bytes=N] [--nocrc] [--logfile=LOGFILE] --outfile=BINFILE
     OBJFILE...
 
@@ -122,11 +122,11 @@ ERRORS
 EXAMPLES
     Some examples of common usage:
 
-      obj2hex.pl --help
+      obj2bin.pl --help
 
-      obj2hex.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
+      obj2bin.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
 
-      obj2hex.pl --verbose --binary --out memtest.bin memtest.obj
+      obj2bin.pl --verbose --binary --out memtest.bin memtest.obj
 
 AUTHOR
     Don North - donorth <ak6dn _at_ mindspring _dot_ com>
