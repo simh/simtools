@@ -293,6 +293,7 @@ sub rad2asc (@);
 sub crc (%);
 sub sym2psect ($$);
 sub read_rec ($);
+sub get_global ($);
 sub parse_rec ($$$);
 
 #----------------------------------------------------------------------------------------------------
@@ -692,14 +693,32 @@ sub read_rec ($) {
     }
 
     # check we have a well formatted record
-    die sprintf("Error: invalid object file record format (%d)", $err) if $err;
+    warn sprintf("Warning: invalid object file record format (%d)", $err) if $err;
 
     # compare rcv'ed checksum vs exp'ed checksum
     my $exp = &chksum(0x01, $len>>0, $len>>8, @dat);
-    die sprintf("Error: Bad checksum exp=0x%02X rcv=0x%02X", $exp, $rcv) unless $exp == $rcv;
+    warn sprintf("Warning: Bad checksum exp=0x%02X rcv=0x%02X", $exp, $rcv) unless $exp == $rcv;
 
     # all is well, return the record
     return @dat;
+}
+
+#----------------------------------------------------------------------------------------------------
+
+# get a global symbol target value
+
+sub get_global ($) {
+
+    my ($sym) = @_;
+
+    # return target value if exists
+    return $gblsym{$sym}{DEF}{ADDRESS} if exists $gblsym{$sym}{DEF}{ADDRESS};
+
+    # issue a warning for multiple definition with a different address
+    warn sprintf("Warning: global symbol undefined: symbol=%s, assuming value of 000000\n", $sym);
+
+    # and return nil
+    return 0;
 }
 
 #----------------------------------------------------------------------------------------------------
@@ -731,12 +750,21 @@ sub parse_rec ($$$) {
 		$program{START}{VALUE} = $val;
 	    } elsif ($ent == 4) {
 		# GBLSYM flags
+		my $adr = $val + $psect{$psectname}{START};
 		$def = $flg&(1<<3) ? "DEF" : "REF";
-		$gblsym{$sym}{$def}{FLG}{$flg&(1<<0) ? "WEA" : "STR"}++;
-		$gblsym{$sym}{$def}{FLG}{$flg&(1<<3) ? "DEF" : "REF"}++;
-		$gblsym{$sym}{$def}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
-		$gblsym{$sym}{$def}{PSECT} = $psectname;
-		$gblsym{$sym}{$def}{VALUE} = $val;
+		if ($def eq "DEF" && exists $gblsym{$sym}{$def} && $adr != $gblsym{$sym}{$def}{ADDRESS}) {
+		    # issue a warning for multiple definition with a different address
+		    warn sprintf("Warning: attempted global symbol redefinition: symbol=%s (address/psect) old=%06o/%s new=%06o/%s -- IGNORING\n",
+				 &trim($sym), $gblsym{$sym}{$def}{ADDRESS}, &trim($gblsym{$sym}{$def}{PSECT}), $adr, &trim($psectname));
+		} else {
+		    # define first time only ... ignore any redefinition attempt
+		    $gblsym{$sym}{$def}{FLG}{$flg&(1<<0) ? "WEA" : "STR"}++;
+		    $gblsym{$sym}{$def}{FLG}{$flg&(1<<3) ? "DEF" : "REF"}++;
+		    $gblsym{$sym}{$def}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
+		    $gblsym{$sym}{$def}{PSECT} = $psectname;
+		    $gblsym{$sym}{$def}{VALUE} = $val;
+		    $gblsym{$sym}{$def}{ADDRESS} = $adr;
+		}
 	    } elsif ($ent == 5) {
 		# PSECT flags
 		$psect[++$psectnumb] = $nam;
@@ -786,7 +814,6 @@ sub parse_rec ($$$) {
 	printf $LOG "\n" if $DEBUG;
 	foreach my $nam (sort(keys(%gblsym))) {
 	    if (exists $gblsym{$nam}{DEF}) {
-		$gblsym{$nam}{DEF}{ADDRESS} = $gblsym{$nam}{DEF}{VALUE} + $psect{$gblsym{$nam}{DEF}{PSECT}}{START};
 		printf $LOG "....GBLSYM(%s) PSECT='%s' VALUE=%06o : ADDRESS=%06o\n",
 		            $nam, $gblsym{$nam}{DEF}{PSECT}, $gblsym{$nam}{DEF}{VALUE}, $gblsym{$nam}{DEF}{ADDRESS} if $DEBUG;
 	    }
@@ -921,7 +948,7 @@ sub parse_rec ($$$) {
 		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS});
+		my $val = $datmsk & (&get_global($sym));
 		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
@@ -935,7 +962,7 @@ sub parse_rec ($$$) {
 		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS} - ($adr+2));
+		my $val = $datmsk & (&get_global($sym) - ($adr+2));
 		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
@@ -950,7 +977,7 @@ sub parse_rec ($$$) {
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS} + $con);
+		my $val = $datmsk & (&get_global($sym) + $con);
 		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
@@ -965,7 +992,7 @@ sub parse_rec ($$$) {
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
-		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS} + $con - ($adr+2));
+		my $val = $datmsk & (&get_global($sym) + $con - ($adr+2));
 		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
@@ -1070,6 +1097,7 @@ sub parse_rec ($$$) {
 			push(@stk, ~$arg[0]);
 			$opc = "COM";
 		    } elsif ($rec->[$i] == 012) {
+			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			my @arg = splice(@stk,-1,1);
 			$val = $arg[0];
 			$opc = "STO";
@@ -1084,7 +1112,7 @@ sub parse_rec ($$$) {
 			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			$nam = &rad2asc(($rec->[$i+2]<<8)|($rec->[$i+1]<<0),
 					($rec->[$i+4]<<8)|($rec->[$i+3]<<0));
-			$con = $gblsym{$nam}{DEF}{VALUE};
+			$con = &get_global($nam);
 			push(@stk, $con);
 			$opc = sprintf("GLB[%s]=(%o)", &trim($nam), $con);
 			$i += 4;
@@ -1106,7 +1134,7 @@ sub parse_rec ($$$) {
 		}
 		printf $LOG "..RLD(CPXR): adr=%06o val=%06o ; dis=%06o\n", $adr, $val, $dis if $DEBUG;
 	    } else {
-		die sprintf("Error: Unknown RLD entry 0%o (%d)", $ent, $ent);
+		warn sprintf("Warning: Unknown RLD entry 0%o (%d)", $ent, $ent);
 	    }
 	}
 
@@ -1133,7 +1161,7 @@ sub parse_rec ($$$) {
     } elsif ($key == 000 || $key >= 011) { # unknown
 
 	# invalid record type in the object file
-	die sprintf("Error: unknown record type 0%o (%d)", $key, $key);
+	warn sprintf("Warning: unknown record type 0%o (%d)", $key, $key);
 
     }
 
