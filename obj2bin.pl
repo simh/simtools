@@ -783,12 +783,12 @@ sub parse_rec ($$$) {
 	                $psect{$nam}{NUMBER}, $nam, $start, $end, $length if $length && $DEBUG;
 	}
 
-	printf $LOG "\n";
+	printf $LOG "\n" if $DEBUG;
 	foreach my $nam (sort(keys(%gblsym))) {
 	    if (exists $gblsym{$nam}{DEF}) {
-		my $address = $gblsym{$nam}{DEF}{VALUE} + $psect{$gblsym{$nam}{DEF}{PSECT}}{START};
+		$gblsym{$nam}{DEF}{ADDRESS} = $gblsym{$nam}{DEF}{VALUE} + $psect{$gblsym{$nam}{DEF}{PSECT}}{START};
 		printf $LOG "....GBLSYM(%s) PSECT='%s' VALUE=%06o : ADDRESS=%06o\n",
-		            $nam, $gblsym{$nam}{DEF}{PSECT}, $gblsym{$nam}{DEF}{VALUE}, $address if $DEBUG;
+		            $nam, $gblsym{$nam}{DEF}{PSECT}, $gblsym{$nam}{DEF}{VALUE}, $gblsym{$nam}{DEF}{ADDRESS} if $DEBUG;
 	    }
 	}
 
@@ -836,8 +836,10 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$psectname}{START} + $con);
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(IR):   adr=%06o val=%06o ; dis=%06o con=%06o\n",
 		            $adr, $val, $dis, $con if $DEBUG;
 		$i += 4;
@@ -848,8 +850,10 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($con - ($adr+2));
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(IDR):  adr=%06o val=%06o ; dis=%06o con=%06o\n",
 		            $adr, $val, $dis, $con if $DEBUG;
 		$i += 4;
@@ -860,8 +864,10 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$nam}{START});
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(PR):   adr=%06o val=%06o ; dis=%06o nam='%s'\n",
 		            $adr, $val, $dis, $nam if $DEBUG;
 		$i += 6;
@@ -872,8 +878,10 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$nam}{START} - ($adr+2));
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(PDR):  adr=%06o val=%06o ; dis=%06o nam='%s'\n",
 		            $adr, $val, $dis, $nam if $DEBUG;
 		$i += 6;
@@ -885,8 +893,10 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$nam}{START} + $con);
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(PAR):  adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
 		            $adr, $val, $dis, $con, $nam if $DEBUG;
 		$i += 8;
@@ -898,44 +908,70 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$nam}{START} + $con - ($adr+2));
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(PADR): adr=%06o val=%06o ; dis=%06o con=%06o nam='%s'\n",
 		            $adr, $val, $dis, $con, $nam if $DEBUG;
 		$i += 8;
 	    } elsif ($ent == 002) {
-		# global relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		# global relocation ... OK
 		my $dis = $rec->[$i+1];
 		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		# process
-		printf $LOG "..RLD(GR):   adr=?????? val=?????? ; dis=%06o            sym='%s'\n",
-		            $dis, $sym if $DEBUG;
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS});
+		# store
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
+		printf $LOG "..RLD(GR):   adr=%06o val=%06o ; dis=%06o            sym='%s'\n",
+		            $adr, $val, $dis, $sym if $DEBUG;
 		$i += 6;
 	    } elsif ($ent == 004) {
-		# global displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		# global displaced relocation ... OK
 		my $dis = $rec->[$i+1];
 		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		# process
-		printf $LOG "..RLD(GDR):  adr=?????? val=?????? ; dis=%06o            sym='%s'\n",
-		            $dis, $sym if $DEBUG;
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS} - ($adr+2));
+		# store
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
+		printf $LOG "..RLD(GDR):  adr=%06o val=%06o ; dis=%06o            sym='%s'\n",
+		            $adr, $val, $dis, $sym if $DEBUG;
 		$i += 6;
 	    } elsif ($ent == 005) {
-		# global additive relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		# global additive relocation ... OK
 		my $dis = $rec->[$i+1];
 		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
-		printf $LOG "..RLD(GAR):  adr=?????? val=?????? ; dis=%06o con=%06o sym='%s'\n",
-		            $dis, $con, $sym if $DEBUG;
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS} + $con);
+		# store
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
+		printf $LOG "..RLD(GAR):  adr=%06o val=%06o ; dis=%06o con=%06o sym='%s'\n",
+		            $adr, $val, $dis, $con, $sym if $DEBUG;
 		$i += 8;
 	    } elsif ($ent == 006) {
-		# global additive displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		# global additive displaced relocation ... OK
 		my $dis = $rec->[$i+1];
 		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
-		printf $LOG "..RLD(GADR): adr=?????? val=?????? ; dis=%06o con=%06o sym='%s'\n",
-		            $dis, $con, $sym if $DEBUG;
+		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $val = $datmsk & ($gblsym{$sym}{DEF}{ADDRESS} + $con - ($adr+2));
+		# store
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
+		printf $LOG "..RLD(GADR): adr=%06o val=%06o ; dis=%06o con=%06o sym='%s'\n",
+		            $adr, $val, $dis, $con, $sym if $DEBUG;
 		$i += 8;
 	    } elsif ($ent == 007) {
 		# location counter definition ... OK
@@ -945,6 +981,7 @@ sub parse_rec ($$$) {
 		# process
 		$psectname = $nam;
 		$textaddr = $datmsk & ($con);
+		# print
 		printf $LOG "..RLD(LCD):  adr=%06o            ; dis=%06o con=%06o nam='%s'\n",
 		            $textaddr, $dis, $con, $nam if $DEBUG;
 		$i += 8;
@@ -954,6 +991,7 @@ sub parse_rec ($$$) {
 		my $con = ($rec->[$i+3]<<8)|($rec->[$i+2]<<0);
 		# process
 		$textaddr = $datmsk & ($con);
+		# print
 		printf $LOG "..RLD(LCM):  adr=%06o            ; dis=%06o con=%06o\n",
 		            $textaddr, $dis, $con if $DEBUG;
 		$i += 4;
@@ -963,15 +1001,20 @@ sub parse_rec ($$$) {
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ( 01000 ); # make this up, no easy way to compute it
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(LIM1): adr=%06o val=%06o ; dis=%06o\n",
 		            $adr, $val, $dis if $DEBUG;
+		# process
 		$dis += 2;
 		$adr += 2;
 		$val = $datmsk & ($program{END}{ADDRESS});
+		# store
 		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
 		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
+		# print
 		printf $LOG "..RLD(LIM2): adr=%06o val=%06o ; dis=%06o\n",
 		            $adr, $val, $dis if $DEBUG;
 		$i += 2;
@@ -1032,13 +1075,13 @@ sub parse_rec ($$$) {
 			$opc = "STO";
 			$dun = 1;
 		    } elsif ($rec->[$i] == 013) {
-			############## may need tweaking ################
+			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			my @arg = splice(@stk,-1,1);
 			$val = $arg[0];
 			$opc = "STO+DIS";
 			$dun = 1;
 		    } elsif ($rec->[$i] == 016) {
-			############## may need tweaking ################
+			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			$nam = &rad2asc(($rec->[$i+2]<<8)|($rec->[$i+1]<<0),
 					($rec->[$i+4]<<8)|($rec->[$i+3]<<0));
 			$con = $gblsym{$nam}{DEF}{VALUE};
