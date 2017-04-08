@@ -291,8 +291,9 @@ sub trim ($);
 sub chksum (@);
 sub rad2asc (@);
 sub crc (%);
+sub sym2psect ($$);
 sub read_rec ($);
-sub parse_rec ($);
+sub parse_rec ($$$);
 
 #----------------------------------------------------------------------------------------------------
 
@@ -363,7 +364,7 @@ my %gblsym = ();
 my %psect = ();
 my @psect = ();
 my %program = ();
-my $psectname = '. ABS.';
+my $psectname = sprintf("%02d:%s",1,'. ABS.');
 my $psectaddr = 0;
 my $psectnumb = -1;
 my $textaddr = 0;
@@ -371,20 +372,18 @@ my $textaddr = 0;
 # program defaults
 $program{START}{ADDRESS} = 1;
 $program{START}{VALUE} = 1;
-$program{START}{PSECT} = '. ABS.';
+$program{START}{PSECT} = $psectname;
 
-# process all object files
-while (my $objfile = shift(@ARGV)) {
-
-    # open the input .obj file, die if error
-    my $OBJ = FileHandle->new("< ".$objfile);
-    die "Error: can't open input object file '$objfile'\n" unless defined $OBJ;
-
-    # now parse all the records
-    while (my @rec = &read_rec($OBJ)) { &parse_rec(\@rec); }
-
-    # done with object file
-    $OBJ->close;
+# two passes, first is headers, second is data records
+foreach my $pass (1..2) {
+    foreach my $numb (0..$#ARGV) {
+	my $objfile = $ARGV[$numb];
+	my $OBJ = FileHandle->new("< ".$objfile);
+	die "Error: can't open input object file '$objfile'\n" unless defined $OBJ;
+	printf $LOG "\n\nPROCESS PASS %d FILE %d '%s'\n\n", $pass, $numb+1, $objfile if $DEBUG;
+	while (my @rec = &read_rec($OBJ)) { &parse_rec($numb+1, $pass, \@rec); }
+	$OBJ->close;
+    }
 }
 
 #----------------------------------------------------------------------------------------------------
@@ -574,6 +573,15 @@ sub rad2asc (@) {
 
 #----------------------------------------------------------------------------------------------------
 
+# symbol to psect name converter
+
+sub sym2psect ($$) {
+
+    return sprintf("%02d:%-6s", @_);
+}
+
+#----------------------------------------------------------------------------------------------------
+
 # crc computation routine
 
 sub crc (%) {
@@ -669,7 +677,7 @@ sub read_rec ($) {
     push(@suf, ord($buf));
 
     # output the record if debugging
-    if ($DEBUG) {
+    if ($DEBUG >= 2) {
 	my $fmt = "%03o";
 	my $n = 16;
 	my $pre = sprintf("RECORD: [%s] ",join(" ",map(sprintf($fmt,$_),@pre)));
@@ -698,34 +706,37 @@ sub read_rec ($) {
 
 # parse an input object file record, update data structures
 
-sub parse_rec ($) {
+sub parse_rec ($$$) {
 
-    my ($rec) = (@_);
+    my ($file,$pass,$rec) = (@_);
 
     # type is first byte of record
     my $key = $rec->[0];
 
-    if ($key == 001) { # GSD
+    if ($key == 001 && $pass == 1) { # GSD
 
 	# iterate over GSD subrecords
 	for (my $i = 2; $i < scalar(@$rec); ) {
 	    # GSD records are fixed 8B length all in the same format
-	    my $nam = &rad2asc(($rec->[$i+1]<<8)|($rec->[$i+0]<<0), ($rec->[$i+3]<<8)|($rec->[$i+2]<<0));
+	    my $sym = &rad2asc(($rec->[$i+1]<<8)|($rec->[$i+0]<<0),($rec->[$i+3]<<8)|($rec->[$i+2]<<0));
+	    my $nam = &sym2psect($file,$sym);
 	    my $flg = $rec->[$i+4];
 	    my $ent = $rec->[$i+5];
 	    my $val = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 	    my @ent = ('MODULE','CSECT','INTSYM','XFRADR','GBLSYM','PSECT','IDENT','VSECT');
+	    my $def = undef;
 	    if ($ent == 3) {
 		# XFRADR
 		$program{START}{PSECT} = $nam;
 		$program{START}{VALUE} = $val;
 	    } elsif ($ent == 4) {
 		# GBLSYM flags
-		$gblsym{$nam}{FLG}{$flg&(1<<0) ? "WEA" : "STR"}++;
-		$gblsym{$nam}{FLG}{$flg&(1<<3) ? "DEF" : "REF"}++;
-		$gblsym{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
-		$gblsym{$nam}{PSECT} = $psectname;
-		$gblsym{$nam}{VALUE} = $val;
+		$def = $flg&(1<<3) ? "DEF" : "REF";
+		$gblsym{$sym}{$def}{FLG}{$flg&(1<<0) ? "WEA" : "STR"}++;
+		$gblsym{$sym}{$def}{FLG}{$flg&(1<<3) ? "DEF" : "REF"}++;
+		$gblsym{$sym}{$def}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
+		$gblsym{$sym}{$def}{PSECT} = $psectname;
+		$gblsym{$sym}{$def}{VALUE} = $val;
 	    } elsif ($ent == 5) {
 		# PSECT flags
 		$psect[++$psectnumb] = $nam;
@@ -747,15 +758,17 @@ sub parse_rec ($) {
 		}
 	    }
 	    if ($DEBUG) {
-		printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, $nam, $val;
-		printf $LOG " flags=%s", join(",", sort(keys(%{$gblsym{$nam}{FLG}}))) if $ent == 4;
+		printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, ($ent == 4 ? $sym : $nam), $val;
+		printf $LOG " psect='%s' value=%06o", $gblsym{$sym}{$def}{PSECT}, $gblsym{$sym}{$def}{VALUE} if $ent == 4;
+		printf $LOG " length=%06o start=%06o", $psect{$nam}{LENGTH}, $psect{$nam}{START} if $ent == 5;
+		printf $LOG " flags=%s", join(",", sort(keys(%{$gblsym{$sym}{$def}{FLG}}))) if $ent == 4;
 		printf $LOG " flags=%s", join(",", sort(keys(%{$psect{$nam}{FLG}}))) if $ent == 5;
 		printf $LOG "\n";
 	    }
 	    $i += 8;
 	}
 
-    } elsif ($key == 002) { # ENDGSD
+    } elsif ($key == 002 && $pass == 1) { # ENDGSD
 
 	# just say we saw it
 	printf $LOG "..ENDGSD\n\n" if $DEBUG;
@@ -769,13 +782,23 @@ sub parse_rec ($) {
 	    printf $LOG "....PSECT[%02d](%s) START=%06o END=%06o LENGTH=%06o\n",
 	                $psect{$nam}{NUMBER}, $nam, $start, $end, $length if $length && $DEBUG;
 	}
+
+	printf $LOG "\n";
+	foreach my $nam (sort(keys(%gblsym))) {
+	    if (exists $gblsym{$nam}{DEF}) {
+		my $address = $gblsym{$nam}{DEF}{VALUE} + $psect{$gblsym{$nam}{DEF}{PSECT}}{START};
+		printf $LOG "....GBLSYM(%s) PSECT='%s' VALUE=%06o : ADDRESS=%06o\n",
+		            $nam, $gblsym{$nam}{DEF}{PSECT}, $gblsym{$nam}{DEF}{VALUE}, $address if $DEBUG;
+	    }
+	}
+
 	if ($program{START}{ADDRESS} == 1) {
 	    $program{START}{ADDRESS} = $program{START}{VALUE} + $psect{$program{START}{PSECT}}{START};
 	}
 	printf $LOG "\n....PROG(ADDRESS) START=%06o END=%06o\n",
 	            $program{START}{ADDRESS}, $program{END}{ADDRESS} if $DEBUG;
 
-    } elsif ($key == 003) { # TXT
+    } elsif ($key == 003 && $pass == 2) { # TXT
 
 	# process text record
 	my $off = ($rec->[3]<<8)|($rec->[2]<<0);
@@ -798,7 +821,7 @@ sub parse_rec ($) {
 	$adrmax = $adr+$len-1 if $adrmax eq '' || $adr+$len-1 > $adrmax;
 	$textaddr = $adr;
 
-    } elsif ($key == 004) { # RLD
+    } elsif ($key == 004 && $pass == 2) { # RLD
 
 	# iterate over RLD subrecords
 	for (my $i = 2; $i < scalar(@$rec); ) {
@@ -833,7 +856,7 @@ sub parse_rec ($) {
 	    } elsif ($ent == 012) {
 		# psect relocation ... OK
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $nam = &sym2psect($file,&rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0)));
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$nam}{START});
@@ -845,7 +868,7 @@ sub parse_rec ($) {
 	    } elsif ($ent == 014) {
 		# psect displaced relocation ... OK
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $nam = &sym2psect($file,&rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0)));
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
 		my $val = $datmsk & ($psect{$nam}{START} - ($adr+2));
@@ -857,7 +880,7 @@ sub parse_rec ($) {
 	    } elsif ($ent == 015) {
 		# psect additive relocation ... OK
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $nam = &sym2psect($file,&rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0)));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
@@ -870,7 +893,7 @@ sub parse_rec ($) {
 	    } elsif ($ent == 016) {
 		# psect additive displaced relocation ... OK
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $nam = &sym2psect($file,&rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0)));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
@@ -883,41 +906,41 @@ sub parse_rec ($) {
 	    } elsif ($ent == 002) {
 		# global relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		# process
-		printf $LOG "..RLD(GR):   dis=%06o nam='%s'\n",
-		            $dis, $nam if $DEBUG;
+		printf $LOG "..RLD(GR):   adr=?????? val=?????? ; dis=%06o            sym='%s'\n",
+		            $dis, $sym if $DEBUG;
 		$i += 6;
 	    } elsif ($ent == 004) {
 		# global displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		# process
-		printf $LOG "..RLD(GDR):  dis=%06o nam='%s'\n",
-		            $dis, $nam if $DEBUG;
+		printf $LOG "..RLD(GDR):  adr=?????? val=?????? ; dis=%06o            sym='%s'\n",
+		            $dis, $sym if $DEBUG;
 		$i += 6;
 	    } elsif ($ent == 005) {
 		# global additive relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
-		printf $LOG "..RLD(GAR):  dis=%06o con=%06o nam='%s'\n",
-		            $dis, $con, $nam if $DEBUG;
+		printf $LOG "..RLD(GAR):  adr=?????? val=?????? ; dis=%06o con=%06o sym='%s'\n",
+		            $dis, $con, $sym if $DEBUG;
 		$i += 8;
 	    } elsif ($ent == 006) {
 		# global additive displaced relocation ... TBD <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $sym = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
-		printf $LOG "..RLD(GADR): dis=%06o con=%06o nam='%s'\n",
-		            $dis, $con, $nam if $DEBUG;
+		printf $LOG "..RLD(GADR): adr=?????? val=?????? ; dis=%06o con=%06o sym='%s'\n",
+		            $dis, $con, $sym if $DEBUG;
 		$i += 8;
 	    } elsif ($ent == 007) {
 		# location counter definition ... OK
 		my $dis = $rec->[$i+1];
-		my $nam = &rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0), ($rec->[$i+5]<<8)|($rec->[$i+4]<<0));
+		my $nam = &sym2psect($file,&rad2asc(($rec->[$i+3]<<8)|($rec->[$i+2]<<0),($rec->[$i+5]<<8)|($rec->[$i+4]<<0)));
 		my $con = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
 		# process
 		$psectname = $nam;
@@ -955,7 +978,7 @@ sub parse_rec ($) {
 	    } elsif ($ent == 017) {
 		# complex relocation ... OK
 		my $dis = $rec->[$i+1];
-		my $nam = '. ABS.';
+		my $nam = &sym2psect($file,'. ABS.');
 		my $con = 0;
 		# process
 		my $adr = $adrmsk & ($textaddr + $dis - 4);
@@ -1018,7 +1041,7 @@ sub parse_rec ($) {
 			############## may need tweaking ################
 			$nam = &rad2asc(($rec->[$i+2]<<8)|($rec->[$i+1]<<0),
 					($rec->[$i+4]<<8)|($rec->[$i+3]<<0));
-			$con = $gblsym{$nam}{VALUE};
+			$con = $gblsym{$nam}{DEF}{VALUE};
 			push(@stk, $con);
 			$opc = sprintf("GLB[%s]=(%o)", &trim($nam), $con);
 			$i += 4;
@@ -1064,7 +1087,7 @@ sub parse_rec ($) {
 	# ignore
 	printf $LOG "..LIBEND: ignored\n" if $DEBUG;
 
-    } else { # unknown
+    } elsif ($key == 000 || $key >= 011) { # unknown
 
 	# invalid record type in the object file
 	die sprintf("Error: unknown record type 0%o (%d)", $key, $key);
