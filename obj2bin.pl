@@ -1051,7 +1051,7 @@ sub parse_rec ($$$) {
 		my $nam = &sym2psect($file,'. ABS.');
 		my $con = 0;
 		# process
-		my $adr = $adrmsk & ($textaddr + $dis - 4);
+		my $adr = 0;
 		my $loc = 0;
 		my $val = 0;
 		my $opc = "";
@@ -1059,64 +1059,76 @@ sub parse_rec ($$$) {
 		my $dun = 0;
 		for ($i += 2; !$dun; $i += 1) {
 		    if ($rec->[$i] == 000) {
+			# NOP do nothing
 			$opc = "NOP";
 		    } elsif ($rec->[$i] == 001) {
+			# ADD : pop + pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[0] + $arg[1]);
 			$opc = "ADD";
 		    } elsif ($rec->[$i] == 002) {
+			# SUB : pop - pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[0] - $arg[1]);
 			$opc = "SUB";
 		    } elsif ($rec->[$i] == 003) {
+			# MUL : pop * pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[0] * $arg[1]);
 			$opc = "MUL";
 		    } elsif ($rec->[$i] == 004) {
+			# DIV : pop / pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[1] == 0 ? 0 : int($arg[0] / $arg[1]));
 			$opc = "DIV";
 		    } elsif ($rec->[$i] == 005) {
+			# AND : pop & pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[0] & $arg[1]);
 			$opc = "AND";
 		    } elsif ($rec->[$i] == 006) {
+			# IOR : pop | pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[0] | $arg[1]);
 			$opc = "IOR";
 		    } elsif ($rec->[$i] == 007) {
+			# XOR : pop ^ pop => push
 			my @arg = splice(@stk,-2,2);
 			push(@stk, $arg[0] ^ $arg[1]);
 			$opc = "XOR";
 		    } elsif ($rec->[$i] == 010) {
+			# NEG : pop - => push
 			my @arg = splice(@stk,-1,1);
 			push(@stk, -$arg[0]);
 			$opc = "NEG";
 		    } elsif ($rec->[$i] == 011) {
+			# COM : pop ~ => push
 			my @arg = splice(@stk,-1,1);
 			push(@stk, ~$arg[0]);
 			$opc = "COM";
 		    } elsif ($rec->[$i] == 012) {
-			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			# STO : pop => store @ address
 			my @arg = splice(@stk,-1,1);
-			$val = $arg[0];
+			$adr = $adrmsk & ($textaddr + $dis - 4);
+			$val = $datmsk & ($arg[0]);
 			$opc = "STO";
 			$dun = 1;
 		    } elsif ($rec->[$i] == 013) {
-			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			# STO : pop => store @ address + disp
 			my @arg = splice(@stk,-1,1);
-			$val = $arg[0];
+			$adr = $adrmsk & ($textaddr + $dis - 4);
+			$val = $datmsk & ($arg[0] - ($adr+2));
 			$opc = "STO+DIS";
 			$dun = 1;
 		    } elsif ($rec->[$i] == 016) {
-			############## may need tweaking ################ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			$nam = &rad2asc(($rec->[$i+2]<<8)|($rec->[$i+1]<<0),
-					($rec->[$i+4]<<8)|($rec->[$i+3]<<0));
+			# FET : global => push
+			$nam = &rad2asc(($rec->[$i+2]<<8)|($rec->[$i+1]<<0),($rec->[$i+4]<<8)|($rec->[$i+3]<<0));
 			$con = &get_global($nam);
 			push(@stk, $con);
 			$opc = sprintf("GLB[%s]=(%o)", &trim($nam), $con);
 			$i += 4;
 		    } elsif ($rec->[$i] == 017) {
+			# FET : local => push
 			$nam = $psect[$rec->[$i+1]];
 			$con = ($rec->[$i+3]<<8) | ($rec->[$i+2]<<0);
 			$loc = $psect{$nam}{START} + $con;
@@ -1124,6 +1136,7 @@ sub parse_rec ($$$) {
 			$opc = sprintf("FET[%s+%o]=(%o)", &trim($nam), $con, $loc);
 			$i += 3;
 		    } elsif ($rec->[$i] == 020) {
+			# CONstant : value => push
 			$con = ($rec->[$i+2]<<8) | ($rec->[$i+1]<<0);
 			push(@stk, $con);
 			$opc = "CON";
@@ -1132,7 +1145,11 @@ sub parse_rec ($$$) {
 		    $stk[-1] = $datmsk & $stk[-1] if @stk;
 		    printf $LOG "....OPC=%-20s STK=(%s)\n", $opc, join(",",map(sprintf("%o",$_),@stk)) if $DEBUG;
 		}
+		# print
 		printf $LOG "..RLD(CPXR): adr=%06o val=%06o ; dis=%06o\n", $adr, $val, $dis if $DEBUG;
+		# store
+		$mem[($adr+0)&$adrmsk] = $memmsk & ($val>>0);
+		$mem[($adr+1)&$adrmsk] = $memmsk & ($val>>8);
 	    } else {
 		warn sprintf("Warning: Unknown RLD entry 0%o (%d)", $ent, $ent);
 	    }
