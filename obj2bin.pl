@@ -774,16 +774,28 @@ sub parse_rec ($$$) {
 		$psect{$nam}{FLG}{$flg&(1<<4) ? "R/O" : "R/W"}++;
 		$psect{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
 		$psect{$nam}{FLG}{$flg&(1<<7) ? "D"   : "I/D"}++;
-		$val++ if $val & 1;
-		if ($psect{$nam}{FLG}{CON}) {
-		    $psect{$nam}{LENGTH} = $val;
-		    $psect{$nam}{START} = $psectaddr;
-		    $psectname = $nam;
-		    $psectaddr += $val;
-		} elsif ($psect{$nam}{FLG}{ABS}) {
-		    $psect{$nam}{LENGTH} = $val;
-		    $psect{$nam}{START} = 0;
-		    $psectname = $nam;
+		$psectname = $nam;
+		if ($psect{$nam}{FLG}{ABS}) {
+		    # absolute
+		    if ($psect{$nam}{FLG}{CON}) {
+			# concatenated
+			warn sprintf("Warning: psect ABS,CON is not supported, psect='%s'\n", $psectname);
+		    } else {
+			# overlaid
+			$psect{$nam}{LENGTH} = $val;
+			$psect{$nam}{START} = 0;
+		    }
+		} else {
+		    # relative
+		    if ($psect{$nam}{FLG}{CON}) {
+			# concatenated
+			$psect{$nam}{LENGTH} = $val;
+			$psect{$nam}{START} = $psectaddr & 1 ? ++$psectaddr : $psectaddr;
+			$psectaddr += $val;
+		    } else {
+			# overlaid
+			warn sprintf("Warning: psect REL,OVR is not supported, psect='%s'\n", $psectname);
+		    }
 		}
 	    }
 	    if ($DEBUG) {
