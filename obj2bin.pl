@@ -754,7 +754,7 @@ sub parse_rec ($$$) {
 		$def = $flg&(1<<3) ? "DEF" : "REF";
 		if ($def eq "DEF" && exists $gblsym{$sym}{$def} && $adr != $gblsym{$sym}{$def}{ADDRESS}) {
 		    # issue a warning for multiple definition with a different address
-		    warn sprintf("Warning: attempted global symbol redefinition: symbol=%s (address/psect) old=%06o/%s new=%06o/%s -- IGNORING\n",
+		    warn sprintf("Warning: global symbol redefinition: symbol=%s (address/psect) old=%06o/%s new=%06o/%s -- IGNORING\n",
 				 &trim($sym), $gblsym{$sym}{$def}{ADDRESS}, &trim($gblsym{$sym}{$def}{PSECT}), $adr, &trim($psectname));
 		} else {
 		    # define first time only ... ignore any redefinition attempt
@@ -774,6 +774,7 @@ sub parse_rec ($$$) {
 		$psect{$nam}{FLG}{$flg&(1<<4) ? "R/O" : "R/W"}++;
 		$psect{$nam}{FLG}{$flg&(1<<5) ? "REL" : "ABS"}++;
 		$psect{$nam}{FLG}{$flg&(1<<7) ? "D"   : "I/D"}++;
+		$val++ if $val & 1;
 		if ($psect{$nam}{FLG}{CON}) {
 		    $psect{$nam}{LENGTH} = $val;
 		    $psect{$nam}{START} = $psectaddr;
