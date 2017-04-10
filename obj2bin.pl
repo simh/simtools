@@ -780,19 +780,19 @@ sub parse_rec ($$$) {
 		    if ($psect{$nam}{FLG}{CON}) {
 			# concatenated
 			warn sprintf("Warning: psect ABS,CON is not supported, psect='%s'\n", $psectname);
-		    } else {
+		    } elsif ($psect{$nam}{FLG}{OVR}) {
 			# overlaid
 			$psect{$nam}{LENGTH} = $val;
 			$psect{$nam}{START} = 0;
 		    }
-		} else {
+		} elsif ($psect{$nam}{FLG}{REL}) {
 		    # relative
 		    if ($psect{$nam}{FLG}{CON}) {
 			# concatenated
 			$psect{$nam}{LENGTH} = $val;
 			$psect{$nam}{START} = $psectaddr & 1 ? ++$psectaddr : $psectaddr;
 			$psectaddr += $val;
-		    } else {
+		    } elsif ($psect{$nam}{FLG}{OVR}) {
 			# overlaid
 			warn sprintf("Warning: psect REL,OVR is not supported, psect='%s'\n", $psectname);
 		    }
