@@ -738,7 +738,6 @@ sub parse_rec ($$$) {
 	for (my $i = 2; $i < scalar(@$rec); ) {
 	    # GSD records are fixed 8B length all in the same format
 	    my $sym = &rad2asc(($rec->[$i+1]<<8)|($rec->[$i+0]<<0),($rec->[$i+3]<<8)|($rec->[$i+2]<<0));
-	    my $nam = &sym2psect($file,$sym);
 	    my $flg = $rec->[$i+4];
 	    my $ent = $rec->[$i+5];
 	    my $val = ($rec->[$i+7]<<8)|($rec->[$i+6]<<0);
@@ -746,8 +745,12 @@ sub parse_rec ($$$) {
 	    my $def = undef;
 	    if ($ent == 3) {
 		# XFRADR
-		$program{START}{PSECT} = $nam;
+		$program{START}{PSECT} = &sym2psect($file,$sym);
 		$program{START}{VALUE} = $val;
+		if ($DEBUG) {
+		    printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o\n",
+		                $ent[$ent], $ent, $program{START}{PSECT}, $program{START}{VALUE};
+		}
 	    } elsif ($ent == 4) {
 		# GBLSYM flags
 		my $adr = $val + $psect{$psectname}{START};
@@ -765,9 +768,16 @@ sub parse_rec ($$$) {
 		    $gblsym{$sym}{$def}{VALUE} = $val;
 		    $gblsym{$sym}{$def}{ADDRESS} = $adr;
 		}
+		if ($DEBUG) {
+		    printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, $sym, $val;
+		    printf $LOG " psect='%s' value=%06o", $gblsym{$sym}{$def}{PSECT}, $gblsym{$sym}{$def}{VALUE};
+		    printf $LOG " flags=%s\n", join(",", sort(keys(%{$gblsym{$sym}{$def}{FLG}})));
+		}
 	    } elsif ($ent == 5) {
 		# PSECT flags
+		my $nam = &sym2psect($file,$sym);
 		$psect[++$psectnumb] = $nam;
+		$psect{$nam}{FILE} = $file;
 		$psect{$nam}{NUMBER} = $psectnumb;
 		$psect{$nam}{FLG}{$flg&(1<<0) ? "GBL" : $flg&(1<<6) ? "GBL" : "LCL"}++;
 		$psect{$nam}{FLG}{$flg&(1<<2) ? "OVR" : "CON"}++;
@@ -797,14 +807,11 @@ sub parse_rec ($$$) {
 			warn sprintf("Warning: psect REL,OVR is not supported, psect='%s'\n", $psectname);
 		    }
 		}
-	    }
-	    if ($DEBUG) {
-		printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, ($ent == 4 ? $sym : $nam), $val;
-		printf $LOG " psect='%s' value=%06o", $gblsym{$sym}{$def}{PSECT}, $gblsym{$sym}{$def}{VALUE} if $ent == 4;
-		printf $LOG " length=%06o start=%06o", $psect{$nam}{LENGTH}, $psect{$nam}{START} if $ent == 5;
-		printf $LOG " flags=%s", join(",", sort(keys(%{$gblsym{$sym}{$def}{FLG}}))) if $ent == 4;
-		printf $LOG " flags=%s", join(",", sort(keys(%{$psect{$nam}{FLG}}))) if $ent == 5;
-		printf $LOG "\n";
+		if ($DEBUG) {
+		    printf $LOG "..GSD: type='%-6s'(%03o) name='%s' value=%06o", $ent[$ent], $ent, $nam, $val;
+		    printf $LOG " length=%06o start=%06o", $psect{$nam}{LENGTH}, $psect{$nam}{START};
+		    printf $LOG " flags=%s\n", join(",", sort(keys(%{$psect{$nam}{FLG}})));
+		}
 	    }
 	    $i += 8;
 	}
