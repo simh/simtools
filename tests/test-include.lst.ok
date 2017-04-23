@@ -48,7 +48,12 @@ test-include.mac:15: ***ERROR Bad .INCLUDE file name
       16                                        .include =incl.mac=             ; looks like assignment
 test-include.mac:17: ***ERROR Invalid expression
       17 000012 000000G 000000                  .include :incl.mac:             ; looks like a label
-      17                                
+      18                                
+      19                                ; this is an error: file does not existst
+      20                                
+test-include.mac:21: ***ERROR Unable to find .INCLUDE file "does-not-exist.mac"
+      21                                	.include "does-not-exist.mac"
+      21                                
 
 
 Symbol table

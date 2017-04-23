@@ -15,3 +15,7 @@
         .include <incl.mac<
         .include =incl.mac=             ; looks like assignment
         .include :incl.mac:             ; looks like a label
+
+; this is an error: file does not existst
+
+	.include "does-not-exist.mac"

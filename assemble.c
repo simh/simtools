@@ -469,12 +469,14 @@ static int assemble(
                         }
 
                         my_searchenv(name, "INCLUDE", hitfile, sizeof(hitfile));
-                        free(name);
 
                         if (hitfile[0] == '\0') {
                             report(stack->top, "Unable to find .INCLUDE file \"%s\"\n", name);
+                            free(name);
                             return 0;
                         }
+
+                        free(name);
 
                         incl = new_file_stream(hitfile);
                         if (incl == NULL) {
