@@ -277,12 +277,16 @@ static int assemble(
                 case P_ENDR:
                 case P_ENDM:
                 case P_SBTTL:
-                case P_LIST:
-                case P_NLIST:
                 case P_PRINT:
                     return 1;          /* Accepted, ignored.  (An obvious
                                           need: get assembly listing
-                                          controls working. ) */
+                                          controls working fully. ) */
+                case P_LIST:
+                    if (pass > 0) list_level++;
+                    return 1;
+                case P_NLIST:
+                    if (pass > 0) list_level--;
+                    return 1;
 
                 case P_IDENT:
                     {
