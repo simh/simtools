@@ -282,10 +282,18 @@ static int assemble(
                                           need: get assembly listing
                                           controls working fully. ) */
                 case P_LIST:
-                    if (pass > 0) list_level++;
+                    if (pass > 0) {
+                        cp = skipwhite(cp);
+                        if (EOL(*cp))
+                            list_level++;
+                    }
                     return 1;
                 case P_NLIST:
-                    if (pass > 0) list_level--;
+                    if (pass > 0) {
+                        cp = skipwhite(cp);
+                        if (EOL(*cp))
+                            list_level--;
+                    }
                     return 1;
 
                 case P_IDENT:
