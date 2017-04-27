@@ -46,12 +46,23 @@ typedef struct mlbent {
     int             length;
 } MLBENT;
 
+struct mlb_vtbl;
+
 typedef struct mlb {
+    struct mlb_vtbl *vtbl;
+    char           *name;
     FILE           *fp;
     MLBENT         *directory;
     int             nentries;
     int             is_objlib;     /* is really an object library */
 } MLB;
+
+typedef struct mlb_vtbl {
+    MLB *(*mlb_open)(char *name, int allow_object_library);
+    BUFFER *(*mlb_entry)(MLB *mlb, char *name);
+    void (*mlb_extract)(MLB *mlb);
+    void (*mlb_close)(MLB *mlb);
+} MLB_VTBL;
 
 extern MLB     *mlb_open(
     char *name,
@@ -63,5 +74,8 @@ extern void     mlb_close(
     MLB *mlb);
 extern void     mlb_extract(
     MLB *mlb);
+
+extern struct mlb_vtbl mlb_rsx_vtbl;
+extern struct mlb_vtbl mlb_rt11_vtbl;
 
 #endif /* MLB_H */

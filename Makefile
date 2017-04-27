@@ -9,7 +9,7 @@ CFLAGS ?= -O -ggdb -std=gnu99 $(WARNS)
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\
 	extree.c listing.c macros.c parse.c rept_irpc.c symbols.c \
-	mlb-rsx.c object.c stream2.c util.c rad50.c
+	mlb2.c mlb-rsx.c mlb-rt11.c object.c stream2.c util.c rad50.c
 
 MACRO11_OBJS = $(MACRO11_SRCS:.c=.o)
 

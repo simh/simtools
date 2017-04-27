@@ -133,7 +133,7 @@ static void print_help(
     printf("-h  print this help\n");
     printf("-l  gives the listing file name (.LST)\n");
     printf("    -l - enables listing to stdout.\n");
-    printf("-m  load RT-11 compatible macro library from which\n");
+    printf("-m  load RSX-11 or RT-11 compatible macro library from which\n");
     printf("    .MCALLed macros can be found.\n");
     printf("    Multiple allowed.\n");
     printf("-o  gives the object file name (.OBJ)\n");

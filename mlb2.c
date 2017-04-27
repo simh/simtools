@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include "util.h"
 #include "mlb.h"
 
 MLB_VTBL *mlb_vtbls[] = {
     &mlb_rsx_vtbl,
+    &mlb_rt11_vtbl,
     NULL
 };
 
@@ -18,7 +20,7 @@ MLB     *mlb_open(
     for (i = 0; (vtbl = mlb_vtbls[i]); i++) {
         mlb = vtbl->mlb_open(name, allow_object_library);
         if (mlb != NULL) {
-            mlb->name = strdup(name);
+            mlb->name = memcheck(strdup(name));
             break;
         }
     }
