@@ -572,6 +572,18 @@ static int assemble(
                             if (EOL(*cp))
                                 return 1;
 
+                            /* (lib)macro syntax. Ignore (lib) for now. */
+                            if (*cp == '(') {
+                                char *close = strchr(cp + 1, ')');
+
+                                if (close != NULL) {
+                                    char *libname = cp + 1;
+                                    (void)libname;
+                                    *close = '\0';
+                                    cp = close + 1;
+                                }
+                            }
+
                             label = get_symbol(cp, &cp, NULL);
                             if (!label) {
                                 report(stack->top, "Illegal .MCALL format\n");
