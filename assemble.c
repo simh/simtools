@@ -938,6 +938,10 @@ static int assemble(
                     return 1;
 
                 case P_EVEN:
+                    cp = skipwhite(cp);
+                    if (!EOL(*cp)) {
+                        report(stack->top, ".EVEN must not have an argument\n");
+                    }
                     if (DOT & 1) {
                         list_word(stack->top, DOT, 0, 1, "");
                         DOT++;
@@ -946,6 +950,9 @@ static int assemble(
                     return 1;
 
                 case P_ODD:
+                    if (!EOL(*cp)) {
+                        report(stack->top, ".EVEN must not have an argument\n");
+                    }
                     if (!(DOT & 1)) {
                         list_word(stack->top, DOT, 0, 1, "");
                         DOT++;
@@ -1133,8 +1140,18 @@ static int assemble(
                 case P_BLKW:
                 case P_BLKB:
                     {
-                        EX_TREE        *value = parse_expr(cp, 0);
+                        EX_TREE        *value;
                         int             ok = 1;
+
+                        cp = skipwhite(cp);
+                        if (EOL(*cp)) {
+                            /* If no argument, assume 1. Documented but
+                             * discouraged. Par 6.5.3, page 6-32. */
+                            /* warning(stack->top, "Argument to .BLKB/.BLKW should be present; 1 assumed\n"); */
+                            value = new_ex_lit(1);
+                        } else {
+                            value = parse_expr(cp, 0);
+                        }
 
                         if (value->type != EX_LIT) {
                             report(stack->top, "Argument to .BLKB/.BLKW " "must be constant\n");
