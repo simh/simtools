@@ -91,7 +91,8 @@ void read_body(
             break;
         }
 
-        if (!called && (list_level - 1 + list_md) > 0) {
+        if (!(called & CALLED_NOLIST) &&
+                (list_level - 1 + list_md) > 0) {
             list_flush();
             list_source(stack->top, nextline);
         }
@@ -185,17 +186,21 @@ MACRO          *defmacro(
         return NULL;
     }
 
-    /* Allow redefinition of a macro; new definition replaces the old. */
-    mac = (MACRO *) lookup_sym(label, &macro_st);
-    if (mac) {
-        /* Remove from the symbol table... */
-        remove_sym(&mac->sym, &macro_st);
-        free_macro(mac);
+    if (!(called & CALLED_NODEFINE)) {
+        /* Allow redefinition of a macro; new definition replaces the old. */
+        mac = (MACRO *) lookup_sym(label, &macro_st);
+        if (mac) {
+            /* Remove from the symbol table... */
+            remove_sym(&mac->sym, &macro_st);
+            free_macro(mac);
+        }
     }
 
     mac = new_macro(label);
 
-    add_table(&mac->sym, &macro_st);
+    if (!(called & CALLED_NODEFINE)) {
+        add_table(&mac->sym, &macro_st);
+    }
 
     argtail = &mac->args;
     cp = skipdelim(cp);
@@ -245,7 +250,7 @@ MACRO          *defmacro(
 
         gb = new_buffer();
 
-        if (!called && !list_md) {
+        if (!(called & CALLED_NOLIST) && !list_md) {
             list_level--;
             levelmod = 1;
         }

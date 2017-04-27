@@ -632,7 +632,7 @@ static int assemble(
 
                                     saveline = stmtno;
                                     list_level = -1;
-                                    mac = defmacro(maccp, &macstack, TRUE);
+                                    mac = defmacro(maccp, &macstack, CALLED_NOLIST);
                                     if (mac == NULL) {
                                         report(stack->top, "Failed to define macro " "called %s\n", label);
                                     }
@@ -652,7 +652,7 @@ static int assemble(
 
                 case P_MACRO:
                     {
-                        MACRO          *mac = defmacro(cp, stack, FALSE);
+                        MACRO          *mac = defmacro(cp, stack, CALLED_NORMAL);
 
                         return mac != NULL;
                     }
