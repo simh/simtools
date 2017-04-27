@@ -8,6 +8,7 @@
 
 TESTS="test-asciz \
     test-backpatch \
+    test-blkb \
     test-bsl-mac-arg \
     test-complex-reloc \
     test-endm \
