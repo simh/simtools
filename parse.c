@@ -757,6 +757,42 @@ EX_TREE        *parse_unary(
                 }
                 return tp;
             }
+        case 'p':
+            /* psect limits, low or high */ {
+                char bound = tolower((unsigned char)cp[2]);
+                char *cp2 = skipwhite(cp + 3);
+                int islocal = 0;
+                char *endcp;
+                char *psectname = get_symbol(cp2, &endcp, &islocal);
+                SYMBOL *sectsym = lookup_sym(psectname, &section_st);
+
+                if (sectsym && !islocal) {
+                    SECTION *psect = sectsym->section;
+
+                    tp = new_ex_tree();
+                    tp->type = EX_SYM;
+                    tp->data.symbol = sectsym;
+                    tp->cp = cp;
+
+                    if (bound == 'l') {
+                        ; /* that's it */
+                    } else if (bound == 'h') {
+                        EX_TREE *rightp = new_ex_lit(psect->size);
+                        tp = new_ex_bin(EX_ADD, tp, rightp);
+                    } else {
+                        tp = ex_err(tp, endcp);
+                        /* report(stack->top, "^p: %c not recognized", bound); */
+                    }
+                } else {
+                    /* report(stack->top, "psect name %s not found"); */
+                    tp = ex_err(new_ex_lit(0), endcp);
+                }
+                free(psectname);
+                tp->cp = endcp;
+                cp = endcp;
+
+                return tp;
+            }
         }
 
         if (ispunct((unsigned char)cp[1])) {

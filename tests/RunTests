@@ -21,6 +21,7 @@ TESTS="test-asciz \
     test-prec \
     test-psect \
     test-rad50 \
+    test-ua-pl \
     test-undef \
     test-word-comma"
 
