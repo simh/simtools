@@ -847,7 +847,7 @@ static int assemble(
                                 /* FIXME I don't know if the following
                                    is portable enough.  */
                                 if (tvalue->data.lit & 0x8000)
-                                    sword |= ~0xFFFF;   /* Render negative */
+                                    sword |= ~0x7FFF;   /* Render negative */
 
                                 /* Reduce unsigned value to 16 bits */
                                 uword = tvalue->data.lit & 0xffff;
