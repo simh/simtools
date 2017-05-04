@@ -12,6 +12,7 @@ TESTS="test-asciz \
     test-bsl-mac-arg \
     test-complex-reloc \
     test-endm \
+    test-if \
     test-impword \
     test-include \
     test-jmp \
