@@ -57,7 +57,6 @@ do
 	.list
 	.list
 	.list
-	.enabl lc
 debug	=	1
 	.include "2.11BSD/m11/at.sml"
 	.include "${t}"

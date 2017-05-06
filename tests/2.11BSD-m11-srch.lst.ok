@@ -2,9 +2,8 @@
        2                                	.list
        3                                	.list
        4                                	.list
-       5                                	.enabl lc
-       6        000001                  debug	=	1
-       7                                	.include "2.11BSD/m11/at.sml"
+       5        000001                  debug	=	1
+       6                                	.include "2.11BSD/m11/at.sml"
        1                                	.title	at.sml	-   assembler/translator system macros
        2                                	; @(#)at.sml	1.3 11/3/82
        3                                
@@ -438,7 +437,7 @@
      424                                
      425                                	.end
      425                                
-       8                                	.include "2.11BSD/m11/srch.m11"
+       7                                	.include "2.11BSD/m11/srch.m11"
        1                                	.title	srch
        2                                	.ident	/03apr4/
        3                                
@@ -939,7 +938,7 @@
      322                                
      323                                	.end
      323                                
-       8                                
+       7                                
 
 
 Symbol table

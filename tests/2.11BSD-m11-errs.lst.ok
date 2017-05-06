@@ -2,9 +2,8 @@
        2                                	.list
        3                                	.list
        4                                	.list
-       5                                	.enabl lc
-       6        000001                  debug	=	1
-       7                                	.include "2.11BSD/m11/at.sml"
+       5        000001                  debug	=	1
+       6                                	.include "2.11BSD/m11/at.sml"
        1                                	.title	at.sml	-   assembler/translator system macros
        2                                	; @(#)at.sml	1.3 11/3/82
        3                                
@@ -438,7 +437,7 @@
      424                                
      425                                	.end
      425                                
-       8                                	.include "2.11BSD/m11/errs.m11"
+       7                                	.include "2.11BSD/m11/errs.m11"
        1                                	;
        2                                	; m11 error messages
        3                                	; jim reeds 4 july 1981
@@ -1197,7 +1196,7 @@
          003063    103     110     000  
       83                                	.END
       83                                
-       8                                
+       7                                
 
 
 Symbol table
