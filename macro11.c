@@ -170,6 +170,38 @@ void usage(char *message) {
     exit(EXIT_FAILURE);
 }
 
+void prepare_pass(int this_pass, STACK *stack, int nr_files, char **fnames)
+{
+    int i;
+
+    stack_init(stack);
+
+    /* Push the files onto the input stream in reverse order */
+    for (i = nr_files - 1; i >= 0; --i) {
+        STREAM         *str = new_file_stream(fnames[i]);
+
+        if (str == NULL) {
+            report(NULL, "Unable to open file %s\n", fnames[i]);
+            exit(EXIT_FAILURE);
+        }
+        stack_push(stack, str);
+    }
+
+    DOT = 0;
+    current_pc->section = &blank_section;
+    last_dot_section = NULL;
+    pass = this_pass;
+    stmtno = 0;
+    lsb = 0;
+    next_lsb = 1;
+    lsb_used = 0;
+    last_macro_lsb = -1;
+    last_locsym = 32767;
+    last_cond = -1;
+    sect_sp = -1;
+    suppressed = 0;
+}
+
 int main(
     int argc,
     char *argv[])
@@ -326,39 +358,11 @@ int main(
     }
 
     add_symbols(&blank_section);
-
-    text_init(&tr, NULL, 0);
-
     module_name = memcheck(strdup(".MAIN."));
-
     xfer_address = new_ex_lit(1);      /* The undefined transfer address */
 
-    stack_init(&stack);
-    /* Push the files onto the input stream in reverse order */
-    for (i = nr_files - 1; i >= 0; --i) {
-        STREAM         *str = new_file_stream(fnames[i]);
-
-        if (str == NULL) {
-            report(NULL, "Unable to open file %s\n", fnames[i]);
-            exit(EXIT_FAILURE);
-        }
-        stack_push(&stack, str);
-    }
-
-    DOT = 0;
-    current_pc->section = &blank_section;
-    last_dot_section = NULL;
-    pass = 0;
-    stmtno = 0;
-    lsb = 0;
-    next_lsb = 1;
-    lsb_used = 0;
-    last_macro_lsb = -1;
-    last_locsym = 32767;
-    last_cond = -1;
-    sect_sp = -1;
-    suppressed = 0;
-
+    text_init(&tr, NULL, 0);
+    prepare_pass(0, &stack, nr_files, fnames);
     assemble_stack(&stack, &tr);
 
     if (list_pass_0 && lstfile) {
@@ -378,37 +382,9 @@ int main(
     sym_hist(&symbol_st, "symbol_st"); /* Draw a symbol table histogram */
 #endif
 
-
-    text_init(&tr, obj, 0);
-
-    stack_init(&stack);                /* Superfluous... */
-    /* Re-push the files onto the input stream in reverse order */
-    for (i = nr_files - 1; i >= 0; --i) {
-        STREAM         *str = new_file_stream(fnames[i]);
-
-        if (str == NULL) {
-            report(NULL, "Unable to open file %s\n", fnames[i]);
-            exit(EXIT_FAILURE);
-        }
-        stack_push(&stack, str);
-    }
-
-    DOT = 0;
-
-    current_pc->section = &blank_section;
-    last_dot_section = NULL;
-
-    pass = 1;
-    stmtno = 0;
-    lsb = 0;
-    next_lsb = 1;
-    lsb_used = 0;
-    last_macro_lsb = -1;
-    last_locsym = 32767;
     pop_cond(-1);
-    sect_sp = -1;
-    suppressed = 0;
-
+    text_init(&tr, obj, 0);
+    prepare_pass(1, &stack, nr_files, fnames);
     errcount = assemble_stack(&stack, &tr);
 
     text_flush(&tr);
