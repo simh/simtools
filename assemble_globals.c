@@ -36,6 +36,9 @@ int             enabl_gbl = 1;  /* Implicit definition of global symbols */
 int             enabl_lc = 1;   /* If lowercase disabled, convert assembler
                                    source to upper case. */
 
+int             enabl_lcm = 0;  /* If lowercase disabled, .IF IDN/DIF are
+                                   case-sensitive. */
+
 int             suppressed = 0; /* Assembly suppressed by failed conditional */
 
 

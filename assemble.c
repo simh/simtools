@@ -719,6 +719,8 @@ static int assemble(
                             enabl_gbl = 1;
                         } else if (strcmp(label, "LC") == 0) {
                             enabl_lc = 1;
+                        } else if (strcmp(label, "LCM") == 0) {
+                            enabl_lcm = 1;
                         }
                         free(label);
                         cp = skipdelim(cp);
@@ -738,6 +740,8 @@ static int assemble(
                             enabl_gbl = 0;
                         } else if (strcmp(label, "LC") == 0) {
                             enabl_lc = 0;
+                        } else if (strcmp(label, "LCM") == 0) {
+                            enabl_lcm = 0;
                         }
                         free(label);
                         cp = skipdelim(cp);
@@ -828,6 +832,12 @@ static int assemble(
                                 thing2 = getstring(cp, &cp);
                             else
                                 thing2 = memcheck(strdup(""));
+
+                            if (!enabl_lcm) {
+                                upcase(thing1);
+                                upcase(thing2);
+                            }
+
                             ok = (strcmp(thing1, thing2) == 0);
                             if (label[0] == 'D') {
                                 ok = !ok;
