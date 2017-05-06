@@ -1,0 +1,2656 @@
+       1                                ;;;; Wrapper for 2.11BSD/m11/lout.m11
+       2                                	.list
+       3                                	.list
+       4                                	.list
+       5                                	.enabl lc
+       6        000001                  debug	=	1
+       7                                	.include "2.11BSD/m11/at.sml"
+       1                                	.title	at.sml	-   assembler/translator system macros
+       2                                	; @(#)at.sml	1.3 11/3/82
+       3                                
+       4                                	.ident	/10may4/
+       5                                
+       6                                	.macro	always		;all files of macro
+       7                                
+       8                                	.macro	.data
+       9                                	entsec	.data
+      10                                	.endm	.data
+      11                                
+      12                                	.macro	.text
+      13                                	entsec	.text
+      14                                	.endm
+      15                                
+      16                                	.macro	.bss
+      17                                	entsec	.bss
+      18                                	.endm
+      19                                
+      20                                mk.symbol=1			;one to make symbols, 0 otherwise
+      21                                x40=	0
+      22                                pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      23                                				; if not you will have to write macros for them
+      24                                $timdf=	7			; California Time Zone
+      25                                				; should really use ftime(2) for this and for
+      26                                				; DST.
+      27                                ;xfltg=	0		;define to assmbl out floating hardware
+      28                                rsx11d	=	0	; rsx11d features 
+      29                                debug	=	0	; <<< REEDS if non zero includes debug junk
+      30                                
+      31                                ft.id=	1			;have set i & d.  set =0 if not
+      32                                
+      33                                ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      34                                
+      35                                	.nlist	bex
+      36                                
+      37                                tab=	11
+      38                                lf=	12
+      39                                vt=	13
+      40                                ff=	14
+      41                                cr=	15
+      42                                space=	40
+      43                                
+      44                                bpmb	=	20		;bytes per macro block
+      45                                
+      46                                
+      47                                
+      48                                
+      49                                
+      50                                	.psect	.text	con, shr, gbl,ins
+      51                                	.psect	.data	con, dat, prv, gbl
+      52                                	.psect	.bss	con, bss, gbl
+      53                                
+      54                                	.psect	dpure	con, dat, prv, gbl
+      55                                	.psect	mixed	con, prv, gbl
+      56                                	.psect	errmes	con, dat, prv, gbl
+      57                                	.psect	impure	con, bss, gbl
+      58                                	.psect	imppas	con, bss, gbl
+      59                                	.psect	implin	con, bss, gbl
+      60                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+      61                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+      62                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+      63                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+      64                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+      65                                	.psect	psasec 	con, dat, prv, gbl
+      66                                	.psect	pstsec 	con, dat, prv, gbl
+      67                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+      68                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+      69                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+      70                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      71                                
+      72                                
+      72                                
+      73                                	.macro	entsec	name 	;init a section
+      74                                	.psect	name	con
+      75                                	.endm	entsec
+      76                                
+      77                                
+      78                                
+      79                                	.macro jeq	x,?fred
+      80                                	bne	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	jne	x,?fred
+      85                                	beq	fred
+      86                                	jmp	x
+      87                                fred:
+      88                                	.endm
+      89                                	.macro	xitsec
+      90                                	entsec	.text
+      91                                	.endm	xitsec
+      92                                
+      93                                
+      94                                	.macro	call	address
+      95                                	jsr	pc,address
+      96                                	.endm
+      97                                
+      98                                	.macro	return
+      99                                	rts	pc
+     100                                	.endm
+     101                                
+     102                                
+     103                                	.macro	always
+     104                                	.nlist	bex
+     105                                	.endm	always
+     106                                	.endm	always
+     107                                
+     108                                
+     109        000001                  	.if ne debug
+     110                                	
+     111                                	.macro	ndebug n
+     112                                	.globl	ndebug,..z
+     113                                	mov	n,..z
+     114                                	call	ndebug
+     115                                	.endm
+     116                                
+     117                                	.macro	sdebug	string
+     118                                	.globl	sdebug,..z,..zbuf
+     119                                	x = 0
+     120                                	.irpc	t,<string>
+     121                                	movb	#''t,..zbuf+x
+     122                                	x = x+1
+     123                                	.endm
+     124                                	movb	#0,..zbuf+x
+     125                                	mov	#..zbuf,..z
+     126                                	call	sdebug
+     127                                	.endm
+     128                                
+     129                                	.iff
+     130                                	
+     131                                	.macro	ndebug n
+     132                                	.endm
+     133                                
+     134                                	.macro	sdebug	string
+     135                                	.endm
+     136                                	
+     137                                	.endc
+     138                                	
+     139                                	
+     140                                	.macro	param	mne,	value	;define default parameters
+     141                                	.iif ndf mne,	mne=	value
+     142                                	.list
+     143                                mne=	mne
+     144                                	.nlist
+     145                                	.endm
+     145                                
+     146                                	.macro	putkb	addr	;list to kb
+     147                                	.globl	putkb
+     148                                	mov	addr,r0
+     149                                	call	putkb
+     150                                	.endm
+     151                                
+     152                                	.macro	putlp	addr	;list to lp
+     153                                	.globl	putlp
+     154                                	mov	addr,r0
+     155                                	call	putlp
+     156                                	.endm
+     157                                
+     158                                	.macro	putkbl	addr	;list to kb and lp
+     159                                	.globl	putkbl
+     160                                	mov	addr,r0
+     161                                	call	putkbl
+     162                                	.endm
+     163                                
+     164                                
+     165                                	.macro	xmit	wrdcnt	;move small # of words
+     166                                	.globl	xmit0
+     167                                	call	xmit0-<wrdcnt*2>
+     168                                	.endm	xmit
+     169                                
+     170                                
+     171                                ;the macro "genswt" is used to specify  a command
+     172                                ;string switch (1st argument) and the address of
+     173                                ;the routine to be called when encountered (2nd arg).
+     174                                ; the switch is made upper-case.
+     175                                
+     176                                	.macro	genswt	mne,addr,?label
+     177                                	entsec	swtsec
+     178                                label:	.irpc	x,mne
+     179                                	.if ge ''x-141
+     180                                		.if le ''x-172
+     181                                			.byte ''x-40
+     182                                		.iff
+     183                                			.byte ''x
+     184                                		.endc
+     185                                	.iff
+     186                                	.byte ''x
+     187                                	.endc
+     188                                	.endm
+     189                                	.iif ne <.-label&1>,	.byte	0
+     190                                	.word	addr
+     191                                	xitsec
+     192                                	.endm
+     192                                
+     193                                	.macro	zread	chan
+     194                                	.globl	zread
+     195                                	mov	#chan'chn,r0
+     196                                	call	zread
+     197                                	.endm	zread
+     198                                
+     199                                	.macro	zwrite	chan
+     200                                	.globl	zwrite
+     201                                	mov	#chan'chn,r0
+     202                                	call	zwrite
+     203                                	.endm	zwrite
+     203                                
+     204                                	.macro	genedt	mne,subr	;gen enable/disable table
+     205                                	entsec	edtsec
+     206                                	.rad50	/mne/
+     207                                	.if nb	subr
+     208                                	.word	subr
+     209                                	.iff
+     210                                	.word	cpopj
+     211                                	.endc
+     212                                	.word	ed.'mne
+     213                                	xitsec
+     214                                	.endm	genedt
+     215                                
+     216                                
+     217                                ;the macro "gencnd" is used to specify conditional
+     218                                ;arguments.  it takes two or three arguments:
+     219                                
+     220                                ;	1-	mnemonic
+     221                                ;	2-	subroutine to be called
+     222                                ;	3-	if non-blank, complement condition
+     223                                
+     224                                	.macro	gencnd	mne,subr,toggle	;generate conditional
+     225                                	entsec	cndsec
+     226                                	.rad50	/mne/
+     227                                	.if b	<toggle>
+     228                                	.word	subr
+     229                                	.iff
+     230                                	.word	subr+1
+     231                                	.endc
+     232                                	xitsec
+     233                                	.endm
+     233                                
+     234                                	.macro	ch.mne
+     235                                
+     236                                ch.ior=	'!
+     237                                ch.qtm=	'"
+     238                                ch.hsh=	'#
+     239                                ch.dol=	'$
+     240                                ch.pct=	'%
+     241                                ch.and=	'&
+     242                                ch.xcl=	''
+     243                                
+     244                                ch.lp=	'(
+     245                                ch.rp=	')
+     246                                ch.mul=	'*
+     247                                ch.add=	'+
+     248                                ch.com=	',
+     249                                ch.sub=	'-
+     250                                ch.dot=	'.
+     251                                ch.div=	'/
+     252                                
+     253                                ch.col=	':
+     254                                ch.smc=	';
+     255                                ch.lab=	'<
+     256                                ch.equ=	'=
+     257                                ch.rab=	'>
+     258                                ch.qm=	'?
+     259                                
+     260                                ch.ind=	'@
+     261                                ch.bsl=	'\
+     262                                ch.uar=	'^
+     263                                
+     264                                let.a=	'a&^c40
+     265                                let.b=	'b&^c40
+     266                                let.c=	'c&^c40
+     267                                let.d=	'd&^c40
+     268                                let.e=	'e&^c40
+     269                                let.f=	'f&^c40
+     270                                let.g=	'g&^c40
+     271                                let.o=	'o&^c40
+     272                                let.p=	'p&^c40
+     273                                let.r=	'r&^c40
+     274                                let.z=	'z&^c40
+     275                                
+     276                                dig.0=	'0
+     277                                dig.9=	'9
+     278                                	.macro	ch.mne
+     279                                	.endm	ch.mne
+     280                                	.endm	ch.mne
+     281                                
+     282                                	.macro error num,arg, mess ,?x
+     283                                	sdebug	<num>
+     284                                	.globl	err.'arg,ern'num, errbts,errref
+     285                                	.if	b	<mess>
+     286                                	deliberate error mistake
+     287                                	.endc
+     288                                	.if	dif	0,num
+     289                                	.globl	err.xx
+     290                                	tst	err.xx
+     291                                	bne	x
+     292                                	mov	#ern'num,err.xx
+     293                                x:
+     294                                	.endc
+     295                                	bis	#err.'arg,errbts
+     296                                	.endm
+     297                                
+     298                                
+     299                                
+     300                                	.macro	setnz	addr	;set addr to non-zero for t/f flags
+     301                                	mov	sp,addr
+     302                                	.endm
+     303                                
+     304                                
+     305                                	.macro	bisbic	arg	; used by .list/.nlist, .enabl/.dsabl
+     306                                	.globl	bisbic
+     307                                	mov	#arg,-(sp)
+     308                                	call	bisbic
+     309                                	tst	(sp)+
+     310                                	.endm
+     310                                
+     311                                				;roll handler calls
+     312                                
+     313                                	.macro	search	rolnum	;binary search
+     314                                	mov	#rolnum,r0
+     315                                	.globl	search
+     316                                	call	search
+     317                                	.endm
+     318                                
+     319                                	.macro	scan	rolnum	;linear scan
+     320                                	mov	#rolnum,r0
+     321                                	.globl	scan
+     322                                	call	scan
+     323                                	.endm
+     324                                
+     325                                	.macro	scanw	rolnum	;linear scan, one word
+     326                                	mov	#rolnum,r0
+     327                                	.globl	scanw
+     328                                	call	scanw
+     329                                	.endm
+     330                                
+     331                                	.macro	next	rolnum	;fetch next entry
+     332                                	mov	#rolnum,r0
+     333                                	.globl	next
+     334                                	call	next
+     335                                	.endm
+     336                                
+     337                                	.macro	append	rolnum	;append to end of roll
+     338                                	mov	#rolnum,r0
+     339                                	.globl	append
+     340                                	call	append
+     341                                	.endm
+     342                                
+     343                                	.macro	zap	rolnum	;clear roll
+     344                                	mov	#rolnum,r0
+     345                                	.globl	zap
+     346                                	call	zap
+     347                                	.endm
+     348                                
+     349                                ;	call	insert		;insert (must be preceded by one 
+     350                                				;of the above to set pointers)
+     351                                ;	call	setrol		;save and set regs for above
+     351                                
+     352                                ;flags used in symbol table mode
+     353                                
+     354                                	.macro	st.flg
+     355                                
+     356                                .if le ft.unx
+     357                                
+     358                                ovrflg=	000004		;overlay (psect only)
+     359                                defflg=	000010		;defined
+     360                                relflg=	000040		;relocatable
+     361                                glbflg=	000100		;global
+     362                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     363                                
+     364                                
+     365                                .endc
+     366                                
+     367                                .if gt ft.unx
+     368                                
+     369                                			; ****** these should not be changed!! ******
+     370                                shrflg=	000001		;shareable (psect only)
+     371                                .if gt ft.id
+     372                                insflg=	shrflg*2	;instruction space (psect only)
+     373                                bssflg=	insflg*2	;blank section (psect only)
+     374                                m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+     375                                .iff
+     376                                bssflg=	shrflg*2
+     377                                m.idf=	shrflg!bssflg
+     378                                .endc
+     379                                b.idf=	1		;shift count to make above bits word offset
+     380                                			; ***********************************
+     381                                defflg=	000010		;defined
+     382                                ovrflg=	000020		;overlay (psect only)
+     383                                relflg=	000040		;relocatable
+     384                                glbflg=	000100		;global
+     385                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     386                                
+     387                                .endc
+     388                                
+     389                                ;
+     390                                ; default psect attribs.
+     391                                ; can be changed, but make sure all customers know about
+     392                                ; it, including all the linkers.
+     393                                ;
+     394                                pattrs=relflg!defflg		; For .psects and blank .csects
+     395                                aattrs=glbflg!defflg!ovrflg		; For .asect
+     396                                cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+     397                                
+     398                                regflg=	000001		;register
+     399                                lblflg=	000002		;label
+     400                                mdfflg=	000004		;multilpy defined
+     401                                	.macro	st.flg
+     402                                	.endm
+     403                                	.endm	st.flg
+     404                                
+     405                                
+     406                                
+     407                                	.macro	ct.mne
+     408                                	.globl	cttbl
+     409                                ct.eol	=	000		; eol
+     410                                ct.com	=	001		; comma
+     411                                ct.tab	=	002		; tab
+     412                                ct.sp	=	004		; space
+     413                                ct.pcx	=	010		; printing character
+     414                                ct.num	=	020		; numeric
+     415                                ct.alp	=	040		; alpha, dot, dollar
+     416                                ct.lc	=	100		; lower case alpha
+     417                                ct.smc	=	200		; semi-colon (sign bit)
+     418                                
+     419                                ct.pc	=	ct.com!ct.smc!ct.pcx!ct.num!ct.alp
+     420                                	.macro	ct.mne
+     421                                	.endm	ct.mne
+     422                                	.endm	ct.mne
+     423                                
+     424                                
+     425                                	.end
+     425                                
+       8                                	.include "2.11BSD/m11/lout.m11"
+       1                                	.title	lout
+       2                                
+       3                                
+       4                                	.ident	/10may4/
+       5                                
+       6                                	.mcall	(at)always,ch.mne,st.flg,ct.mne
+       7                                	.mcall	(at)bisbic
+       8 000000                         	always
+       1                                
+       2                                	.macro	.data
+       3                                	entsec	.data
+       4                                	.endm	.data
+       5                                
+       6                                	.macro	.text
+       7                                	entsec	.text
+       8                                	.endm
+       9                                
+      10                                	.macro	.bss
+      11                                	entsec	.bss
+      12                                	.endm
+      13                                
+      14        000001                  mk.symbol=1			;one to make symbols, 0 otherwise
+      15        000000                  x40=	0
+      16        000000                  pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      17                                				; if not you will have to write macros for them
+      18        000007                  $timdf=	7			; California Time Zone
+      19                                				; should really use ftime(2) for this and for
+      20                                				; DST.
+      21                                ;xfltg=	0		;define to assmbl out floating hardware
+      22        000000                  rsx11d	=	0	; rsx11d features 
+      23        000000                  debug	=	0	; <<< REEDS if non zero includes debug junk
+      24                                
+      25        000001                  ft.id=	1			;have set i & d.  set =0 if not
+      26                                
+      27        000001                  ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      28                                
+      29                                	.nlist	bex
+      30                                
+      31        000011                  tab=	11
+      32        000012                  lf=	12
+      33        000013                  vt=	13
+      34        000014                  ff=	14
+      35        000015                  cr=	15
+      36        000040                  space=	40
+      37                                
+      38        000020                  bpmb	=	20		;bytes per macro block
+      39                                
+      40                                
+      41                                
+      42                                
+      43                                
+./2.11BSD/m11/lout.m11:8->ALWAYS:44: ***ERROR Unknown flag SHR given to .PSECT directive
+      44                                	.psect	.text	con, shr, gbl,ins
+./2.11BSD/m11/lout.m11:8->ALWAYS:45: ***ERROR Unknown flag DAT given to .PSECT directive
+      45                                	.psect	.data	con, dat, prv, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:46: ***ERROR Unknown flag BSS given to .PSECT directive
+      46                                	.psect	.bss	con, bss, gbl
+      47                                
+./2.11BSD/m11/lout.m11:8->ALWAYS:48: ***ERROR Unknown flag DAT given to .PSECT directive
+      48                                	.psect	dpure	con, dat, prv, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:49: ***ERROR Unknown flag PRV given to .PSECT directive
+      49                                	.psect	mixed	con, prv, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:50: ***ERROR Unknown flag DAT given to .PSECT directive
+      50                                	.psect	errmes	con, dat, prv, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:51: ***ERROR Unknown flag BSS given to .PSECT directive
+      51                                	.psect	impure	con, bss, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:52: ***ERROR Unknown flag BSS given to .PSECT directive
+      52                                	.psect	imppas	con, bss, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:53: ***ERROR Unknown flag BSS given to .PSECT directive
+      53                                	.psect	implin	con, bss, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:54: ***ERROR Unknown flag DAT given to .PSECT directive
+      54                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+./2.11BSD/m11/lout.m11:8->ALWAYS:55: ***ERROR Unknown flag DAT given to .PSECT directive
+      55                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+./2.11BSD/m11/lout.m11:8->ALWAYS:56: ***ERROR Unknown flag DAT given to .PSECT directive
+      56                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+./2.11BSD/m11/lout.m11:8->ALWAYS:57: ***ERROR Unknown flag DAT given to .PSECT directive
+      57                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+./2.11BSD/m11/lout.m11:8->ALWAYS:58: ***ERROR Unknown flag DAT given to .PSECT directive
+      58                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+./2.11BSD/m11/lout.m11:8->ALWAYS:59: ***ERROR Unknown flag DAT given to .PSECT directive
+      59                                	.psect	psasec 	con, dat, prv, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:60: ***ERROR Unknown flag DAT given to .PSECT directive
+      60                                	.psect	pstsec 	con, dat, prv, gbl
+./2.11BSD/m11/lout.m11:8->ALWAYS:61: ***ERROR Unknown flag DAT given to .PSECT directive
+      61                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+./2.11BSD/m11/lout.m11:8->ALWAYS:62: ***ERROR Unknown flag DAT given to .PSECT directive
+      62                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+./2.11BSD/m11/lout.m11:8->ALWAYS:63: ***ERROR Unknown flag DAT given to .PSECT directive
+      63                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+./2.11BSD/m11/lout.m11:8->ALWAYS:64: ***ERROR Unknown flag BSS given to .PSECT directive
+      64                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      65                                
+      66                                
+      67                                
+      68                                	.macro	entsec	name 	;init a section
+      69                                	.psect	name	con
+      70                                	.endm	entsec
+      71                                
+      72                                
+      73                                
+      74                                	.macro jeq	x,?fred
+      75                                	bne	fred
+      76                                	jmp	x
+      77                                fred:
+      78                                	.endm
+      79                                	.macro	jne	x,?fred
+      80                                	beq	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	xitsec
+      85                                	entsec	.text
+      86                                	.endm	xitsec
+      87                                
+      88                                
+      89                                	.macro	call	address
+      90                                	jsr	pc,address
+      91                                	.endm
+      92                                
+      93                                	.macro	return
+      94                                	rts	pc
+      95                                	.endm
+      96                                
+      97                                
+      98                                	.macro	always
+      99                                	.nlist	bex
+     100                                	.endm	always
+       9 000000                         	ch.mne
+       1                                
+       2        000041                  ch.ior=	'!
+       3        000042                  ch.qtm=	'"
+       4        000043                  ch.hsh=	'#
+       5        000044                  ch.dol=	'$
+       6        000045                  ch.pct=	'%
+       7        000046                  ch.and=	'&
+       8        000047                  ch.xcl=	''
+       9                                
+      10        000050                  ch.lp=	'(
+      11        000051                  ch.rp=	')
+      12        000052                  ch.mul=	'*
+      13        000053                  ch.add=	'+
+      14        000054                  ch.com=	',
+      15        000055                  ch.sub=	'-
+      16        000056                  ch.dot=	'.
+      17        000057                  ch.div=	'/
+      18                                
+      19        000072                  ch.col=	':
+      20        000073                  ch.smc=	';
+      21        000074                  ch.lab=	'<
+      22        000075                  ch.equ=	'=
+      23        000076                  ch.rab=	'>
+      24        000077                  ch.qm=	'?
+      25                                
+      26        000100                  ch.ind=	'@
+      27        000134                  ch.bsl=	'\
+      28        000136                  ch.uar=	'^
+      29                                
+      30        000101                  let.a=	'a&^c40
+      31        000102                  let.b=	'b&^c40
+      32        000103                  let.c=	'c&^c40
+      33        000104                  let.d=	'd&^c40
+      34        000105                  let.e=	'e&^c40
+      35        000106                  let.f=	'f&^c40
+      36        000107                  let.g=	'g&^c40
+      37        000117                  let.o=	'o&^c40
+      38        000120                  let.p=	'p&^c40
+      39        000122                  let.r=	'r&^c40
+      40        000132                  let.z=	'z&^c40
+      41                                
+      42        000060                  dig.0=	'0
+      43        000071                  dig.9=	'9
+      44                                	.macro	ch.mne
+      45                                	.endm	ch.mne
+      10 000000                         	st.flg
+       1                                
+       2        000001                  .if le ft.unx
+       3                                
+       4                                ovrflg=	000004		;overlay (psect only)
+       5                                defflg=	000010		;defined
+       6                                relflg=	000040		;relocatable
+       7                                glbflg=	000100		;global
+       8                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+       9                                
+      10                                
+      11                                .endc
+      12                                
+      13        000001                  .if gt ft.unx
+      14                                
+      15                                			; ****** these should not be changed!! ******
+      16        000001                  shrflg=	000001		;shareable (psect only)
+      17        000001                  .if gt ft.id
+      18        000002                  insflg=	shrflg*2	;instruction space (psect only)
+      19        000004                  bssflg=	insflg*2	;blank section (psect only)
+      20        000007                  m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+      21                                .iff
+      22                                bssflg=	shrflg*2
+      23                                m.idf=	shrflg!bssflg
+      24                                .endc
+      25        000001                  b.idf=	1		;shift count to make above bits word offset
+      26                                			; ***********************************
+      27        000010                  defflg=	000010		;defined
+      28        000020                  ovrflg=	000020		;overlay (psect only)
+      29        000040                  relflg=	000040		;relocatable
+      30        000100                  glbflg=	000100		;global
+      31        000200                  dfgflg= 000200		; default global <rsx11d>... reeds's guess
+      32                                
+      33                                .endc
+      34                                
+      35                                ;
+      36                                ; default psect attribs.
+      37                                ; can be changed, but make sure all customers know about
+      38                                ; it, including all the linkers.
+      39                                ;
+      40        000050                  pattrs=relflg!defflg		; For .psects and blank .csects
+      41        000130                  aattrs=glbflg!defflg!ovrflg		; For .asect
+      42        000170                  cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+      43                                
+      44        000001                  regflg=	000001		;register
+      45        000002                  lblflg=	000002		;label
+      46        000004                  mdfflg=	000004		;multilpy defined
+      47                                	.macro	st.flg
+      48                                	.endm
+      11 000000                         	ct.mne
+       1                                	.globl	cttbl
+       2        000000                  ct.eol	=	000		; eol
+       3        000001                  ct.com	=	001		; comma
+       4        000002                  ct.tab	=	002		; tab
+       5        000004                  ct.sp	=	004		; space
+       6        000010                  ct.pcx	=	010		; printing character
+       7        000020                  ct.num	=	020		; numeric
+       8        000040                  ct.alp	=	040		; alpha, dot, dollar
+       9        000100                  ct.lc	=	100		; lower case alpha
+      10        000200                  ct.smc	=	200		; semi-colon (sign bit)
+      11                                
+      12        000271                  ct.pc	=	ct.com!ct.smc!ct.pcx!ct.num!ct.alp
+      13                                	.macro	ct.mne
+      14                                	.endm	ct.mne
+      12                                
+      13                                	.mcall	(at)xmit,param,putlp
+      14                                	.macro	putlin	addr	;use listing flags
+      15                                	.if dif	<addr><r0>
+      16                                	mov	addr,r0
+      17                                	.endc
+      18                                	call	putlin
+      19                                	.endm
+      20                                	.mcall	(at)genswt,error
+      21                                	.mcall	(at)zwrite
+      22                                	.mcall	(at)genedt,setnz
+      23                                	.mcall	(at)scanw,next,zap
+      24                                	.mcall	(at)sdebug,ndebug
+      25                                
+      26                                
+      27 000000                         	param	lpp,	60.		;
+       1                                	.iif ndf lpp,	lpp=	60.
+       2                                	.list
+       3        000074                  lpp=	lpp
+       4                                	.nlist
+      28 000000                         	param	ttllen,	32.
+       1                                	.iif ndf ttllen,	ttllen=	32.
+       2                                	.list
+       3        000040                  ttllen=	ttllen
+       4                                	.nlist
+      29 000000                         	param	stllen,	64.
+       1                                	.iif ndf stllen,	stllen=	64.
+       2                                	.list
+       3        000100                  stllen=	stllen
+       4                                	.nlist
+      30                                
+      31                                	.globl	codrol,	errrol,	lcdrol,	symrol,	secrol
+      32                                	.globl	lcbegl,	linend,	lcendl
+      33                                	.globl	linbuf,	cdrsav,	endp2l
+      34                                
+      35                                	.globl	linnum,	seqend,	pagnum,	pagext
+      36                                	.globl	ffcnt,	lppcnt
+      37                                	.globl	dflgbm,	opclas
+      38                                
+      39                                
+      40                                	.globl	edmask,	ed.cdr, ed.lc
+      41                                
+      42                                
+      43        000204                  srclen	=	204		;*********************
+      44        000060                  octlen	=	 60		;*********************
+      45                                
+      46        066306                  mx.on	=lc.md!lc.mc!lc.ld!lc.toc!lc.sym!lc.cnd!lc.bin!lc.loc!lc.seq
+      47                                
+      48                                
+      49                                
+      50                                	.globl	lc.cnd
+      51                                	.globl	exmflg
+      51                                
+      52                                	.globl	lstchn,	cmochn,	lstflg,	putoc
+      53                                	.globl	mx.flg,	my.flg
+      54                                	.globl	crfref
+      55                                
+      56                                	.globl	clcfgs,	clcloc,	clcmax
+      57                                	.globl	clcnam,	clcsec,	cpopj
+      58                                	.globl	errbts
+      59                                	.globl	flags,	getchr,	getnb,	getsym
+      60                                	.globl	mode
+      61                                	.globl	rolndx,	rolupd
+      62                                	.globl	sector,	setpf0,	setpf1
+      63                                	.globl	setsym
+      64                                	.globl	symbol,	tstarg,	value
+      65                                
+      66                                	.globl	expr,	pcroll,	prgttl
+      67                                	.globl	setwrd,	setbyt,	tstr50,	mulr50
+      68                                	.globl	r50unp
+      69                                
+      70                                	.globl	setchr
+      71                                
+      72                                ;globals defined in assembler
+      73                                
+      74                                	.globl	setlc
+      75                                
+      76                                	.globl	chrpnt,	getr50,	pass
+      77                                	.globl	putkb,	putkbl,	putlp
+      78                                
+      79                                	.globl	dnc,	movbyt,	savreg,	xmit0
+      80                                	.globl	linbuf,	errcnt
+      81                                
+      82                                ;globals defined in mcexec
+      83                                
+      84                                	.globl	dattim
+      85                                	.globl	hdrttl
+      86                                	.globl	io.eof,	io.tty,	io.err
+      87                                
+      88                                	.globl	ioftbl,	cnttbl,	buftbl
+      89                                
+      90                                
+      91                                
+      92                                	.globl	argcnt,	cttbl
+      93                                	.globl	endlin
+      94                                	.globl	getlin,	lblend,	lcendl,	lcflag
+      95                                	.globl	lcmask,	lc.mc,	lc.md,	lc.me
+      96                                	.globl	lst.kb, lst.lp, lstdev
+      96                                
+      97 000000                         	xitsec			;start in default sector
+       1 000000                         	entsec	.text
+       1 000000                         	.psect	.text	con
+      98                                
+      99                                endlin:				;end of line processor
+     100 000000                         	call	savreg
+       1 000000 004767  000000G         	jsr	pc,savreg
+     101 000004 005067  000000G         	clr	rolupd		;set to fetch from code roll
+     102 000010 105765  000000G         	tstb	cttbl(r5)	;eol or semi-colon?
+     103 000014 003427                  	ble	lout1		;  yes
+     104 000016                         	error	19,q,<random junk at end of statement ignored>
+       1 000016                         	sdebug	<19>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<19>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 000016 112767  000061  000000G 	movb	#'1,..zbuf+x
+       2        000001                  	x = x+1
+       3 000024 112767  000071  000001G 	movb	#'9,..zbuf+x
+       4        000002                  	x = x+1
+       7 000032 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 000040 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 000046                         	call	sdebug
+       1 000046 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.q,ern19, errbts,errref
+       3                                	.if	b	<random junk at end of statement ignored>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,19
+       7                                	.globl	err.xx
+       8 000052 005767  000002'         	tst	err.xx
+       9 000056 001003                  	bne	32768$
+      10 000060 012767  000000G 000002' 	mov	#ern19,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 000066 052767  002000  000000' 	bis	#err.q,errbts
+     105                                
+     106                                lout1:	.if ndf	xedcdr
+     107 000074 116767  000002' 000174' 	movb	cdrsav,linbuf+72.	;replace borrowed char
+     108                                	.endc
+     109 000102 016746  000000G         	mov	pass,-(sp)	;pass 1?
+     110 000106 001471                  	beq	9$		;  yes
+     111 000110                         	call	mx.mx		; <<< REEDS june 81
+       1 000110 004767  003632          	jsr	pc,mx.mx
+     112 000114 016716  000442'         	mov	lstdev,(sp)	;init listing flag
+     113                                	
+     114 000120 005767  000000'         	tst	errbts		;any errors?
+     115 000124 001053                  	bne	7$		;  yes, go directly, do not collect, etc.
+     116 000126 105716                  	tstb	(sp)		;any listing device?
+     117 000130 001460                  	beq	9$		;  no
+     118 000132 032767  004000  000004' 	bit	#lc.ld,lcflag	;listing directive?
+     119 000140 001043                  	bne	5$		;  yes
+     120 000142 005767  000000G         	tst	mx.flg		; <<< REEDS june 81
+     121 000146 001004                  	bne	80$		; <<< REEDS june 81: in mx mode we ignore .list
+     122 000150 005767  000434'         	tst	lclvl		;test over-under ride
+     123 000154 002435                  	blt	5$		;if <0, list only if errors
+     124 000156 003037                  	bgt	8$		;if >0, list unconditionally
+     125 000160 032767  000020  000432' 80$:	bit	#lc.com,lcmask	;comment suppression?
+     126 000166 001403                  	beq	2$		;  no
+     127 000170 016767  000000G 000010' 	mov	chrpnt,lcendl	;yes, assume we're sitting at comment
+     128 000176 032767  000010  000432' 2$:	bit	#lc.src,lcmask	;line suppression?
+     129 000204 001403                  	beq	3$		;  no
+     130 000206 012767  000064' 000010' 	mov	#linbuf,lcendl	;yes, point to start of buffer
+     131                                3$:
+     132                                	.if ndf	xmacro
+     133 000214 105767  000000C         	tstb	<^pl rolsiz>+codrol+1	;anything in code roll?
+     134 000220 001407                  	beq	4$		;  no
+     135 000222 032767  001000  000432' 	bit	#lc.meb,lcmask	;macro binary expansion?
+     136 000230 001003                  	bne	4$		;  no
+     137 000232 042767  000400  000004' 	bic	#lc.me,lcflag	;yes, ignore me flag
+     138                                	.endc
+     139 000240 036767  000432' 000004' 4$:	bit	lcmask,lcflag	;anything suppressed?
+     140 000246 001411                  	beq	9$		;  no, use current flags
+     141 000250 005016                  5$:	clr	(sp)		;yes, clear listing mode
+     142 000252 000407                  	br	9$
+     142                                
+     143 000254 000316                  7$:	swab	(sp)		;error, set to error flags
+     144 000256 012767  000064' 000006' 8$:	mov	#linbuf,lcbegl	;list entire line
+     145 000264 012767  000270' 000010' 	mov	#linend,lcendl
+     146 000272                         9$:	call	pcroll		;process entry on code roll
+       1 000272 004767  000000G         	jsr	pc,pcroll
+     146                                
+     147 000276 111667  000440'         endl10:	movb	(sp),lstreq	;anything requested?
+     148 000302 001530                  	beq	endl20		;  no
+     149 000304 105077  000010'         	clrb	@lcendl		;set asciz terminator
+     150 000310 012702  000004'         	mov	#octbuf,r2
+     151 000314 012722  020040          11$:	mov	#space*400+space,(r2)+	;blank fill
+     152 000320 022702  000064'         	cmp	#linbuf,r2	;test for end (beginning of line buffer)
+     153 000324 001373                  	bne	11$
+     154                                
+     155 000326 012702  000004'         endl50:	mov	#octbuf,r2	;point to start of buffer
+     156 000332                         	call	tsterr		;set error flags
+       1 000332 004767  000430          	jsr	pc,tsterr
+     157 000336 012700  000000G         	mov	#linnum,r0
+     158 000342 012001                  	mov	(r0)+,r1
+     159 000344 020110                  	cmp	r1,(r0)
+     160 000346 001421                  	beq	2$
+     161 000350 010110                  	mov	r1,(r0)
+     162 000352 032767  000002  000432' 	bit	#lc.seq,lcmask
+     163 000360 001014                  	bne	2$
+     164 000362 010204                  	mov	r2,r4
+     165 000364                         	call	dnc
+       1 000364 004767  000000G         	jsr	pc,dnc
+     166 000370 012700  000013'         	mov	#octbuf+7,r0
+     167 000374 114240                  1$:	movb	-(r2),-(r0)
+     168 000376 112712  000040          	movb	#space,(r2)
+     169 000402 020204                  	cmp	r2,r4
+     170 000404 101373                  	bhi	1$
+     171 000406 012702  000013'         	mov	#octbuf+7,r2
+     172 000412 112722  000011          2$:	movb	#tab,(r2)+
+     173 000416 012701  000014'         21$:	mov	#pf0,r1
+     174 000422 032767  000002  000432' 	bit	#lc.loc,lcmask
+     175 000430 001006                  	bne	4$
+     176 000432 005711                  	tst	(r1)
+     177 000434 001402                  	beq	3$
+     178 000436                         	call	setwrd
+       1 000436 004767  000000G         	jsr	pc,setwrd
+     179 000442 112722  000011          3$:	movb	#tab,(r2)+
+     180 000446 005011                  4$:	clr	(r1)
+     181 000450 012701  000020'         	mov	#pf1,r1
+     182 000454 032767  000004  000432' 	bit	#lc.bin,lcmask
+     183 000462 001026                  	bne	endl19
+     184 000464 012704  000001          	mov	#1,r4
+     185 000470 032767  010000  000432' 	bit	#lc.ttm,lcmask
+     186 000476 001401                  	beq	41$
+     187 000500 122424                  	cmpb	(r4)+,(r4)+		; cheap increment by 2
+     188 000502 005711                  41$:	tst	(r1)
+     189 000504 001402                  	beq	6$
+     190 000506                         5$:	call	setwdb
+       1 000506 004767  000136          	jsr	pc,setwdb
+     191 000512 112722  000011          6$:	movb	#tab,(r2)+
+     192 000516 005011                  	clr	(r1)
+     193 000520 005304                  	dec	r4
+     194 000522 001406                  	beq	endl19
+     195 000524 005767  000000G         	tst	rolupd
+     196 000530 001770                  	beq	6$
+     197 000532                         	call	pcroll
+       1 000532 004767  000000G         	jsr	pc,pcroll
+     198 000536 000763                  	br	5$
+     199 000540 016701  000006'         endl19:	mov	lcbegl,r1	;point to start of listing line
+     200 000544                         	call	movbyt		;move over
+       1 000544 004767  000000G         	jsr	pc,movbyt
+     201 000550                         	putlin	#octbuf		; test for header and list
+       1                                	.if dif	<#octbuf><r0>
+       2 000550 012700  000004'         	mov	#octbuf,r0
+       3                                	.endc
+       4 000554                         	call	putlin
+       1 000554 004767  002526          	jsr	pc,putlin
+     202 000560                         	call	err.pr
+       1 000560 004767  003350          	jsr	pc,err.pr
+     202                                
+     203                                endl20:
+     204 000564 105077  000006'         	clrb	@lcbegl		;don't dupe line
+     205 000570 005767  000000G         	tst	rolupd		;finished?
+     206 000574 001410                  	beq	endl30		;  yes, don't loop
+     207 000576                         	call	pcroll
+       1 000576 004767  000000G         	jsr	pc,pcroll
+     208 000602 001405                  	beq	endl30		;exit if empty
+     209 000604 032767  000044  000432' 	bit	#lc.bex!lc.bin,lcmask	;binary extension suppressed?
+     210 000612 001631                  	beq	endl10		;  no
+     211 000614 000763                  	br	endl20		;yes, don't list
+     212                                
+     213 000616 005726                  endl30:	tst	(sp)+		;prune listing flag
+     214 000620                         	zap	codrol		;clear the code roll
+       1 000620 012700  000000G         	mov	#codrol,r0
+       2                                	.globl	zap
+       3 000624                         	call	zap
+       1 000624 004767  000000G         	jsr	pc,zap
+     215 000630 016700  000000G         	mov	clcloc,r0
+     216 000634 020067  000000G         	cmp	r0,clcmax	;new high for sector?
+     217 000640 101402                  	blos	31$		;  no
+     218 000642 010067  000000G         	mov	r0,clcmax	;yes, set it
+     219 000646                         31$:	return
+       1 000646 000207                  	rts	pc
+     220                                
+     220                                
+     221                                setwdb:				;list word or byte
+     222 000650 005711                  	tst	(r1)		;anything for second field?
+     223 000652 001444                  	beq	9$		;  no
+     224 000654 012746  000000G         	mov	#setwrd,-(sp)	;assume word
+     225 000660 032767  000000G 000000G 	bit	#dflgbm,opclas	;true?
+     226 000666 001402                  	beq	1$		;  yes
+     227 000670 012716  000000G         	mov	#setbyt,(sp)	;no, byte
+     228 000674                         1$:	call	@(sp)+		;call routine
+       1 000674 004736                  	jsr	pc,@(sp)+
+     229 000676 032711  037400          	bit	#77*400,(r1)	;test for linker modification
+     230 000702 001430                  	beq	9$
+     231                                	
+     232 000704 032711  005100          	bit	#5100,(r1)	;if one of these isnt set I dont know
+     233 000710 001003                  	bne	12$		;what is going on, so lets mark it ?
+     234 000712 112712  000077          	movb	#'?,(r2)
+     235 000716 000422                  	br	9$
+     236                                12$:
+     237 000720 112712  000047          	movb	#ch.xcl,(r2)	; ' marks psect relocation
+     238 000724 032711  004000          	bit	#4000,(r1)
+     239 000730 001002                  	bne	10$
+     240 000732 112712  000042          	movb	#'",(r2) 	;  " location counter relocation
+     241                                10$:
+     242 000736 032711  000100          	bit	#glbflg,(r1)
+     243 000742 001407                  	beq	2$
+     244 000744 112712  000107          	movb	#'G,(r2)
+     245 000750 005767  000000G         	tst	symbol		; harvard m11 uses global syms with funny
+     246 000754 001002                  	bne	2$		; names for complex relocation
+     247 000756 112712  000103          	movb	#'C,(r2)
+     248 000762 105722                  2$:	tstb	(r2)+
+     249 000764                         9$:	return
+       1 000764 000207                  	rts	pc
+     250                                
+     251                                tsterr:				;test and process errors
+     252 000766 016700  000000'         	mov	errbts,r0	;any errors?
+     253 000772 001440                  	beq	9$		;  no
+     254 000774 042700  000001          	bic	#err.,r0	;yes, ".print"?
+     255 001000 001404                  	beq	4$		;  yes
+     256 001002 005267  000000'         	inc	errcnt		;bump error count
+     257 001006                         	call	err.sh
+       1 001006 004767  000064          	jsr	pc,err.sh
+     258 001012 012701  000012'         4$:	mov	#errmne-1,r1
+     259 001016 105721                  1$:	tstb	(r1)+		;move char pntr and clear carry
+     260 001020 006067  000000'         	ror	errbts		;rotate error bits
+     261 001024 103022                  	bcc	2$
+     262 001026 111122                  	movb	(r1),(r2)+
+     263                                	.if ndf	xcref
+     264 001030 111100                  	movb	(r1),r0		;fetch character
+     265 001032                         	call	tstr50		;convert to rad50
+       1 001032 004767  000000G         	jsr	pc,tstr50
+     266 001036                         	call	mulr50		;left justify
+       1 001036 004767  000000G         	jsr	pc,mulr50
+     267 001042                         	call	mulr50
+       1 001042 004767  000000G         	jsr	pc,mulr50
+     268 001046 010067  000000G         	mov	r0,symbol	;store
+     269 001052 005067  000002G         	clr	symbol+2
+     270 001056 012767  000000G 000000G 	mov	#errrol,rolndx	;prepare to cref
+     271 001064                         	call	crfref		;do so
+       1 001064 004767  000000G         	jsr	pc,crfref
+     272                                	.endc
+     273 001070 000752                  	br	1$
+     274                                
+     275 001072 001351                  2$:	bne	1$
+     276 001074                         9$:	return
+       1 001074 000207                  	rts	pc
+     277                                
+     278                                
+     279                                .globl	fileln
+     280                                .globl	putli2
+     281                                err.sh::
+     282 001076                         	call	savreg
+       1 001076 004767  000000G         	jsr	pc,savreg
+     283 001102 005767  000000G         	tst	lstflg
+     284 001106 001045                  	bne	9$
+     285                                
+     286                                ; printf("%s: line %d: %s\n", infile, fileln, errmess)
+     287                                
+     288 001110 012702  000000'         	mov	#err.bx,r2
+     289 001114 105767  000140'         	tstb	err.by
+     290 001120 001423                  	beq	1$
+     291 001122 012701  000140'         	mov	#err.by,r1
+     292 001126                         	call	movbyt
+       1 001126 004767  000000G         	jsr	pc,movbyt
+     293 001132 012701  000000'         	mov	#err.s1,r1
+     294 001136                         	call	movbyt
+       1 001136 004767  000000G         	jsr	pc,movbyt
+     295 001142 016701  000000G         	mov	fileln,r1
+     296 001146                         	call	dnc
+       1 001146 004767  000000G         	jsr	pc,dnc
+     297 001152 005767  000002'         	tst	err.xx
+     298 001156 001412                  	beq	2$
+     299 001160 012701  000010'         	mov	#err.s2,r1
+     300 001164                         	call	movbyt
+       1 001164 004767  000000G         	jsr	pc,movbyt
+     301 001170 016701  000002'         1$:	mov	err.xx,r1
+     302 001174                         	call	movbyt
+       1 001174 004767  000000G         	jsr	pc,movbyt
+     303 001200 005067  000002'         	clr	err.xx
+     304                                2$:
+     305 001204 105012                  	clrb	(r2)
+     306 001206 012702  000000'         	mov	#err.bx,r2
+     307 001212 012704  000001          	mov	#lst.kb,r4
+     308 001216                         	call	putli2
+       1 001216 004767  002134          	jsr	pc,putli2
+     309                                9$:
+     310 001222                         	return
+       1 001222 000207                  	rts	pc
+     311                                
+     312 001224                         .data
+       1 001224                         	entsec	.data
+       1 000000                         	.psect	.data	con
+     313 000000    072     040     154  err.s1:	.asciz /: line /
+         000003    151     156     145  
+         000006    040     000          
+     314                                .even
+     315 000010    072     040     000  err.s2:	.asciz	/: /
+     316                                
+     317 000013                         .bss
+       1 000013                         	entsec	.bss
+       1 000000                         	.psect	.bss	con
+     318        000000                  err.bx:	.blkw	60
+     319        000140                  err.by::	.blkw	60
+     320                                
+     321 000300                         	entsec	impure
+       1 000000                         	.psect	impure	con
+     322        000000                  errcnt:	.blkw			;error counter
+     323 000002                         	entsec	implin
+       1 000000                         	.psect	implin	con
+     324        000000                  errbts:	.blkw			;error flags
+     325        000002                  err.xx::	.blkw		;error message
+     326 000004                         	xitsec
+       1 000004                         	entsec	.text
+       1 001224                         	.psect	.text	con
+     327                                	.if ndf	xedcdr
+     328 001224                         	genedt	cdr
+       1 001224                         	entsec	edtsec
+       1 000000                         	.psect	edtsec	con
+       2 000000 011562                  	.rad50	/cdr/
+       3                                	.if nb	
+       4                                	.word	
+       5                                	.iff
+       6 000002 000000G                 	.word	cpopj
+       7                                	.endc
+       8 000004 000000G                 	.word	ed.cdr
+       9 000006                         	xitsec
+       1 000006                         	entsec	.text
+       1 001224                         	.psect	.text	con
+     329 001224                         	entsec	impure
+       1 000002                         	.psect	impure	con
+     330        000002                  cdrsav:	.blkw			;saved char from card format
+     331                                	.endc
+     331                                
+     332 000004                         	entsec	impure
+       1 000004                         	.psect	impure	con
+     333                                octbuf:
+     334        000004                  octerp:	.blkb	0
+     335        000004                  octseq:	.blkb	2
+     336        000006                  octpf0:	.blkb	7
+     337        000015                  octpf1:	.blkb	octlen-<.-octbuf>
+     338        000064                  linbuf:	.blkw	srclen/2
+     339        000270                  linend:	.blkw	1
+     340                                
+     341 000272                         .data
+       1 000272                         	entsec	.data
+       1 000013                         	.psect	.data	con
+     342        000001                  tmpcnt	=	1
+     343                                errmne:	.irpc	char,< abeilmnopqrtuz>
+     344                                	.ascii	/char/
+     345                                	.globl	err.'char
+     346                                err.'char=	tmpcnt
+     347                                tmpcnt	=	tmpcnt+tmpcnt
+     348                                	.endm
+       1 000013    040                  	.ascii	/ /
+       2                                	.globl	err. 
+       3        000001                  err. =	tmpcnt
+       4        000002                  tmpcnt	=	tmpcnt+tmpcnt
+       5 000014    141                  	.ascii	/a/
+       6                                	.globl	err.a
+       7        000002                  err.a=	tmpcnt
+       8        000004                  tmpcnt	=	tmpcnt+tmpcnt
+       9 000015    142                  	.ascii	/b/
+      10                                	.globl	err.b
+      11        000004                  err.b=	tmpcnt
+      12        000010                  tmpcnt	=	tmpcnt+tmpcnt
+      13 000016    145                  	.ascii	/e/
+      14                                	.globl	err.e
+      15        000010                  err.e=	tmpcnt
+      16        000020                  tmpcnt	=	tmpcnt+tmpcnt
+      17 000017    151                  	.ascii	/i/
+      18                                	.globl	err.i
+      19        000020                  err.i=	tmpcnt
+      20        000040                  tmpcnt	=	tmpcnt+tmpcnt
+      21 000020    154                  	.ascii	/l/
+      22                                	.globl	err.l
+      23        000040                  err.l=	tmpcnt
+      24        000100                  tmpcnt	=	tmpcnt+tmpcnt
+      25 000021    155                  	.ascii	/m/
+      26                                	.globl	err.m
+      27        000100                  err.m=	tmpcnt
+      28        000200                  tmpcnt	=	tmpcnt+tmpcnt
+      29 000022    156                  	.ascii	/n/
+      30                                	.globl	err.n
+      31        000200                  err.n=	tmpcnt
+      32        000400                  tmpcnt	=	tmpcnt+tmpcnt
+      33 000023    157                  	.ascii	/o/
+      34                                	.globl	err.o
+      35        000400                  err.o=	tmpcnt
+      36        001000                  tmpcnt	=	tmpcnt+tmpcnt
+      37 000024    160                  	.ascii	/p/
+      38                                	.globl	err.p
+      39        001000                  err.p=	tmpcnt
+      40        002000                  tmpcnt	=	tmpcnt+tmpcnt
+      41 000025    161                  	.ascii	/q/
+      42                                	.globl	err.q
+      43        002000                  err.q=	tmpcnt
+      44        004000                  tmpcnt	=	tmpcnt+tmpcnt
+      45 000026    162                  	.ascii	/r/
+      46                                	.globl	err.r
+      47        004000                  err.r=	tmpcnt
+      48        010000                  tmpcnt	=	tmpcnt+tmpcnt
+      49 000027    164                  	.ascii	/t/
+      50                                	.globl	err.t
+      51        010000                  err.t=	tmpcnt
+      52        020000                  tmpcnt	=	tmpcnt+tmpcnt
+      53 000030    165                  	.ascii	/u/
+      54                                	.globl	err.u
+      55        020000                  err.u=	tmpcnt
+      56        040000                  tmpcnt	=	tmpcnt+tmpcnt
+      57 000031    172                  	.ascii	/z/
+      58                                	.globl	err.z
+      59        040000                  err.z=	tmpcnt
+      60        100000                  tmpcnt	=	tmpcnt+tmpcnt
+     349                                
+     350 000032                         	xitsec
+       1 000032                         	entsec	.text
+       1 001224                         	.psect	.text	con
+     350                                
+     351                                	.globl	title,	sbttl
+     352                                
+     353                                title:
+     354 001224                         	call	getsym		;get a symbol
+       1 001224 004767  000000G         	jsr	pc,getsym
+     355 001230 001030                  	bne	title1		;  error if null
+     356 001232                         	error	20,a,<missing title>
+       1 001232                         	sdebug	<20>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<20>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 001232 112767  000062  000000G 	movb	#'2,..zbuf+x
+       2        000001                  	x = x+1
+       3 001240 112767  000060  000001G 	movb	#'0,..zbuf+x
+       4        000002                  	x = x+1
+       7 001246 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 001254 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 001262                         	call	sdebug
+       1 001262 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.a,ern20, errbts,errref
+       3                                	.if	b	<missing title>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,20
+       7                                	.globl	err.xx
+       8 001266 005767  000002'         	tst	err.xx
+       9 001272 001003                  	bne	32768$
+      10 001274 012767  000000G 000002' 	mov	#ern20,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 001302 052767  000002  000000' 	bis	#err.a,errbts
+     357 001310                         	return
+       1 001310 000207                  	rts	pc
+     358                                
+     359 001312 010067  000000G         title1:	mov	r0,prgttl	;move into storage
+     360 001316 016767  000002G 000002G 	mov	symbol+2,prgttl+2
+     361 001324                         	call	setsym		;point to start of title
+       1 001324 004767  000000G         	jsr	pc,setsym
+     362 001330 012702  000274'         	mov	#ttlbuf,r2	;point to buffer
+     363 001334 112722  000014          	movb	#ff,(r2)+	;store page eject
+     364 001340 005003                  	clr	r3		;clear position conter
+     365                                2$:	.if ndf xedlc		;>>>gh 7/20/78 to not automatically upper-case
+     366 001342 032767  000000G 000000G 	bit	#ed.lc,edmask	;lower case enabled?
+     367 001350 001003                  	bne	6$		;  no, leave as upper case	
+     368 001352 016705  000000G         	mov	chrpnt,r5	;fake for ovlay pic
+     369 001356 111505                  	movb	(r5),r5		;fetch original character
+     370                                6$:	.endc
+     371 001360 110512                  	movb	r5,(r2)		;plunk the next char in the buffer
+     372 001362 001415                  	beq	5$		;branch if end
+     373 001364 020527  000011          	cmp	r5,#tab		;a tab?
+     374 001370 001002                  	bne	3$		;  no
+     375 001372 052703  000007          	bis	#7,r3		;yes, compensate
+     376 001376 005203                  3$:	inc	r3		;update position counter
+     377 001400 020327  000040          	cmp	r3,#ttllen	;within bounds?
+     378 001404 103001                  	bhis	4$		;  no
+     379 001406 105722                  	tstb	(r2)+		;yes, move pointer
+     380 001410                         4$:	call	getchr		;get the next character
+       1 001410 004767  000000G         	jsr	pc,getchr
+     381 001414 001352                  	bne	2$		;loop if not end
+     382 001416 112722  000011          5$:	movb	#tab,(r2)+	;set separator
+     383                                	.globl	vernam
+     384 001422 016701  000000G         	mov	vernam,r1
+     385 001426                         	call	movbyt		;set version number, etc.
+       1 001426 004767  000000G         	jsr	pc,movbyt
+     386 001432 012701  000000G         	mov	#dattim,r1
+     387 001436                         	call	movbyt		;date and time
+       1 001436 004767  000000G         	jsr	pc,movbyt
+     388 001442 010267  000272'         	mov	r2,ttlbrk	;remember break point
+     389 001446 105012                  	clrb	(r2)
+     390 001450                         	return
+       1 001450 000207                  	rts	pc
+     391                                
+     392 001452                         	.data
+       1 001452                         	entsec	.data
+       1 000032                         	.psect	.data	con
+     393 000032    056     155     141  defttl::	.asciz	/.main./	;default title
+         000035    151     156     056  
+         000040    000                  
+     394                                
+     395 000041                         	entsec	impure
+       1 000272                         	.psect	impure	con
+     396        000272                  ttlbrk:	.blkw			;break location
+     397        000274                  ttlbuf:	.blkb	ttllen-1!7+1+1	;modulo tab + ff
+     398        000335                  	.blkb	20.		;intro msg
+     399        000361                  	.iif ndf xtime,	.blkb	20.	;time & date
+     400        000405                  	.blkb	20.		;page number
+     401 000431    000                  	.even
+     402 000432                         	xitsec
+       1 000432                         	entsec	.text
+       1 001452                         	.psect	.text	con
+     403                                
+     403                                
+     404                                
+     405                                
+     406                                sbttl:				;sub-title directive
+     407 001452 012702  000000'         	mov	#stlbuf,r2	;point to sub-title buffer
+     408 001456 005767  000000G         	tst	pass		;pass one?
+     409 001462 001420                  	beq	2$		;  yes
+     410                                1$:	.if ndf xedlc		;>>>gh 7/20/78 to not automatically upper-case
+     411 001464 032767  000000G 000000G 	bit	#ed.lc,edmask	;lower case enabled?
+     412 001472 001003                  	bne	4$		;  no, leave as upper case
+     413 001474 016705  000000G         	mov	chrpnt,r5	;fake for ovlay pic
+     414 001500 111505                  	movb	(r5),r5		;fetch original character
+     415                                4$:	.endc
+     416 001502 110522                  	movb	r5,(r2)+	;move character in
+     417 001504 001477                  	beq	13$		;  branch if end
+     418 001506                         	call	getchr		;get the next character
+       1 001506 004767  000000G         	jsr	pc,getchr
+     419 001512 020227  000077'         	cmp	r2,#stlbuf+stllen-1	;test for end
+     420 001516 103762                  	blo	1$
+     421 001520 105742                  	tstb	-(r2)		;polish off line
+     422 001522 000760                  	br	1$
+     423                                
+     424 001524 032767  020000  000432' 2$:	bit	#lc.toc,lcmask
+     425 001532 001064                  	bne	13$
+     426 001534 105767  000442'         	tstb	lstdev		;any listing device?
+     427 001540 001461                  	beq	13$		;  no, exit
+     428 001542 005767  000000G         	tst	mx.flg		; <<< REEDS june 81
+     429 001546 001056                  	bne	13$		; <<<
+     430 001550 012701  000041'         	mov	#toctxt,r1
+     431 001554                         	call	movbyt		;set table of contents
+       1 001554 004767  000000G         	jsr	pc,movbyt
+     432 001560                         	call	setsym		;point to ".sbttl"
+       1 001560 004767  000000G         	jsr	pc,setsym
+     433 001564                         3$:	call	getr50		;get radix-50 char
+       1 001564 004767  000000G         	jsr	pc,getr50
+     434 001570 003375                  	bgt	3$		;stop at first terminator
+     435 001572 016702  000000G         	mov	chrpnt,r2	;set pointer
+     436                                	.if ndf	xlcseq
+     437 001576 016700  000000G         	mov	linnum,r0
+     438 001602                         	call	10$
+       1 001602 004767  000044          	jsr	pc,10$
+     439 001606 112742  000055          	movb	#ch.sub,-(r2)
+     440                                	.iff
+     441                                	movb	#tab,-(r2)
+     442                                	.endc
+     443 001612 016700  000000G         	mov	pagnum,r0
+     444 001616                         	call	10$
+       1 001616 004767  000030          	jsr	pc,10$
+     445 001622 112742  000040          	movb	#space,-(r2)
+     446                                	
+     447 001626 005767  000000G         	tst	lstflg
+     448 001632 001403                  	beq	15$
+     449 001634 156767  000442' 000440' 	bisb	lstdev,lstreq
+     450 001642                         15$:	putlin	r2 		;output
+       1                                	.if dif	<r2><r0>
+       2 001642 010200                  	mov	r2,r0
+       3                                	.endc
+       4 001644                         	call	putlin
+       1 001644 004767  001436          	jsr	pc,putlin
+     451 001650                         	return
+       1 001650 000207                  	rts	pc
+     452                                
+     453 001652 012704  000004          10$:	mov	#4,r4		; << REEDS. changed to 4 digit field from 3
+     454 001656 112742  000040          11$:	movb	#space,-(r2)
+     455 001662 010001                  	mov	r0,r1
+     456 001664 001406                  	beq	12$
+     457 001666 005000                  	clr	r0
+     458 001670 071027  000012          	div	#^d10,r0
+     459 001674 062701  000060          	add	#dig.0,r1
+     460 001700 110112                  	movb	r1,(r2)
+     461 001702 077413                  12$:	sob	r4,11$
+     462 001704                         13$:	return
+       1 001704 000207                  	rts	pc
+     463                                
+     464 001706                         .data
+       1 001706                         	entsec	.data
+       1 000041                         	.psect	.data	con
+     465 000041    164     141     142  toctxt:	.asciz	/table of contents/
+         000044    154     145     040  
+         000047    157     146     040  
+         000052    143     157     156  
+         000055    164     145     156  
+         000060    164     163     000  
+     466                                
+     467 000063                         	entsec	imppas
+       1 000000                         	.psect	imppas	con
+     468        000000                  stlbuf:	.blkw	<stllen+2>/2	;sub-title buffer
+     469                                
+     470 000102                         	xitsec
+       1 000102                         	entsec	.text
+       1 001706                         	.psect	.text	con
+     470                                
+     471                                	.globl	print,	error
+     472                                
+     473                                
+     474                                	.enabl	lsb
+     475                                
+     476                                print:
+     477 001706                         	error	0,<>,<user generated error>	; null error (dont count)
+       1 001706                         	sdebug	<0>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<0>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 001706 112767  000060  000000G 	movb	#'0,..zbuf+x
+       2        000001                  	x = x+1
+       7 001714 112767  000000  000001G 	movb	#0,..zbuf+x
+       8 001722 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 001730                         	call	sdebug
+       1 001730 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.,ern0, errbts,errref
+       3                                	.if	b	<user generated error>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,0
+       7                                	.globl	err.xx
+       8                                	tst	err.xx
+       9                                	bne	32768$
+      10                                	mov	#ern0,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 001734 052767  000001  000000' 	bis	#err.,errbts
+     478 001742 000427                  	br	error1
+     479                                
+     480 001744                         error:	error	53,p,<user generated error>		
+       1 001744                         	sdebug	<53>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<53>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 001744 112767  000065  000000G 	movb	#'5,..zbuf+x
+       2        000001                  	x = x+1
+       3 001752 112767  000063  000001G 	movb	#'3,..zbuf+x
+       4        000002                  	x = x+1
+       7 001760 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 001766 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 001774                         	call	sdebug
+       1 001774 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.p,ern53, errbts,errref
+       3                                	.if	b	<user generated error>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,53
+       7                                	.globl	err.xx
+       8 002000 005767  000002'         	tst	err.xx
+       9 002004 001003                  	bne	32769$
+      10 002006 012767  000000G 000002' 	mov	#ern53,err.xx
+      11                                32769$:
+      12                                	.endc
+      13 002014 052767  001000  000000' 	bis	#err.p,errbts
+     481 002022                         error1:	call	setpf0		;print location field
+       1 002022 004767  000450          	jsr	pc,setpf0
+     482 002026                         	call	expr		;evaluate expression
+       1 002026 004767  000000G         	jsr	pc,expr
+     483 002032 001402                  	beq	2$		;branch if null
+     484 002034                         	call	setpf1		;non-null, list value
+       1 002034 004767  000546          	jsr	pc,setpf1
+     485 002040                         2$:	return
+       1 002040 000207                  	rts	pc
+     486                                
+     487                                	.dsabl	lsb
+     488                                
+     489                                
+     490                                	.globl	rem
+     491                                
+     492                                rem:				; ".rem" directive
+     493 002042 010503                  	mov	r5,r3		;set terminating character
+     494 002044 001030                  	bne	rem1		;branch if non-null
+     495 002046                         	error	22,a,<missing delimiting character>
+       1 002046                         	sdebug	<22>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<22>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 002046 112767  000062  000000G 	movb	#'2,..zbuf+x
+       2        000001                  	x = x+1
+       3 002054 112767  000062  000001G 	movb	#'2,..zbuf+x
+       4        000002                  	x = x+1
+       7 002062 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 002070 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 002076                         	call	sdebug
+       1 002076 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.a,ern22, errbts,errref
+       3                                	.if	b	<missing delimiting character>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,22
+       7                                	.globl	err.xx
+       8 002102 005767  000002'         	tst	err.xx
+       9 002106 001003                  	bne	32768$
+      10 002110 012767  000000G 000002' 	mov	#ern22,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 002116 052767  000002  000000' 	bis	#err.a,errbts
+     496                                				;error, no delimiting character
+     497 002124                         	return
+       1 002124 000207                  	rts	pc
+     498                                
+     499 002126                         rem1:	call	getchr		;get the next character
+       1 002126 004767  000000G         	jsr	pc,getchr
+     500 002132 005705                  2$:	tst	r5		;end of line?
+     501 002134 001006                  	bne	3$		;  no
+     502 002136                         	call	endlin		;yes, polish off line
+       1 002136 004767  175636          	jsr	pc,endlin
+     503 002142                         	call	getlin		;get next line
+       1 002142 004767  000000G         	jsr	pc,getlin
+     504 002146 001771                  	beq	2$		;loop if no eof
+     505 002150                         	return			;eof, exit
+       1 002150 000207                  	rts	pc
+     506                                
+     507 002152 020503                  3$:	cmp	r5,r3		;is this the terminator?
+     508 002154 001364                  	bne	rem1		;  no
+     509 002156 000167  000000G         	jmp	getnb		;yes, bypass and exit
+     510                                
+     510                                
+     511                                	.sbttl	listing control
+     512                                
+     513                                	.globl	nlist,	list
+     514                                
+     515 002162 005103                  nlist:	com	r3		;make r3 -1
+     516                                list:
+     517 002164 006303                  	asl	r3		;make r3 0/-2
+     518 002166 005203                  	inc	r3		;now 1/-1
+     519 002170                         1$:	call	tstarg		;test for another argument
+       1 002170 004767  000000G         	jsr	pc,tstarg
+     520 002174 001005                  	bne	2$		;  valid
+     521 002176 005767  000000G         	tst	argcnt		;null, first?
+     522 002202 001101                  	bne	list7		;  no, we're through
+     523 002204 005267  000000G         	inc	argcnt		;yes, mark it
+     524 002210                         2$:	call	getsym		;try for a symbol
+       1 002210 004767  000000G         	jsr	pc,getsym
+     525 002214                         	scanw	lcdrol		;look it up in the table
+       1 002214 012700  000000G         	mov	#lcdrol,r0
+       2                                	.globl	scanw
+       3 002220                         	call	scanw
+       1 002220 004767  000000G         	jsr	pc,scanw
+     526 002224 001441                  	beq	6$		;  error if not found
+     527 002226 005002                  	clr	r2
+     528 002230 000261                  	sec
+     529 002232 006102                  3$:	rol	r2
+     530 002234 077002                  	sob	r0,3$
+     531 002236 005767  000000G         	tst	exmflg		;called from command string?
+     532 002242 001410                  	beq	11$		;  no
+     533 002244 050267  000436'         	bis	r2,lcmcsi	;yes, set disable bits
+     534 002250                         	bisbic	lcdeft		;change the default values
+       1                                	.globl	bisbic
+       2 002250 012746  000000'         	mov	#lcdeft,-(sp)
+       3 002254                         	call	bisbic
+       1 002254 004767  000000G         	jsr	pc,bisbic
+       4 002260 005726                  	tst	(sp)+
+     535 002262 000403                  	br	12$		;  and skip test
+     536                                
+     537 002264 030267  000436'         11$:	bit	r2,lcmcsi	;this flag off limits?
+     538 002270 001016                  	bne	5$		;  yes
+     539 002272 040267  000432'         12$:	bic	r2,lcmask
+     540 002276 030227  100000          	bit	r2,#lc.		;null?
+     541 002302 001405                  	beq	4$		;  no
+     542 002304                         	call	pagex		;set listing control
+       1 002304 004767  000104          	jsr	pc,pagex
+     543 002310 060367  000434'         	add	r3,lclvl	;yes, update level count
+     544 002314 001404                  	beq	5$		;don't set flag if back to zero
+     545 002316 005703                  4$:	tst	r3
+     546 002320 100002                  	bpl	5$		;.list, branch
+     547 002322 050267  000432'         	bis	r2,lcmask
+     548 002326 000720                  5$:	br	1$		;try for more
+     549                                
+     550 002330                         6$:	error	23,a,<unknown .list/.nlist argument>
+       1 002330                         	sdebug	<23>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<23>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 002330 112767  000062  000000G 	movb	#'2,..zbuf+x
+       2        000001                  	x = x+1
+       3 002336 112767  000063  000001G 	movb	#'3,..zbuf+x
+       4        000002                  	x = x+1
+       7 002344 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 002352 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 002360                         	call	sdebug
+       1 002360 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.a,ern23, errbts,errref
+       3                                	.if	b	<unknown .list/.nlist argument>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,23
+       7                                	.globl	err.xx
+       8 002364 005767  000002'         	tst	err.xx
+       9 002370 001003                  	bne	32768$
+      10 002372 012767  000000G 000002' 	mov	#ern23,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 002400 052767  000002  000000' 	bis	#err.a,errbts
+     551 002406                         list7: 	return
+       1 002406 000207                  	rts	pc
+     552                                
+     553 002410                         	genswt	li,list		;generate /li
+       1 002410                         	entsec	swtsec
+       1 000000                         	.psect	swtsec	con
+       2                                32768$:	.irpc	x,li
+       3                                	.if ge ''x-141
+       4                                		.if le ''x-172
+       5                                			.byte ''x-40
+       6                                		.iff
+       7                                			.byte ''x
+       8                                		.endc
+       9                                	.iff
+      10                                	.byte ''x
+      11                                	.endc
+      12                                	.endm
+       1        000013                  	.if ge 'l-141
+       2        177762                  		.if le 'l-172
+       3 000000    114                  			.byte 'l-40
+       4                                		.iff
+       5                                			.byte 'l
+       6                                		.endc
+       7                                	.iff
+       8                                	.byte 'l
+       9                                	.endc
+      10        000010                  	.if ge 'i-141
+      11        177757                  		.if le 'i-172
+      12 000001    111                  			.byte 'i-40
+      13                                		.iff
+      14                                			.byte 'i
+      15                                		.endc
+      16                                	.iff
+      17                                	.byte 'i
+      18                                	.endc
+      13        000000                  	.iif ne <.-32768$&1>,	.byte	0
+      14 000002 002164'                 	.word	list
+      15 000004                         	xitsec
+       1 000004                         	entsec	.text
+       1 002410                         	.psect	.text	con
+     554 002410                         	genswt	nl,nlist	;  and /nl switch entries
+       1 002410                         	entsec	swtsec
+       1 000004                         	.psect	swtsec	con
+       2                                32768$:	.irpc	x,nl
+       3                                	.if ge ''x-141
+       4                                		.if le ''x-172
+       5                                			.byte ''x-40
+       6                                		.iff
+       7                                			.byte ''x
+       8                                		.endc
+       9                                	.iff
+      10                                	.byte ''x
+      11                                	.endc
+      12                                	.endm
+       1        000015                  	.if ge 'n-141
+       2        177764                  		.if le 'n-172
+       3 000004    116                  			.byte 'n-40
+       4                                		.iff
+       5                                			.byte 'n
+       6                                		.endc
+       7                                	.iff
+       8                                	.byte 'n
+       9                                	.endc
+      10        000013                  	.if ge 'l-141
+      11        177762                  		.if le 'l-172
+      12 000005    114                  			.byte 'l-40
+      13                                		.iff
+      14                                			.byte 'l
+      15                                		.endc
+      16                                	.iff
+      17                                	.byte 'l
+      18                                	.endc
+      13        000000                  	.iif ne <.-32768$&1>,	.byte	0
+      14 000006 002162'                 	.word	nlist
+      15 000010                         	xitsec
+       1 000010                         	entsec	.text
+       1 002410                         	.psect	.text	con
+     555                                
+     556                                	.globl	page
+     557 002410 005267  000000G         page:	inc	ffcnt		;simulate ff after this line
+     558 002414 052767  004000  000004' pagex:	bis	#lc.ld,lcflag	;flag as listing directive
+     559 002422                         	return
+       1 002422 000207                  	rts	pc
+     560                                
+     560                                
+     561                                	.macro	genlct	mne,init	;generate listing control table
+     562                                lc.'mne=	1
+     563                                	.rept	<.-lctbas>/2
+     564                                lc.'mne=	lc.'mne+lc.'mne
+     565                                	.endm
+     566                                	.rad50	/mne/
+     567                                	.if nb	<init>
+     568                                	lcinit=	lcinit+lc.'mne
+     569                                	.endc
+     570                                	.endm
+     571                                
+     572        000000                  lcinit=	0
+     573                                
+     574 002424                         	entsec	lctsec
+       1 000000                         	.psect	lctsec	con
+     575        000000                  lctbas	=	.
+     576 000000                         	genlct	seq
+       1        000001                  lc.seq=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.seq=	lc.seq+lc.seq
+       4                                	.endm
+       1        000002                  lc.seq=	lc.seq+lc.seq
+       5 000000 073631                  	.rad50	/seq/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.seq
+       8                                	.endc
+     577 000002                         	genlct	loc
+       1        000001                  lc.loc=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.loc=	lc.loc+lc.loc
+       4                                	.endm
+       1        000002                  lc.loc=	lc.loc+lc.loc
+       5 000002 046533                  	.rad50	/loc/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.loc
+       8                                	.endc
+     578 000004                         	genlct	bin
+       1        000001                  lc.bin=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.bin=	lc.bin+lc.bin
+       4                                	.endm
+       1        000002                  lc.bin=	lc.bin+lc.bin
+       1        000004                  lc.bin=	lc.bin+lc.bin
+       5 000004 006766                  	.rad50	/bin/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.bin
+       8                                	.endc
+     579 000006                         	genlct	src
+       1        000001                  lc.src=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.src=	lc.src+lc.src
+       4                                	.endm
+       1        000002                  lc.src=	lc.src+lc.src
+       1        000004                  lc.src=	lc.src+lc.src
+       1        000010                  lc.src=	lc.src+lc.src
+       5 000006 074623                  	.rad50	/src/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.src
+       8                                	.endc
+     580 000010                         	genlct	com
+       1        000001                  lc.com=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.com=	lc.com+lc.com
+       4                                	.endm
+       1        000002                  lc.com=	lc.com+lc.com
+       1        000004                  lc.com=	lc.com+lc.com
+       1        000010                  lc.com=	lc.com+lc.com
+       1        000020                  lc.com=	lc.com+lc.com
+       5 000010 012445                  	.rad50	/com/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.com
+       8                                	.endc
+     581 000012                         	genlct	bex
+       1        000001                  lc.bex=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.bex=	lc.bex+lc.bex
+       4                                	.endm
+       1        000002                  lc.bex=	lc.bex+lc.bex
+       1        000004                  lc.bex=	lc.bex+lc.bex
+       1        000010                  lc.bex=	lc.bex+lc.bex
+       1        000020                  lc.bex=	lc.bex+lc.bex
+       1        000040                  lc.bex=	lc.bex+lc.bex
+       5 000012 006540                  	.rad50	/bex/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.bex
+       8                                	.endc
+     582 000014                         	genlct	md
+       1        000001                  lc.md=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.md=	lc.md+lc.md
+       4                                	.endm
+       1        000002                  lc.md=	lc.md+lc.md
+       1        000004                  lc.md=	lc.md+lc.md
+       1        000010                  lc.md=	lc.md+lc.md
+       1        000020                  lc.md=	lc.md+lc.md
+       1        000040                  lc.md=	lc.md+lc.md
+       1        000100                  lc.md=	lc.md+lc.md
+       5 000014 050740                  	.rad50	/md/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.md
+       8                                	.endc
+     583 000016                         	genlct	mc
+       1        000001                  lc.mc=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.mc=	lc.mc+lc.mc
+       4                                	.endm
+       1        000002                  lc.mc=	lc.mc+lc.mc
+       1        000004                  lc.mc=	lc.mc+lc.mc
+       1        000010                  lc.mc=	lc.mc+lc.mc
+       1        000020                  lc.mc=	lc.mc+lc.mc
+       1        000040                  lc.mc=	lc.mc+lc.mc
+       1        000100                  lc.mc=	lc.mc+lc.mc
+       1        000200                  lc.mc=	lc.mc+lc.mc
+       5 000016 050670                  	.rad50	/mc/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.mc
+       8                                	.endc
+     584 000020                         	genlct	me ,1
+       1        000001                  lc.me=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.me=	lc.me+lc.me
+       4                                	.endm
+       1        000002                  lc.me=	lc.me+lc.me
+       1        000004                  lc.me=	lc.me+lc.me
+       1        000010                  lc.me=	lc.me+lc.me
+       1        000020                  lc.me=	lc.me+lc.me
+       1        000040                  lc.me=	lc.me+lc.me
+       1        000100                  lc.me=	lc.me+lc.me
+       1        000200                  lc.me=	lc.me+lc.me
+       1        000400                  lc.me=	lc.me+lc.me
+       5 000020 051010                  	.rad50	/me/
+       6                                	.if nb	<1>
+       7        000400                  	lcinit=	lcinit+lc.me
+       8                                	.endc
+     585 000022                         	genlct	meb,1
+       1        000001                  lc.meb=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.meb=	lc.meb+lc.meb
+       4                                	.endm
+       1        000002                  lc.meb=	lc.meb+lc.meb
+       1        000004                  lc.meb=	lc.meb+lc.meb
+       1        000010                  lc.meb=	lc.meb+lc.meb
+       1        000020                  lc.meb=	lc.meb+lc.meb
+       1        000040                  lc.meb=	lc.meb+lc.meb
+       1        000100                  lc.meb=	lc.meb+lc.meb
+       1        000200                  lc.meb=	lc.meb+lc.meb
+       1        000400                  lc.meb=	lc.meb+lc.meb
+       1        001000                  lc.meb=	lc.meb+lc.meb
+       5 000022 051012                  	.rad50	/meb/
+       6                                	.if nb	<1>
+       7        001400                  	lcinit=	lcinit+lc.meb
+       8                                	.endc
+     586 000024                         	genlct	cnd
+       1        000001                  lc.cnd=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.cnd=	lc.cnd+lc.cnd
+       4                                	.endm
+       1        000002                  lc.cnd=	lc.cnd+lc.cnd
+       1        000004                  lc.cnd=	lc.cnd+lc.cnd
+       1        000010                  lc.cnd=	lc.cnd+lc.cnd
+       1        000020                  lc.cnd=	lc.cnd+lc.cnd
+       1        000040                  lc.cnd=	lc.cnd+lc.cnd
+       1        000100                  lc.cnd=	lc.cnd+lc.cnd
+       1        000200                  lc.cnd=	lc.cnd+lc.cnd
+       1        000400                  lc.cnd=	lc.cnd+lc.cnd
+       1        001000                  lc.cnd=	lc.cnd+lc.cnd
+       1        002000                  lc.cnd=	lc.cnd+lc.cnd
+       5 000024 012364                  	.rad50	/cnd/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.cnd
+       8                                	.endc
+     587 000026                         	genlct	ld ,1
+       1        000001                  lc.ld=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.ld=	lc.ld+lc.ld
+       4                                	.endm
+       1        000002                  lc.ld=	lc.ld+lc.ld
+       1        000004                  lc.ld=	lc.ld+lc.ld
+       1        000010                  lc.ld=	lc.ld+lc.ld
+       1        000020                  lc.ld=	lc.ld+lc.ld
+       1        000040                  lc.ld=	lc.ld+lc.ld
+       1        000100                  lc.ld=	lc.ld+lc.ld
+       1        000200                  lc.ld=	lc.ld+lc.ld
+       1        000400                  lc.ld=	lc.ld+lc.ld
+       1        001000                  lc.ld=	lc.ld+lc.ld
+       1        002000                  lc.ld=	lc.ld+lc.ld
+       1        004000                  lc.ld=	lc.ld+lc.ld
+       5 000026 045640                  	.rad50	/ld/
+       6                                	.if nb	<1>
+       7        005400                  	lcinit=	lcinit+lc.ld
+       8                                	.endc
+     588 000030                         	genlct	ttm,1
+       1        000001                  lc.ttm=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.ttm=	lc.ttm+lc.ttm
+       4                                	.endm
+       1        000002                  lc.ttm=	lc.ttm+lc.ttm
+       1        000004                  lc.ttm=	lc.ttm+lc.ttm
+       1        000010                  lc.ttm=	lc.ttm+lc.ttm
+       1        000020                  lc.ttm=	lc.ttm+lc.ttm
+       1        000040                  lc.ttm=	lc.ttm+lc.ttm
+       1        000100                  lc.ttm=	lc.ttm+lc.ttm
+       1        000200                  lc.ttm=	lc.ttm+lc.ttm
+       1        000400                  lc.ttm=	lc.ttm+lc.ttm
+       1        001000                  lc.ttm=	lc.ttm+lc.ttm
+       1        002000                  lc.ttm=	lc.ttm+lc.ttm
+       1        004000                  lc.ttm=	lc.ttm+lc.ttm
+       1        010000                  lc.ttm=	lc.ttm+lc.ttm
+       5 000030 100055                  	.rad50	/ttm/
+       6                                	.if nb	<1>
+       7        015400                  	lcinit=	lcinit+lc.ttm
+       8                                	.endc
+     589 000032                         	genlct	toc
+       1        000001                  lc.toc=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.toc=	lc.toc+lc.toc
+       4                                	.endm
+       1        000002                  lc.toc=	lc.toc+lc.toc
+       1        000004                  lc.toc=	lc.toc+lc.toc
+       1        000010                  lc.toc=	lc.toc+lc.toc
+       1        000020                  lc.toc=	lc.toc+lc.toc
+       1        000040                  lc.toc=	lc.toc+lc.toc
+       1        000100                  lc.toc=	lc.toc+lc.toc
+       1        000200                  lc.toc=	lc.toc+lc.toc
+       1        000400                  lc.toc=	lc.toc+lc.toc
+       1        001000                  lc.toc=	lc.toc+lc.toc
+       1        002000                  lc.toc=	lc.toc+lc.toc
+       1        004000                  lc.toc=	lc.toc+lc.toc
+       1        010000                  lc.toc=	lc.toc+lc.toc
+       1        020000                  lc.toc=	lc.toc+lc.toc
+       5 000032 077533                  	.rad50	/toc/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.toc
+       8                                	.endc
+     590 000034                         	genlct	sym
+       1        000001                  lc.sym=	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.sym=	lc.sym+lc.sym
+       4                                	.endm
+       1        000002                  lc.sym=	lc.sym+lc.sym
+       1        000004                  lc.sym=	lc.sym+lc.sym
+       1        000010                  lc.sym=	lc.sym+lc.sym
+       1        000020                  lc.sym=	lc.sym+lc.sym
+       1        000040                  lc.sym=	lc.sym+lc.sym
+       1        000100                  lc.sym=	lc.sym+lc.sym
+       1        000200                  lc.sym=	lc.sym+lc.sym
+       1        000400                  lc.sym=	lc.sym+lc.sym
+       1        001000                  lc.sym=	lc.sym+lc.sym
+       1        002000                  lc.sym=	lc.sym+lc.sym
+       1        004000                  lc.sym=	lc.sym+lc.sym
+       1        010000                  lc.sym=	lc.sym+lc.sym
+       1        020000                  lc.sym=	lc.sym+lc.sym
+       1        040000                  lc.sym=	lc.sym+lc.sym
+       5 000034 075265                  	.rad50	/sym/
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.sym
+       8                                	.endc
+     591 000036                         	genlct	<   >		;null
+       1        000001                  lc.   =	1
+       2                                	.rept	<.-lctbas>/2
+       3                                lc.   =	lc.   +lc.   
+       4                                	.endm
+       1        000002                  lc.   =	lc.   +lc.   
+       1        000004                  lc.   =	lc.   +lc.   
+       1        000010                  lc.   =	lc.   +lc.   
+       1        000020                  lc.   =	lc.   +lc.   
+       1        000040                  lc.   =	lc.   +lc.   
+       1        000100                  lc.   =	lc.   +lc.   
+       1        000200                  lc.   =	lc.   +lc.   
+       1        000400                  lc.   =	lc.   +lc.   
+       1        001000                  lc.   =	lc.   +lc.   
+       1        002000                  lc.   =	lc.   +lc.   
+       1        004000                  lc.   =	lc.   +lc.   
+       1        010000                  lc.   =	lc.   +lc.   
+       1        020000                  lc.   =	lc.   +lc.   
+       1        040000                  lc.   =	lc.   +lc.   
+       1        100000                  lc.   =	lc.   +lc.   
+       5 000036 000000                  	.rad50	/   /
+       6                                	.if nb	<>
+       7                                	lcinit=	lcinit+lc.   
+       8                                	.endc
+     592                                
+     593 000040                         	xitsec
+       1 000040                         	entsec	.text
+       1 002424                         	.psect	.text	con
+     594                                
+     595 002424                         	genswt	fl,profl
+       1 002424                         	entsec	swtsec
+       1 000010                         	.psect	swtsec	con
+       2                                32768$:	.irpc	x,fl
+       3                                	.if ge ''x-141
+       4                                		.if le ''x-172
+       5                                			.byte ''x-40
+       6                                		.iff
+       7                                			.byte ''x
+       8                                		.endc
+       9                                	.iff
+      10                                	.byte ''x
+      11                                	.endc
+      12                                	.endm
+       1        000005                  	.if ge 'f-141
+       2        177754                  		.if le 'f-172
+       3 000010    106                  			.byte 'f-40
+       4                                		.iff
+       5                                			.byte 'f
+       6                                		.endc
+       7                                	.iff
+       8                                	.byte 'f
+       9                                	.endc
+      10        000013                  	.if ge 'l-141
+      11        177762                  		.if le 'l-172
+      12 000011    114                  			.byte 'l-40
+      13                                		.iff
+      14                                			.byte 'l
+      15                                		.endc
+      16                                	.iff
+      17                                	.byte 'l
+      18                                	.endc
+      13        000000                  	.iif ne <.-32768$&1>,	.byte	0
+      14 000012 002424'                 	.word	profl
+      15 000014                         	xitsec
+       1 000014                         	entsec	.text
+       1 002424                         	.psect	.text	con
+     596        061446                  flsbts=	lc.seq!lc.loc!lc.bin!lc.bex!lc.me!lc.meb!lc.toc!lc.sym
+     597                                profl:
+     598 002424 012767  061446  000436' 	mov	#flsbts,lcmcsi
+     599 002432 012767  061446  000432' 	mov	#flsbts,lcmask
+     600 002440                         	return
+       1 002440 000207                  	rts	pc
+     601                                
+     602                                .globl	eddflt,ucflag
+     603                                uc.set::
+     604 002442 052767  000000G 000000G 	bis	#ed.lc,eddflt
+     605                                um.set::
+     606 002450 005267  000064'         	inc	ucflag
+     607 002454                         	return
+       1 002454 000207                  	rts	pc
+     608                                
+     609 002456                         .data
+       1 002456                         	entsec	.data
+       1 000063                         	.psect	.data	con
+     610 000063    000                  .even
+     611 000064 000000                  ucflag::	.word		; if set, dont do case trnslation in macros
+     612 000066                         	entsec	dpure
+       1 000000                         	.psect	dpure	con
+     613 000000 015400                  lcdeft:	.word	lcinit		; default value for lcmask
+     614 000002                         	xitsec
+       1 000002                         	entsec	.text
+       1 002456                         	.psect	.text	con
+     614                                
+     615 002456                         	entsec	impure
+       1 000432                         	.psect	impure	con
+     616        000432                  lcmask:	.blkw			;mask bits
+     617        000434                  lclvl:	.blkw			;level count
+     618        000436                  lcmcsi:	.blkw			;command string storage
+     619                                
+     620 000440                         	entsec	implin
+       1 000004                         	.psect	implin	con
+     621        000004                  lcflag:	.blkw			;flag bits
+     622        000006                  lcbegl:	.blkw			;pointer to start of line
+     623        000010                  lcendl:	.blkw			;pointer to end of line
+     624        000012                  lblend:	.blkw			;end of label (for parsing)
+     625                                
+     626 000014                         	xitsec
+       1 000014                         	entsec	.text
+       1 002456                         	.psect	.text	con
+     627                                
+     628                                setlc:
+     629 002456 016767  000000' 000432' 	mov	lcdeft,lcmask		;default flags
+     630 002464 005067  000434'         	clr	lclvl
+     631 002470 005067  000436'         	clr	lcmcsi
+     632 002474                         	return
+       1 002474 000207                  	rts	pc
+     633                                
+     633                                
+     634                                	.sbttl	listing stuff
+     635                                
+     636                                setpf0:				;set print field zero
+     637 002476                         	sdebug	<setpf0>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<setpf0>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 002476 112767  000163  000000G 	movb	#'s,..zbuf+x
+       2        000001                  	x = x+1
+       3 002504 112767  000145  000001G 	movb	#'e,..zbuf+x
+       4        000002                  	x = x+1
+       5 002512 112767  000164  000002G 	movb	#'t,..zbuf+x
+       6        000003                  	x = x+1
+       7 002520 112767  000160  000003G 	movb	#'p,..zbuf+x
+       8        000004                  	x = x+1
+       9 002526 112767  000146  000004G 	movb	#'f,..zbuf+x
+      10        000005                  	x = x+1
+      11 002534 112767  000060  000005G 	movb	#'0,..zbuf+x
+      12        000006                  	x = x+1
+       7 002542 112767  000000  000006G 	movb	#0,..zbuf+x
+       8 002550 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 002556                         	call	sdebug
+       1 002556 004767  000000G         	jsr	pc,sdebug
+     638 002562 016767  000000G 000014' 	mov	clcfgs,pf0	;set current location flags
+     639 002570 152767  000100  000015' 	bisb	#100,pf0+1	;assume word
+     640 002576 016767  000000G 000016' 	mov	clcloc,pf0+2	;set location
+     641 002604                         	return
+       1 002604 000207                  	rts	pc
+     642                                
+     643                                setpf1:				;set print field one
+     644 002606 016767  000000G 000020' 	mov	mode,pf1	;set mode of current value
+     645 002614 152767  000100  000021' 	bisb	#100,pf1+1	;assume word
+     646 002622 016767  000000G 000022' 	mov	value,pf1+2
+     647 002630                         	return
+       1 002630 000207                  	rts	pc
+     648                                
+     649 002632                         	entsec	implin
+       1 000014                         	.psect	implin	con
+     650        000014                  pf0:	.blkw	2
+     651        000020                  pf1:	.blkw	2
+     652 000024                         	xitsec
+       1 000024                         	entsec	.text
+       1 002632                         	.psect	.text	con
+     652                                
+     653                                endp2l:				;end pass2 listing
+     654 002632                         	call	err.pr		; flush out last error message
+       1 002632 004767  001276          	jsr	pc,err.pr
+     655 002636 012701  000075'         	mov	#symtxt,r1
+     656 002642 012702  000000'         	mov	#stlbuf,r2
+     657 002646                         	call	movbyt		;set "symbol table" sub-title
+       1 002646 004767  000000G         	jsr	pc,movbyt
+     658 002652 105767  000442'         	tstb	lstdev		;any listing output?
+     659 002656 001554                  	beq	endp2d		;  no
+     660 002660 032767  040000  000432' 	bit	#lc.sym,lcmask	;symbol table suppression?
+     661 002666 001150                  	bne	endp2d		;  yes
+     662 002670 005267  000000G         	inc	ffcnt		;force new page
+     663 002674 005067  000000G         	clr	lppcnt		;force new page
+     664 002700 005267  000000G         	inc	pagnum
+     665 002704 012767  177777  000000G 	mov	#-1,pagext
+     666 002712 005067  000000G         	clr	rolupd		;set for symbol table scan
+     667 002716 012702  000064'         2$:	mov	#linbuf,r2	;point to storage
+     668 002722                         3$:	next	symrol		;get the next symbol
+       1 002722 012700  000000G         	mov	#symrol,r0
+       2                                	.globl	next
+       3 002726                         	call	next
+       1 002726 004767  000000G         	jsr	pc,next
+     669 002732 001452                  	beq	endp2a		;  no more
+     670 002734 032767  000001  000000G 	bit	#regflg,mode	;register?
+     671 002742 001367                  	bne	3$		;  yes, don't list
+     672 002744                         	call	r50unp		;unpack the symbol
+       1 002744 004767  000000G         	jsr	pc,r50unp
+     673 002750 012703  000002'         	mov	#endp2t,r3
+     674 002754                         	call	endp2p
+       1 002754 004767  000232          	jsr	pc,endp2p
+     675 002760 012701  000000G         	mov	#mode,r1	;point to mode bits
+     676 002764 032711  000010          	bit	#defflg,(r1)	;defined?
+     677 002770 001403                  	beq	4$		;  no
+     678 002772                         	call	setwrd
+       1 002772 004767  000000G         	jsr	pc,setwrd
+     679 002776 000404                  	br	6$
+     680                                
+     681 003000 012701  000066'         4$:	mov	#stars,r1
+     682 003004                         	call	movbyt		;undefined, substitute ******
+       1 003004 004767  000000G         	jsr	pc,movbyt
+     683 003010                         6$:	call	endp2p
+       1 003010 004767  000176          	jsr	pc,endp2p
+     684 003014                         	.iif df	rsx11d,	call	endp2x
+       1 003014 004767  000176          	jsr	pc,endp2x
+     685 003020 012701  000000G         	mov	#sector,r1
+     686 003024 122711  000001          	cmpb	#1,(r1)
+     687 003030 002003                  	bge	10$
+     688 003032 124141                  	cmpb	-(r1),-(r1)
+     689 003034                         	call	setbyt
+       1 003034 004767  000000G         	jsr	pc,setbyt
+     690 003040 112722  000011          10$:	movb	#tab,(r2)+	;separator
+     691 003044 020227  000146'         	cmp	r2,#linbuf+50.	;enough for one line?
+     692 003050 103724                  	blo	3$		;  no
+     693 003052                         	call	endp2b		;output line
+       1 003052 004767  000106          	jsr	pc,endp2b
+     694 003056 000717                  	br	2$		;next line
+     694                                
+     695                                
+     696                                
+     697                                endp2a:				;	print .psect list
+     698                                	
+     699                                	.if ndf	xrel
+     700 003060 005067  000000G         	clr	rolupd		;set for sector scan
+     701 003064                         21$:	call	endp2b		;output line
+       1 003064 004767  000074          	jsr	pc,endp2b
+     702 003070                         	next	secrol		;get the next entry
+       1 003070 012700  000000G         	mov	#secrol,r0
+       2                                	.globl	next
+       3 003074                         	call	next
+       1 003074 004767  000000G         	jsr	pc,next
+     703 003100 001443                  	beq	endp2d		;  exit if end of roll
+     704 003102 112722  000074          	movb	#'<,(r2)+
+     705 003106                         	call	r50unp		;print the name,
+       1 003106 004767  000000G         	jsr	pc,r50unp
+     706 003112 112722  000076          	movb	#'>,(r2)+
+     707 003116 112722  000011          	movb	#tab,(r2)+
+     708 003122 012701  000000G         	mov	#value,r1
+     709 003126                         	call	setwrd		;  the value,
+       1 003126 004767  000000G         	jsr	pc,setwrd
+     710 003132 112722  000011          	movb	#tab,(r2)+
+     711 003136 012701  177776G         	mov	#sector-2,r1
+     712 003142                         	call	setbyt		;  and the entry number
+       1 003142 004767  000000G         	jsr	pc,setbyt
+     713 003146 112722  000011          	movb	#tab,(r2)+
+     714 003152 012701  177776G         	mov	#flags-2,r1
+     715 003156                         	call	setbyt		;  and the attributes
+       1 003156 004767  000000G         	jsr	pc,setbyt
+     716 003162 000740                  	br	21$
+     717                                	.endc
+     718                                
+     719 003164 105012                  endp2b:	clrb	(r2)
+     720 003166 016767  000442' 000440' 	mov	lstdev,lstreq	; we want output
+     721 003174                         	putlin	#linbuf
+       1                                	.if dif	<#linbuf><r0>
+       2 003174 012700  000064'         	mov	#linbuf,r0
+       3                                	.endc
+       4 003200                         	call	putlin
+       1 003200 004767  000102          	jsr	pc,putlin
+     722 003204 012702  000064'         	mov	#linbuf,r2	;reset to start of buffer
+     723 003210                         endp2d:	return
+       1 003210 000207                  	rts	pc
+     724                                
+     725 003212                         endp2p:	call	endp2x
+       1 003212 004767  000000          	jsr	pc,endp2x
+     726 003216 012300                  endp2x:	mov	(r3)+,r0
+     727 003220 032367  000000G         	bit	(r3)+,mode
+     728 003224 001001                  	bne	32$
+     729 003226 000300                  	swab	r0
+     730 003230 110022                  32$:	movb	r0,(r2)+
+     731 003232                         	return
+       1 003232 000207                  	rts	pc
+     732                                
+     733 003234                         	entsec	dpure
+       1 000002                         	.psect	dpure	con
+     734                                endp2t:
+     735 000002    040     075          	.ascii	/ =/
+     736 000004 000002                  	.word	lblflg
+     737 000006    045     040          	.ascii	/% /
+     738 000010 000001                  	.word	regflg
+     739 000012    162     040          	.ascii	/r /
+     740 000014 000040                  	.word	relflg
+     741 000016    147     040          	.ascii	/g /
+     742 000020 000100                  	.word	glbflg
+     743                                	.if df	rsx11d
+     744 000022    170     040          	.ascii	/x /
+     745 000024 000200                  	.word	dfgflg
+     746                                	.endc
+     747                                
+     748 000026                         .data
+       1 000026                         	entsec	.data
+       1 000066                         	.psect	.data	con
+     749 000066    052     052     052  stars:	.asciz	/******/
+         000071    052     052     052  
+         000074    000                  
+     750 000075    163     171     155  symtxt:	.asciz	/symbol table/
+         000100    142     157     154  
+         000103    040     164     141  
+         000106    142     154     145  
+         000111    000                  
+     751 000112                         	xitsec
+       1 000112                         	entsec	.text
+       1 003234                         	.psect	.text	con
+     751                                
+     752        000001                  lst.kb=	1			;teletype listing
+     753        000002                  lst.lp=	2			;lpt listing
+     754                                
+     755                                
+     756 003234                         	xitsec
+       1 003234                         	entsec	.text
+       1 003234                         	.psect	.text	con
+     757                                
+     758                                ;
+     759                                ; These routines are high level.  They make output go to
+     760                                ; more than one device, they add page headers.  The dogsbody
+     761                                ; low guy is 'putli2', who in turn calls on 'o.kblp', which
+     762                                ; interfaces with the file buffering guys directly.
+     763                                ;
+     764                                
+     765 003234 012767  000001  000440' putkb:	mov	#lst.kb,lstreq	;set request
+     766 003242 000411                  	br	putlix
+     767                                
+     768 003244 012767  000001  000440' putkbl:	mov	#lst.kb,lstreq	;set for tty
+     769 003252 005767  000000G         putlp:	tst	lstflg		;doing a listing?
+     770 003256 001403                  	beq	putlix		;no
+     771 003260 156767  000442' 000440' 	bisb	lstdev,lstreq	;lpt
+     772                                ;
+     773                                ; output a line plain & simple
+     774                                ;
+     775                                putlix:
+     776 003266                         	call	savreg
+       1 003266 004767  000000G         	jsr	pc,savreg
+     777 003272 010002                  	mov	r0,r2
+     778 003274 116704  000440'         	movb	lstreq,r4
+     779 003300                         	call	putli2
+       1 003300 004767  000052          	jsr	pc,putli2
+     780 003304                         	return
+       1 003304 000207                  	rts	pc
+     781                                
+     782                                putlin:				;output a line with page heading if needed
+     783 003306                         	call	savreg		;stack registers
+       1 003306 004767  000000G         	jsr	pc,savreg
+     784 003312 010002                  	mov	r0,r2		;arg to r2
+     785 003314 116704  000440'         	movb	lstreq,r4	;get request
+     786 003320 005067  000440'         	clr	lstreq		;clear it
+     787 003324 005704                  	tst	r4
+     788 003326 001412                  	beq	9$		;just exit if empty
+     789 003330 003005                  	bgt	2$		;omit header if not listing
+     790 003332 005367  000000G         	dec	lppcnt		;yes, decrement count
+     791 003336 003002                  	bgt	2$		;skip if not time
+     792 003340                         	call	putpag
+       1 003340 004767  000116          	jsr	pc,putpag
+     793                                2$:
+     794 003344                         	call	err.pr
+       1 003344 004767  000564          	jsr	pc,err.pr
+     795 003350                         	call	putli2		;print out the line
+       1 003350 004767  000002          	jsr	pc,putli2
+     796 003354                         9$:	return
+       1 003354 000207                  	rts	pc
+     797                                
+     798                                
+     799                                putli2:	
+     800 003356 112201                  	movb	(r2)+,r1	;get a char.
+     801 003360 001403                  	beq	21$		;end on null
+     802 003362                         	call	o.kblp		;transmit appropriately
+       1 003362 004767  000032          	jsr	pc,o.kblp
+     803 003366 000773                  	br	putli2		;till null
+     804                                21$:	
+     805 003370 112701  000012          	movb	#lf,r1		; used to be cr/lf
+     806 003374                         	call	o.kblp
+       1 003374 004767  000020          	jsr	pc,o.kblp
+     807 003400 032704  000001          	bit	#lst.kb,r4	;if sending to cmochn,
+     808 003404 001404                  	beq	9$		;no
+     809 003406                         	zwrite	cmo		;yes, send it now
+       1                                	.globl	zwrite
+       2 003406 012700  000000G         	mov	#cmochn,r0
+       3 003412                         	call	zwrite
+       1 003412 004767  000000G         	jsr	pc,zwrite
+     810 003416                         9$:	return
+       1 003416 000207                  	rts	pc
+     811                                
+     812 003420 042701  177600          o.kblp:	bic	#177600,r1	;just 7 bits, please.
+     813 003424 032704  000001          	bit	#lst.kb,r4	;cmo on?
+     814 003430 001404                  	beq	1$		;no
+     815 003432 012700  000000G         	mov	#cmochn,r0	;yes
+     816 003436                         	call	putoc
+       1 003436 004767  000000G         	jsr	pc,putoc
+     817 003442 032704  000002          1$:	bit	#lst.lp,r4	;lst on?
+     818 003446 001404                  	beq	2$		;no
+     819 003450 012700  000000G         	mov	#lstchn,r0	;yes
+     820 003454                         	call	putoc
+       1 003454 004767  000000G         	jsr	pc,putoc
+     821 003460                         2$:	return
+       1 003460 000207                  	rts	pc
+     822                                ; put out a page heading
+     823                                putpag:
+     824                                	;mov	#lpp,lppcnt	;reset count
+     825 003462 012767  000070  000000G 	mov	#lpp-4,lppcnt	;reset count, compensate for bug introduced
+     826                                				;by rearranging pagination logic
+     827 003470 010246                  	mov	r2,-(sp)	;stack current pointer
+     828 003472 016702  000272'         	mov	ttlbrk,r2	;end of pre-set title
+     829 003476 005767  000000G         	tst	pass
+     830 003502 001422                  	beq	11$
+     831 003504 012701  000112'         	mov	#pagmne,r1
+     832 003510                         	call	movbyt		;move "page" into position
+       1 003510 004767  000000G         	jsr	pc,movbyt
+     833 003514 016701  000000G         	mov	pagnum,r1
+     834 003520                         	call	dnc		;convert to decimal
+       1 003520 004767  000000G         	jsr	pc,dnc
+     835 003524 005267  000000G         	inc	pagext
+     836 003530 001407                  	beq	11$
+     837 003532 112722  000055          	movb	#'-,(r2)+
+     838 003536 016701  000000G         	mov	pagext,r1
+     839 003542 005201                  	inc	r1
+     840 003544                         	call	dnc
+       1 003544 004767  000000G         	jsr	pc,dnc
+     841 003550 105012                  11$:	clrb	(r2)
+     842 003552 005767  000000G         	tst	mx.flg		; <<< REEDS june 81
+     843 003556 001010                  	bne	100$
+     844 003560                         	putlp	#ttlbuf		;print title
+       1                                	.globl	putlp
+       2 003560 012700  000274'         	mov	#ttlbuf,r0
+       3 003564                         	call	putlp
+       1 003564 004767  177462          	jsr	pc,putlp
+     845 003570                         	putlp	#stlbuf		;  sub-title,
+       1                                	.globl	putlp
+       2 003570 012700  000000'         	mov	#stlbuf,r0
+       3 003574                         	call	putlp
+       1 003574 004767  177452          	jsr	pc,putlp
+     846                                100$:
+     847 003600                         	putlp	#crlf		;  and a blank line
+       1                                	.globl	putlp
+       2 003600 012700  000120'         	mov	#crlf,r0
+       3 003604                         	call	putlp
+       1 003604 004767  177442          	jsr	pc,putlp
+     848 003610 012602                  	mov	(sp)+,r2
+     849 003612                         	return
+       1 003612 000207                  	rts	pc
+     850 003614                         	entsec	impure
+       1 000440                         	.psect	impure	con
+     851        000440                  lstreq:	.blkw			;list request flags
+     852        000442                  lstdev:	.blkb	2		;error(lh), listing(rh)
+     853                                
+     854 000444                         .data
+       1 000444                         	entsec	.data
+       1 000112                         	.psect	.data	con
+     855 000112    040     160     141  pagmne:	.ascii	/ page /
+         000115    147     145     040  
+     856 000120    000                  crlf:	.asciz	//
+     857 000121                         	xitsec
+       1 000121                         	entsec	.text
+       1 003614                         	.psect	.text	con
+     858                                
+     859                                
+     860                                
+     861                                .macro	putl	x		; printf("%s\n", mx.lin)
+     862                                	mov	x,mx.tmp
+     863                                	call	putl
+     864                                	.endm
+     865                                putl:
+     866                                	.irpc	xx,<012345>
+     867                                	mov	r'xx,-(sp)
+     868                                	.endm
+       1 003614 010046                  	mov	r0,-(sp)
+       2 003616 010146                  	mov	r1,-(sp)
+       3 003620 010246                  	mov	r2,-(sp)
+       4 003622 010346                  	mov	r3,-(sp)
+       5 003624 010446                  	mov	r4,-(sp)
+       6 003626 010546                  	mov	r5,-(sp)
+     869 003630 016702  000060'         	mov	mx.tmp,r2
+     870 003634 012704  000002          	mov	#lst.lp,r4
+     871 003640                         	call	putli2
+       1 003640 004767  177512          	jsr	pc,putli2
+     872                                	.irpc	xx,<543210>
+     873                                	mov	(sp)+,r'xx
+     874                                	.endm
+       1 003644 012605                  	mov	(sp)+,r5
+       2 003646 012604                  	mov	(sp)+,r4
+       3 003650 012603                  	mov	(sp)+,r3
+       4 003652 012602                  	mov	(sp)+,r2
+       5 003654 012601                  	mov	(sp)+,r1
+       6 003656 012600                  	mov	(sp)+,r0
+     875 003660                         	return
+       1 003660 000207                  	rts	pc
+     876                                
+     877                                putsc:
+     878 003662                         	call savreg
+       1 003662 004767  000000G         	jsr	pc,savreg
+     879 003666 016704  000300'         	mov	mdepth,r4
+     880                                1$:
+     881 003672 112701  000073          	movb	#';,r1			
+     882 003676                         	call	mx.put
+       1 003676 004767  000016          	jsr	pc,mx.put
+     883 003702 005304                  	dec	r4
+     884 003704 100372                  	bpl	1$
+     885 003706 112701  000011          	movb	#tab,r1
+     886 003712                         	call	mx.put
+       1 003712 004767  000002          	jsr	pc,mx.put
+     887 003716                         	return
+       1 003716 000207                  	rts	pc
+     888                                mx.put:
+     889 003720                         	call savreg
+       1 003720 004767  000000G         	jsr	pc,savreg
+     890 003724 012704  000002          	mov	#lst.lp,r4
+     891 003730 042701  177600          	bic	#177600,r1
+     892 003734 012700  000000G         	mov	#lstchn,r0
+     893 003740                         	call	putoc
+       1 003740 004767  000000G         	jsr	pc,putoc
+     894 003744                         	return
+       1 003744 000207                  	rts	pc
+     895                                mx.mx:
+     896 003746                         	call savreg
+       1 003746 004767  000000G         	jsr	pc,savreg
+     897 003752 005767  000000G         	tst	mx.flg
+     898 003756 001465                  	beq	1$
+     899 003760 012767  066306  000432' 	mov	#mx.on,lcmask
+     900 003766 005767  000000'         	tst	errbts
+     901 003772 001407                  	beq	3$
+     902 003774                         	putl	#mxstar
+       1 003774 012767  000020' 000060' 	mov	#mxstar,mx.tmp
+       2 004002                         	call	putl
+       1 004002 004767  177606          	jsr	pc,putl
+     903 004006                         	call	err.pr
+       1 004006 004767  000122          	jsr	pc,err.pr
+     904                                3$:
+     905 004012 005767  000056'         	tst	mx.2			; is it a .narg, etc. directive?
+     906 004016 001427                  	beq	2$
+     907 004020 005067  000056'         	clr	mx.2
+     908 004024 005767  000000G         	tst	my.flg
+     909 004030 001007                  	bne	20$
+     910 004032                         	call	putsc			;	;.narg frodo
+       1 004032 004767  177624          	jsr	pc,putsc
+     911 004036                         	putl	#linbuf
+       1 004036 012767  000064' 000060' 	mov	#linbuf,mx.tmp
+       2 004044                         	call	putl
+       1 004044 004767  177544          	jsr	pc,putl
+     912                                20$:
+     913 004050                         	putl	#mx.gen			;	; generates:
+       1 004050 012767  000000' 000060' 	mov	#mx.gen,mx.tmp
+       2 004056                         	call	putl
+       1 004056 004767  177532          	jsr	pc,putl
+     914 004062                         	putl	#mx.pxx			;		frodo  = 5280
+       1 004062 012767  000036' 000060' 	mov	#mx.pxx,mx.tmp
+       2 004070                         	call	putl
+       1 004070 004767  177520          	jsr	pc,putl
+     915 004074 000416                  	br	1$
+     916                                2$:
+     917 004076 005767  000000G         	tst	my.flg			; is it otherwise suppressed & are
+     918 004102 001013                  	bne	1$			; we listing such?
+     919 004104 036767  000432' 000004' 	bit	lcmask,lcflag	; anything supppressed?
+     920 004112 001407                  	beq	1$
+     921 004114                         	call	putsc
+       1 004114 004767  177542          	jsr	pc,putsc
+     922 004120                         	putl	#linbuf
+       1 004120 012767  000064' 000060' 	mov	#linbuf,mx.tmp
+       2 004126                         	call	putl
+       1 004126 004767  177462          	jsr	pc,putl
+     923                                1$:
+     924 004132                         	return
+       1 004132 000207                  	rts	pc
+     925                                
+     926                                err.pr:
+     927 004134                         	call	savreg
+       1 004134 004767  000000G         	jsr	pc,savreg
+     928 004140 010046                  	mov	r0,-(sp)
+     929 004142 010546                  	mov	r5,-(sp)
+     930 004144 005767  000002'         	tst	err.xx
+     931 004150 001415                  	beq	1$
+     932 004152 012704  000001          	mov	#lst.kb,r4
+     933 004156 005767  000000G         	tst	lstflg
+     934 004162 001402                  	beq	2$
+     935 004164 012704  000002          	mov	#lst.lp,r4
+     936                                2$:
+     937 004170 016702  000002'         	mov	err.xx,r2
+     938 004174                         	call	putli2
+       1 004174 004767  177156          	jsr	pc,putli2
+     939 004200 005067  000002'         	clr	err.xx
+     940                                1$:
+     941 004204 012605                  	mov	(sp)+,r5
+     942 004206 012600                  	mov	(sp)+,r0
+     943 004210                         	return
+       1 004210 000207                  	rts	pc
+     944                                
+     945 004212                         	.bss
+       1 004212                         	entsec	.bss
+       1 000300                         	.psect	.bss	con
+     946        000300                  mdepth::	.blkw	1
+     947 000302                         	xitsec
+       1 000302                         	entsec	.text
+       1 004212                         	.psect	.text	con
+     948 004212                         	entsec	mixed
+       1 000000                         	.psect	mixed	con
+     949 000000    073     052     052  mx.gen::	.asciz	/;*** generates:/
+         000003    052     040     147  
+         000006    145     156     145  
+         000011    162     141     164  
+         000014    145     163     072  
+         000017    000                  
+     950 000020    052     052     052  mxstar::	.asciz	/*** error ***/
+         000023    040     145     162  
+         000026    162     157     162  
+         000031    040     052     052  
+         000034    052     000          
+     951 000036    011                  mx.pxx:		.ascii	<tab>
+     952 000037    163     171     155  mx.sym::	.ascii	/symbol	=	/
+         000042    142     157     154  
+         000045    011     075     011  
+     953 000050    066     065     060  mx.num::	.ascii	/65000/
+         000053    060     060          
+     954 000055    000                  	.even
+     955        000056                  mx.2::		.blkw
+     956        000060                  mx.tmp:		.blkw			;	space for putl(arg)
+     957                                
+     958                                	.end
+     958                                
+       8                                
+
+
+Symbol table
+
+$TIMDF  =000007           6$3      000512R  L   002 ED.LC   =****** G         LC.COM  =000020           PAGE     002410RG     002 
+.        ******R      006 6$9      001360R  L   002 EDDFLT  =****** G         LC.LD   =004000           PAGEX    002414R      002 
+..Z     =****** G         7$1      000254R  L   002 EDMASK  =****** G         LC.LOC  =000002           PAGEXT  =****** G         
+..ZBUF  =****** G         8$1      000256R  L   002 ENDL10   000276R      002 LC.MC   =000200 G         PAGMNE   000112R      003 
+1$10     001464R  L   002 80$1     000160R  L   002 ENDL19   000540R      002 LC.MD   =000100 G         PAGNUM  =****** G         
+1$14     002170R  L   002 9$1      000272R  L   002 ENDL20   000564R      002 LC.ME   =000400 G         PASS    =****** G         
+1$23     003442R  L   002 9$21     003354R  L   002 ENDL30   000616R      002 LC.MEB  =001000           PATTRS  =000050           
+1$25     003672R  L   002 9$22     003416R  L   002 ENDL50   000326R      002 LC.SEQ  =000002           PCROLL  =****** G         
+1$26     004132R  L   002 9$5      000764R  L   002 ENDLIN   000000RG     002 LC.SRC  =000010           PDPV45  =000000           
+1$27     004204R  L   002 9$6      001074R  L   002 ENDP2A   003060R      002 LC.SYM  =040000           PF0      000014R      010 
+1$3      000374R  L   002 9$7      001222R  L   002 ENDP2B   003164R      002 LC.TOC  =020000           PF1      000020R      010 
+1$5      000674R  L   002 AATTRS  =000130           ENDP2D   003210R      002 LC.TTM  =010000           PRGTTL  =****** G         
+1$6      001016R  L   002 ARGCNT  =****** G         ENDP2L   002632RG     002 LCBEGL   000006RG     010 PRINT    001706RG     002 
+1$7      001170R  L   002 B.IDF   =000001           ENDP2P   003212R      002 LCDEFT   000000R      005 PROFL    002424R      002 
+10$10    001652R  L   002 BISBIC  =****** G         ENDP2T   000002R      005 LCDROL  =****** G         PUTKB    003234RG     002 
+10$18    003040R  L   002 BPMB    =000020           ENDP2X   003216R      002 LCENDL   000010RG     010 PUTKBL   003244RG     002 
+10$5     000736R  L   002 BSSFLG  =000004           ERN0    =****** G         LCFLAG   000004RG     010 PUTL     003614R      002 
+100$24   003600R  L   002 BUFTBL  =****** G         ERN19   =****** G         LCINIT  =015400           PUTLI2   003356RG     002 
+11$10    001656R  L   002 CATTRS  =000170           ERN20   =****** G         LCLVL    000434R      008 PUTLIN   003306R      002 
+11$14    002264R  L   002 CDRSAV   000002RG     008 ERN22   =****** G         LCMASK   000432RG     008 PUTLIX   003266R      002 
+11$2     000314R  L   002 CH.ADD  =000053           ERN23   =****** G         LCMCSI   000436R      008 PUTLP    003252RG     002 
+11$24    003550R  L   002 CH.AND  =000046           ERN53   =****** G         LCTBAS   000000R      015 PUTOC   =****** G         
+12$10    001702R  L   002 CH.BSL  =000134           ERR.    =000001 G         LET.A   =000101           PUTPAG   003462R      002 
+12$14    002272R  L   002 CH.COL  =000072           ERR.A   =000002 G         LET.B   =000102           PUTSC    003662R      002 
+12$5     000720R  L   002 CH.COM  =000054           ERR.B   =000004 G         LET.C   =000103           R50UNP  =****** G         
+13$10    001704R  L   002 CH.DIV  =000057           ERR.BX   000000R      004 LET.D   =000104           REGFLG  =000001           
+15$10    001642R  L   002 CH.DOL  =000044           ERR.BY   000140RG     004 LET.E   =000105           RELFLG  =000040           
+2$1      000176R  L   002 CH.DOT  =000056           ERR.E   =000010 G         LET.F   =000106           REM      002042RG     002 
+2$10     001524R  L   002 CH.EQU  =000075           ERR.I   =000020 G         LET.G   =000107           REM1     002126R      002 
+2$11     002040R  L   002 CH.HSH  =000043           ERR.L   =000040 G         LET.O   =000117           ROLNDX  =****** G         
+2$13     002132R  L   002 CH.IND  =000100           ERR.M   =000100 G         LET.P   =000120           ROLUPD  =****** G         
+2$14     002210R  L   002 CH.IOR  =000041           ERR.N   =000200 G         LET.R   =000122           RSX11D  =000000           
+2$18     002716R  L   002 CH.LAB  =000074           ERR.O   =000400 G         LET.Z   =000132           SAVREG  =****** G         
+2$21     003344R  L   002 CH.LP   =000050           ERR.P   =001000 G         LF      =000012           SBTTL    001452RG     002 
+2$23     003460R  L   002 CH.MUL  =000052           ERR.PR   004134R      002 LINBUF   000064RG     008 SCANW   =****** G         
+2$26     004076R  L   002 CH.PCT  =000045           ERR.Q   =002000 G         LINEND   000270RG     008 SDEBUG  =****** G         
+2$27     004170R  L   002 CH.QM   =000077           ERR.R   =004000 G         LINNUM  =****** G         SECROL  =****** G         
+2$3      000412R  L   002 CH.QTM  =000042           ERR.S1   000000R      003 LIST     002164RG     002 SECTOR  =****** G         
+2$5      000762R  L   002 CH.RAB  =000076           ERR.S2   000010R      003 LIST7    002406R      002 SEQEND  =****** G         
+2$6      001072R  L   002 CH.RP   =000051           ERR.SH   001076RG     002 LOUT1    000074R      002 SETBYT  =****** G         
+2$7      001204R  L   002 CH.SMC  =000073           ERR.T   =010000 G         LPP     =000074           SETCHR  =****** G         
+2$9      001342R  L   002 CH.SUB  =000055           ERR.U   =020000 G         LPPCNT  =****** G         SETLC    002456RG     002 
+20$26    004050R  L   002 CH.UAR  =000136           ERR.XX   000002RG     010 LST.KB  =000001 G         SETPF0   002476RG     002 
+21$19    003064R  L   002 CH.XCL  =000047           ERR.Z   =040000 G         LST.LP  =000002 G         SETPF1   002606RG     002 
+21$22    003370R  L   002 CHRPNT  =****** G         ERRBTS   000000RG     010 LSTCHN  =****** G         SETSYM  =****** G         
+21$3     000416R  L   002 CLCFGS  =****** G         ERRCNT   000000RG     008 LSTDEV   000442RG     008 SETWDB   000650R      002 
+3$1      000214R  L   002 CLCLOC  =****** G         ERRMNE   000013R      003 LSTFLG  =****** G         SETWRD  =****** G         
+3$10     001564R  L   002 CLCMAX  =****** G         ERROR    001744RG     002 LSTREQ   000440R      008 SHRFLG  =000001           
+3$13     002152R  L   002 CLCNAM  =****** G         ERROR1   002022R      002 M.IDF   =000007           SPACE   =000040           
+3$14     002232R  L   002 CLCSEC  =****** G         ERRREF  =****** G         MDEPTH   000300RG     004 SRCLEN  =000204           
+3$18     002722R  L   002 CMOCHN  =****** G         ERRROL  =****** G         MDFFLG  =000004           STARS    000066R      003 
+3$26     004012R  L   002 CNTTBL  =****** G         EXMFLG  =****** G         MK.SYM  =000001           STLBUF   000000R      009 
+3$3      000442R  L   002 CODROL  =****** G         EXPR    =****** G         MODE    =****** G         STLLEN  =000100           
+3$9      001376R  L   002 CPOPJ   =****** G         FF      =000014           MOVBYT  =****** G         SYMBOL  =****** G         
+31$4     000646R  L   002 CR      =000015           FFCNT   =****** G         MULR50  =****** G         SYMROL  =****** G         
+32$20    003230R  L   002 CRFREF  =****** G         FILELN  =****** G         MX.2     000056RG     006 SYMTXT   000075R      003 
+32768$0  000066R  L   002 CRLF     000120R      003 FLAGS   =****** G         MX.FLG  =****** G         TAB     =000011           
+32768$12 002116R  L   002 CT.ALP  =000040           FLSBTS  =061446           MX.GEN   000000RG     006 TITLE    001224RG     002 
+32768$14 002400R  L   002 CT.COM  =000001           FT.ID   =000001           MX.MX    003746R      002 TITLE1   001312R      002 
+32768$15 000000R  L   011 CT.EOL  =000000           FT.UNX  =000001           MX.NUM   000050RG     006 TMPCNT  =100000           
+32768$16 000004R  L   011 CT.LC   =000100           GETCHR  =****** G         MX.ON   =066306           TOCTXT   000041R      003 
+32768$17 000010R  L   011 CT.NUM  =000020           GETLIN  =****** G         MX.PUT   003720R      002 TSTARG  =****** G         
+32768$8  001302R  L   002 CT.PC   =000271           GETNB   =****** G         MX.PXX   000036R      006 TSTERR   000766R      002 
+32769$11 002014R  L   002 CT.PCX  =000010           GETR50  =****** G         MX.SYM   000037RG     006 TSTR50  =****** G         
+4$1      000240R  L   002 CT.SMC  =000200           GETSYM  =****** G         MX.TMP   000060R      006 TTLBRK   000272R      008 
+4$10     001502R  L   002 CT.SP   =000004           GLBFLG  =000100           MXSTAR   000020RG     006 TTLBUF   000274R      008 
+4$14     002316R  L   002 CT.TAB  =000002           HDRTTL  =****** G         MY.FLG  =****** G         TTLLEN  =000040           
+4$18     003000R  L   002 CTTBL   =****** G         INSFLG  =000002           NEXT    =****** G         UC.SET   002442RG     002 
+4$3      000446R  L   002 DATTIM  =****** G         IO.EOF  =****** G         NLIST    002162RG     002 UCFLAG   000064RG     003 
+4$6      001012R  L   002 DEBUG   =000000           IO.ERR  =****** G         O.KBLP   003420R      002 UM.SET   002450RG     002 
+4$9      001410R  L   002 DEFFLG  =000010           IO.TTY  =****** G         OCTBUF   000004R      008 VALUE   =****** G         
+41$3     000502R  L   002 DEFTTL   000032RG     003 IOFTBL  =****** G         OCTERP   000004R      008 VERNAM  =****** G         
+5$1      000250R  L   002 DFGFLG  =000200           LBLEND   000012RG     010 OCTLEN  =000060           VT      =000013           
+5$14     002326R  L   002 DFLGBM  =****** G         LBLFLG  =000002           OCTPF0   000006R      008 X       =000006           
+5$3      000506R  L   002 DIG.0   =000060           LC.     =100000           OCTPF1   000015R      008 X40     =000000           
+5$9      001416R  L   002 DIG.9   =000071           LC.BEX  =000040           OCTSEQ   000004R      008 XMIT0   =****** G         
+6$14     002330R  L   002 DNC     =****** G         LC.BIN  =000004           OPCLAS  =****** G         ZAP     =****** G         
+6$18     003010R  L   002 ED.CDR  =****** G         LC.CND  =002000 G         OVRFLG  =000020           ZWRITE  =****** G         
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+.TEXT   004212    002   (RW,I,LCL,REL,CON,NOSAV)
+.DATA   000121    003   (RW,I,LCL,REL,CON,NOSAV)
+.BSS    000302    004   (RW,I,LCL,REL,CON,NOSAV)
+DPURE   000026    005   (RW,I,LCL,REL,CON,NOSAV)
+MIXED   000062    006   (RW,I,LCL,REL,CON,NOSAV)
+ERRMES  000000    007   (RW,I,LCL,REL,CON,NOSAV)
+IMPURE  000444    008   (RW,I,LCL,REL,CON,NOSAV)
+IMPPAS  000102    009   (RW,I,LCL,REL,CON,NOSAV)
+IMPLIN  000024    010   (RW,I,LCL,REL,CON,NOSAV)
+SWTSEC  000014    011   (RW,I,LCL,REL,CON,NOSAV)
+CNDSEC  000000    012   (RW,I,LCL,REL,CON,NOSAV)
+CRFSEC  000000    013   (RW,I,LCL,REL,CON,NOSAV)
+EDTSEC  000006    014   (RW,I,LCL,REL,CON,NOSAV)
+LCTSEC  000040    015   (RW,I,LCL,REL,CON,NOSAV)
+PSASEC  000000    016   (RW,I,LCL,REL,CON,NOSAV)
+PSTSEC  000000    017   (RW,I,LCL,REL,CON,NOSAV)
+ROLBAS  000000    018   (RW,I,LCL,REL,CON,NOSAV)
+ROLSIZ  000000    019   (RW,I,LCL,REL,CON,NOSAV)
+ROLTOP  000000    020   (RW,I,LCL,REL,CON,NOSAV)
+XPCOR   000000    021   (RW,I,LCL,REL,CON,NOSAV)

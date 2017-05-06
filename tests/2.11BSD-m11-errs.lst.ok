@@ -1,0 +1,1247 @@
+       1                                ;;;; WRAPPER FOR 2.11BSD/M11/ERRS.M11
+       2                                	.LIST
+       3                                	.LIST
+       4                                	.LIST
+       5                                	.ENABL LC
+       6        000001                  debug	=	1
+       7                                	.include "2.11BSD/m11/at.sml"
+       1                                	.title	at.sml	-   assembler/translator system macros
+       2                                	; @(#)at.sml	1.3 11/3/82
+       3                                
+       4                                	.ident	/10may4/
+       5                                
+       6                                	.macro	always		;all files of macro
+       7                                
+       8                                	.macro	.data
+       9                                	entsec	.data
+      10                                	.endm	.data
+      11                                
+      12                                	.macro	.text
+      13                                	entsec	.text
+      14                                	.endm
+      15                                
+      16                                	.macro	.bss
+      17                                	entsec	.bss
+      18                                	.endm
+      19                                
+      20                                mk.symbol=1			;one to make symbols, 0 otherwise
+      21                                x40=	0
+      22                                pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      23                                				; if not you will have to write macros for them
+      24                                $timdf=	7			; California Time Zone
+      25                                				; should really use ftime(2) for this and for
+      26                                				; DST.
+      27                                ;xfltg=	0		;define to assmbl out floating hardware
+      28                                rsx11d	=	0	; rsx11d features 
+      29                                debug	=	0	; <<< REEDS if non zero includes debug junk
+      30                                
+      31                                ft.id=	1			;have set i & d.  set =0 if not
+      32                                
+      33                                ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      34                                
+      35                                	.nlist	bex
+      36                                
+      37                                tab=	11
+      38                                lf=	12
+      39                                vt=	13
+      40                                ff=	14
+      41                                cr=	15
+      42                                space=	40
+      43                                
+      44                                bpmb	=	20		;bytes per macro block
+      45                                
+      46                                
+      47                                
+      48                                
+      49                                
+      50                                	.psect	.text	con, shr, gbl,ins
+      51                                	.psect	.data	con, dat, prv, gbl
+      52                                	.psect	.bss	con, bss, gbl
+      53                                
+      54                                	.psect	dpure	con, dat, prv, gbl
+      55                                	.psect	mixed	con, prv, gbl
+      56                                	.psect	errmes	con, dat, prv, gbl
+      57                                	.psect	impure	con, bss, gbl
+      58                                	.psect	imppas	con, bss, gbl
+      59                                	.psect	implin	con, bss, gbl
+      60                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+      61                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+      62                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+      63                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+      64                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+      65                                	.psect	psasec 	con, dat, prv, gbl
+      66                                	.psect	pstsec 	con, dat, prv, gbl
+      67                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+      68                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+      69                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+      70                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      71                                
+      72                                
+      72                                
+      73                                	.macro	entsec	name 	;init a section
+      74                                	.psect	name	con
+      75                                	.endm	entsec
+      76                                
+      77                                
+      78                                
+      79                                	.macro jeq	x,?fred
+      80                                	bne	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	jne	x,?fred
+      85                                	beq	fred
+      86                                	jmp	x
+      87                                fred:
+      88                                	.endm
+      89                                	.macro	xitsec
+      90                                	entsec	.text
+      91                                	.endm	xitsec
+      92                                
+      93                                
+      94                                	.macro	call	address
+      95                                	jsr	pc,address
+      96                                	.endm
+      97                                
+      98                                	.macro	return
+      99                                	rts	pc
+     100                                	.endm
+     101                                
+     102                                
+     103                                	.macro	always
+     104                                	.nlist	bex
+     105                                	.endm	always
+     106                                	.endm	always
+     107                                
+     108                                
+     109        000001                  	.if ne debug
+     110                                	
+     111                                	.macro	ndebug n
+     112                                	.globl	ndebug,..z
+     113                                	mov	n,..z
+     114                                	call	ndebug
+     115                                	.endm
+     116                                
+     117                                	.macro	sdebug	string
+     118                                	.globl	sdebug,..z,..zbuf
+     119                                	x = 0
+     120                                	.irpc	t,<string>
+     121                                	movb	#''t,..zbuf+x
+     122                                	x = x+1
+     123                                	.endm
+     124                                	movb	#0,..zbuf+x
+     125                                	mov	#..zbuf,..z
+     126                                	call	sdebug
+     127                                	.endm
+     128                                
+     129                                	.iff
+     130                                	
+     131                                	.macro	ndebug n
+     132                                	.endm
+     133                                
+     134                                	.macro	sdebug	string
+     135                                	.endm
+     136                                	
+     137                                	.endc
+     138                                	
+     139                                	
+     140                                	.macro	param	mne,	value	;define default parameters
+     141                                	.iif ndf mne,	mne=	value
+     142                                	.list
+     143                                mne=	mne
+     144                                	.nlist
+     145                                	.endm
+     145                                
+     146                                	.macro	putkb	addr	;list to kb
+     147                                	.globl	putkb
+     148                                	mov	addr,r0
+     149                                	call	putkb
+     150                                	.endm
+     151                                
+     152                                	.macro	putlp	addr	;list to lp
+     153                                	.globl	putlp
+     154                                	mov	addr,r0
+     155                                	call	putlp
+     156                                	.endm
+     157                                
+     158                                	.macro	putkbl	addr	;list to kb and lp
+     159                                	.globl	putkbl
+     160                                	mov	addr,r0
+     161                                	call	putkbl
+     162                                	.endm
+     163                                
+     164                                
+     165                                	.macro	xmit	wrdcnt	;move small # of words
+     166                                	.globl	xmit0
+     167                                	call	xmit0-<wrdcnt*2>
+     168                                	.endm	xmit
+     169                                
+     170                                
+     171                                ;the macro "genswt" is used to specify  a command
+     172                                ;string switch (1st argument) and the address of
+     173                                ;the routine to be called when encountered (2nd arg).
+     174                                ; the switch is made upper-case.
+     175                                
+     176                                	.macro	genswt	mne,addr,?label
+     177                                	entsec	swtsec
+     178                                label:	.irpc	x,mne
+     179                                	.if ge ''x-141
+     180                                		.if le ''x-172
+     181                                			.byte ''x-40
+     182                                		.iff
+     183                                			.byte ''x
+     184                                		.endc
+     185                                	.iff
+     186                                	.byte ''x
+     187                                	.endc
+     188                                	.endm
+     189                                	.iif ne <.-label&1>,	.byte	0
+     190                                	.word	addr
+     191                                	xitsec
+     192                                	.endm
+     192                                
+     193                                	.macro	zread	chan
+     194                                	.globl	zread
+     195                                	mov	#chan'chn,r0
+     196                                	call	zread
+     197                                	.endm	zread
+     198                                
+     199                                	.macro	zwrite	chan
+     200                                	.globl	zwrite
+     201                                	mov	#chan'chn,r0
+     202                                	call	zwrite
+     203                                	.endm	zwrite
+     203                                
+     204                                	.macro	genedt	mne,subr	;gen enable/disable table
+     205                                	entsec	edtsec
+     206                                	.rad50	/mne/
+     207                                	.if nb	subr
+     208                                	.word	subr
+     209                                	.iff
+     210                                	.word	cpopj
+     211                                	.endc
+     212                                	.word	ed.'mne
+     213                                	xitsec
+     214                                	.endm	genedt
+     215                                
+     216                                
+     217                                ;the macro "gencnd" is used to specify conditional
+     218                                ;arguments.  it takes two or three arguments:
+     219                                
+     220                                ;	1-	mnemonic
+     221                                ;	2-	subroutine to be called
+     222                                ;	3-	if non-blank, complement condition
+     223                                
+     224                                	.macro	gencnd	mne,subr,toggle	;generate conditional
+     225                                	entsec	cndsec
+     226                                	.rad50	/mne/
+     227                                	.if b	<toggle>
+     228                                	.word	subr
+     229                                	.iff
+     230                                	.word	subr+1
+     231                                	.endc
+     232                                	xitsec
+     233                                	.endm
+     233                                
+     234                                	.macro	ch.mne
+     235                                
+     236                                ch.ior=	'!
+     237                                ch.qtm=	'"
+     238                                ch.hsh=	'#
+     239                                ch.dol=	'$
+     240                                ch.pct=	'%
+     241                                ch.and=	'&
+     242                                ch.xcl=	''
+     243                                
+     244                                ch.lp=	'(
+     245                                ch.rp=	')
+     246                                ch.mul=	'*
+     247                                ch.add=	'+
+     248                                ch.com=	',
+     249                                ch.sub=	'-
+     250                                ch.dot=	'.
+     251                                ch.div=	'/
+     252                                
+     253                                ch.col=	':
+     254                                ch.smc=	';
+     255                                ch.lab=	'<
+     256                                ch.equ=	'=
+     257                                ch.rab=	'>
+     258                                ch.qm=	'?
+     259                                
+     260                                ch.ind=	'@
+     261                                ch.bsl=	'\
+     262                                ch.uar=	'^
+     263                                
+     264                                let.a=	'a&^c40
+     265                                let.b=	'b&^c40
+     266                                let.c=	'c&^c40
+     267                                let.d=	'd&^c40
+     268                                let.e=	'e&^c40
+     269                                let.f=	'f&^c40
+     270                                let.g=	'g&^c40
+     271                                let.o=	'o&^c40
+     272                                let.p=	'p&^c40
+     273                                let.r=	'r&^c40
+     274                                let.z=	'z&^c40
+     275                                
+     276                                dig.0=	'0
+     277                                dig.9=	'9
+     278                                	.macro	ch.mne
+     279                                	.endm	ch.mne
+     280                                	.endm	ch.mne
+     281                                
+     282                                	.macro error num,arg, mess ,?x
+     283                                	sdebug	<num>
+     284                                	.globl	err.'arg,ern'num, errbts,errref
+     285                                	.if	b	<mess>
+     286                                	deliberate error mistake
+     287                                	.endc
+     288                                	.if	dif	0,num
+     289                                	.globl	err.xx
+     290                                	tst	err.xx
+     291                                	bne	x
+     292                                	mov	#ern'num,err.xx
+     293                                x:
+     294                                	.endc
+     295                                	bis	#err.'arg,errbts
+     296                                	.endm
+     297                                
+     298                                
+     299                                
+     300                                	.macro	setnz	addr	;set addr to non-zero for t/f flags
+     301                                	mov	sp,addr
+     302                                	.endm
+     303                                
+     304                                
+     305                                	.macro	bisbic	arg	; used by .list/.nlist, .enabl/.dsabl
+     306                                	.globl	bisbic
+     307                                	mov	#arg,-(sp)
+     308                                	call	bisbic
+     309                                	tst	(sp)+
+     310                                	.endm
+     310                                
+     311                                				;roll handler calls
+     312                                
+     313                                	.macro	search	rolnum	;binary search
+     314                                	mov	#rolnum,r0
+     315                                	.globl	search
+     316                                	call	search
+     317                                	.endm
+     318                                
+     319                                	.macro	scan	rolnum	;linear scan
+     320                                	mov	#rolnum,r0
+     321                                	.globl	scan
+     322                                	call	scan
+     323                                	.endm
+     324                                
+     325                                	.macro	scanw	rolnum	;linear scan, one word
+     326                                	mov	#rolnum,r0
+     327                                	.globl	scanw
+     328                                	call	scanw
+     329                                	.endm
+     330                                
+     331                                	.macro	next	rolnum	;fetch next entry
+     332                                	mov	#rolnum,r0
+     333                                	.globl	next
+     334                                	call	next
+     335                                	.endm
+     336                                
+     337                                	.macro	append	rolnum	;append to end of roll
+     338                                	mov	#rolnum,r0
+     339                                	.globl	append
+     340                                	call	append
+     341                                	.endm
+     342                                
+     343                                	.macro	zap	rolnum	;clear roll
+     344                                	mov	#rolnum,r0
+     345                                	.globl	zap
+     346                                	call	zap
+     347                                	.endm
+     348                                
+     349                                ;	call	insert		;insert (must be preceded by one 
+     350                                				;of the above to set pointers)
+     351                                ;	call	setrol		;save and set regs for above
+     351                                
+     352                                ;flags used in symbol table mode
+     353                                
+     354                                	.macro	st.flg
+     355                                
+     356                                .if le ft.unx
+     357                                
+     358                                ovrflg=	000004		;overlay (psect only)
+     359                                defflg=	000010		;defined
+     360                                relflg=	000040		;relocatable
+     361                                glbflg=	000100		;global
+     362                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     363                                
+     364                                
+     365                                .endc
+     366                                
+     367                                .if gt ft.unx
+     368                                
+     369                                			; ****** these should not be changed!! ******
+     370                                shrflg=	000001		;shareable (psect only)
+     371                                .if gt ft.id
+     372                                insflg=	shrflg*2	;instruction space (psect only)
+     373                                bssflg=	insflg*2	;blank section (psect only)
+     374                                m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+     375                                .iff
+     376                                bssflg=	shrflg*2
+     377                                m.idf=	shrflg!bssflg
+     378                                .endc
+     379                                b.idf=	1		;shift count to make above bits word offset
+     380                                			; ***********************************
+     381                                defflg=	000010		;defined
+     382                                ovrflg=	000020		;overlay (psect only)
+     383                                relflg=	000040		;relocatable
+     384                                glbflg=	000100		;global
+     385                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     386                                
+     387                                .endc
+     388                                
+     389                                ;
+     390                                ; default psect attribs.
+     391                                ; can be changed, but make sure all customers know about
+     392                                ; it, including all the linkers.
+     393                                ;
+     394                                pattrs=relflg!defflg		; For .psects and blank .csects
+     395                                aattrs=glbflg!defflg!ovrflg		; For .asect
+     396                                cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+     397                                
+     398                                regflg=	000001		;register
+     399                                lblflg=	000002		;label
+     400                                mdfflg=	000004		;multilpy defined
+     401                                	.macro	st.flg
+     402                                	.endm
+     403                                	.endm	st.flg
+     404                                
+     405                                
+     406                                
+     407                                	.macro	ct.mne
+     408                                	.globl	cttbl
+     409                                ct.eol	=	000		; eol
+     410                                ct.com	=	001		; comma
+     411                                ct.tab	=	002		; tab
+     412                                ct.sp	=	004		; space
+     413                                ct.pcx	=	010		; printing character
+     414                                ct.num	=	020		; numeric
+     415                                ct.alp	=	040		; alpha, dot, dollar
+     416                                ct.lc	=	100		; lower case alpha
+     417                                ct.smc	=	200		; semi-colon (sign bit)
+     418                                
+     419                                ct.pc	=	ct.com!ct.smc!ct.pcx!ct.num!ct.alp
+     420                                	.macro	ct.mne
+     421                                	.endm	ct.mne
+     422                                	.endm	ct.mne
+     423                                
+     424                                
+     425                                	.end
+     425                                
+       8                                	.include "2.11BSD/m11/errs.m11"
+       1                                	;
+       2                                	; m11 error messages
+       3                                	; jim reeds 4 july 1981
+       4                                	;
+       5                                	.mcall	(at)always
+       6 000000                         	always
+       1                                
+       2                                	.macro	.data
+       3                                	entsec	.data
+       4                                	.endm	.data
+       5                                
+       6                                	.macro	.text
+       7                                	entsec	.text
+       8                                	.endm
+       9                                
+      10                                	.macro	.bss
+      11                                	entsec	.bss
+      12                                	.endm
+      13                                
+      14        000001                  mk.symbol=1			;one to make symbols, 0 otherwise
+      15        000000                  x40=	0
+      16        000000                  pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      17                                				; if not you will have to write macros for them
+      18        000007                  $timdf=	7			; California Time Zone
+      19                                				; should really use ftime(2) for this and for
+      20                                				; DST.
+      21                                ;xfltg=	0		;define to assmbl out floating hardware
+      22        000000                  rsx11d	=	0	; rsx11d features 
+      23        000000                  debug	=	0	; <<< REEDS if non zero includes debug junk
+      24                                
+      25        000001                  ft.id=	1			;have set i & d.  set =0 if not
+      26                                
+      27        000001                  ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      28                                
+      29                                	.nlist	bex
+      30                                
+      31        000011                  tab=	11
+      32        000012                  lf=	12
+      33        000013                  vt=	13
+      34        000014                  ff=	14
+      35        000015                  cr=	15
+      36        000040                  space=	40
+      37                                
+      38        000020                  bpmb	=	20		;bytes per macro block
+      39                                
+      40                                
+      41                                
+      42                                
+      43                                
+./2.11BSD/m11/errs.m11:6->ALWAYS:44: ***ERROR Unknown flag SHR given to .PSECT directive
+      44                                	.psect	.text	con, shr, gbl,ins
+./2.11BSD/m11/errs.m11:6->ALWAYS:45: ***ERROR Unknown flag DAT given to .PSECT directive
+      45                                	.psect	.data	con, dat, prv, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:46: ***ERROR Unknown flag BSS given to .PSECT directive
+      46                                	.psect	.bss	con, bss, gbl
+      47                                
+./2.11BSD/m11/errs.m11:6->ALWAYS:48: ***ERROR Unknown flag DAT given to .PSECT directive
+      48                                	.psect	dpure	con, dat, prv, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:49: ***ERROR Unknown flag PRV given to .PSECT directive
+      49                                	.psect	mixed	con, prv, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:50: ***ERROR Unknown flag DAT given to .PSECT directive
+      50                                	.psect	errmes	con, dat, prv, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:51: ***ERROR Unknown flag BSS given to .PSECT directive
+      51                                	.psect	impure	con, bss, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:52: ***ERROR Unknown flag BSS given to .PSECT directive
+      52                                	.psect	imppas	con, bss, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:53: ***ERROR Unknown flag BSS given to .PSECT directive
+      53                                	.psect	implin	con, bss, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:54: ***ERROR Unknown flag DAT given to .PSECT directive
+      54                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+./2.11BSD/m11/errs.m11:6->ALWAYS:55: ***ERROR Unknown flag DAT given to .PSECT directive
+      55                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+./2.11BSD/m11/errs.m11:6->ALWAYS:56: ***ERROR Unknown flag DAT given to .PSECT directive
+      56                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+./2.11BSD/m11/errs.m11:6->ALWAYS:57: ***ERROR Unknown flag DAT given to .PSECT directive
+      57                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+./2.11BSD/m11/errs.m11:6->ALWAYS:58: ***ERROR Unknown flag DAT given to .PSECT directive
+      58                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+./2.11BSD/m11/errs.m11:6->ALWAYS:59: ***ERROR Unknown flag DAT given to .PSECT directive
+      59                                	.psect	psasec 	con, dat, prv, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:60: ***ERROR Unknown flag DAT given to .PSECT directive
+      60                                	.psect	pstsec 	con, dat, prv, gbl
+./2.11BSD/m11/errs.m11:6->ALWAYS:61: ***ERROR Unknown flag DAT given to .PSECT directive
+      61                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+./2.11BSD/m11/errs.m11:6->ALWAYS:62: ***ERROR Unknown flag DAT given to .PSECT directive
+      62                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+./2.11BSD/m11/errs.m11:6->ALWAYS:63: ***ERROR Unknown flag DAT given to .PSECT directive
+      63                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+./2.11BSD/m11/errs.m11:6->ALWAYS:64: ***ERROR Unknown flag BSS given to .PSECT directive
+      64                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      65                                
+      66                                
+      67                                
+      68                                	.macro	entsec	name 	;init a section
+      69                                	.psect	name	con
+      70                                	.endm	entsec
+      71                                
+      72                                
+      73                                
+      74                                	.macro jeq	x,?fred
+      75                                	bne	fred
+      76                                	jmp	x
+      77                                fred:
+      78                                	.endm
+      79                                	.macro	jne	x,?fred
+      80                                	beq	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	xitsec
+      85                                	entsec	.text
+      86                                	.endm	xitsec
+      87                                
+      88                                
+      89                                	.macro	call	address
+      90                                	jsr	pc,address
+      91                                	.endm
+      92                                
+      93                                	.macro	return
+      94                                	rts	pc
+      95                                	.endm
+      96                                
+      97                                
+      98                                	.macro	always
+      99                                	.nlist	bex
+     100                                	.endm	always
+       7                                
+       8 000000                         	.data
+       1 000000                         	entsec	.data
+       1 000000                         	.psect	.data	con
+       9                                	.dsabl	lc
+      10                                	.LIST	MD,ME,MC
+      11                                
+      12                                	.MACRO	ERRGEN	NUM,CODE,TEXT
+      13                                ern'num::	.asciz	\text\
+      14                                	.endm
+      15 000000                         	ERRGEN	1,R,<CANNOT RELOCATE A REGISTER>
+       1 000000    103     101     116  ERN1::	.ASCIZ	\CANNOT RELOCATE A REGISTER\
+         000003    116     117     124  
+         000006    040     122     105  
+         000011    114     117     103  
+         000014    101     124     105  
+         000017    040     101     040  
+         000022    122     105     107  
+         000025    111     123     124  
+         000030    105     122     000  
+      16 000033                         	ERRGEN	2,A,<IMPROPER RELOCATION>
+       1 000033    111     115     120  ERN2::	.ASCIZ	\IMPROPER RELOCATION\
+         000036    122     117     120  
+         000041    105     122     040  
+         000044    122     105     114  
+         000047    117     103     101  
+         000052    124     111     117  
+         000055    116     000          
+      17 000057                         	ERRGEN	3,A,<BAD EXPRESSION>
+       1 000057    102     101     104  ERN3::	.ASCIZ	\BAD EXPRESSION\
+         000062    040     105     130  
+         000065    120     122     105  
+         000070    123     123     111  
+         000073    117     116     000  
+      18 000076                         	ERRGEN	4,U,<UNDEFINED SYMBOL>
+       1 000076    125     116     104  ERN4::	.ASCIZ	\UNDEFINED SYMBOL\
+         000101    105     106     111  
+         000104    116     105     104  
+         000107    040     123     131  
+         000112    115     102     117  
+         000115    114     000          
+      19 000117                         	ERRGEN	5,M,<MULTIPLY DEFINED>
+       1 000117    115     125     114  ERN5::	.ASCIZ	\MULTIPLY DEFINED\
+         000122    124     111     120  
+         000125    114     131     040  
+         000130    104     105     106  
+         000133    111     116     105  
+         000136    104     000          
+      20 000140                         	ERRGEN	6,N,<DIGIT ILLEGAL IN CURRENT RADIX>
+       1 000140    104     111     107  ERN6::	.ASCIZ	\DIGIT ILLEGAL IN CURRENT RADIX\
+         000143    111     124     040  
+         000146    111     114     114  
+         000151    105     107     101  
+         000154    114     040     111  
+         000157    116     040     103  
+         000162    125     122     122  
+         000165    105     116     124  
+         000170    040     122     101  
+         000173    104     111     130  
+         000176    000                  
+      21 000177                         	ERRGEN	7,T,<NUMBER TOO BIG>
+       1 000177    116     125     115  ERN7::	.ASCIZ	\NUMBER TOO BIG\
+         000202    102     105     122  
+         000205    040     124     117  
+         000210    117     040     102  
+         000213    111     107     000  
+      22 000216                         	ERRGEN	8,U,<LOCAL SYMBOL NOT DEFINED>	
+       1 000216    114     117     103  ERN8::	.ASCIZ	\LOCAL SYMBOL NOT DEFINED\
+         000221    101     114     040  
+         000224    123     131     115  
+         000227    102     117     114  
+         000232    040     116     117  
+         000235    124     040     104  
+         000240    105     106     111  
+         000243    116     105     104  
+         000246    000                  
+      23 000247                         	ERRGEN	9,A,<EMPTY FLOATING POINT NUMBER>
+       1 000247    105     115     120  ERN9::	.ASCIZ	\EMPTY FLOATING POINT NUMBER\
+         000252    124     131     040  
+         000255    106     114     117  
+         000260    101     124     111  
+         000263    116     107     040  
+         000266    120     117     111  
+         000271    116     124     040  
+         000274    116     125     115  
+         000277    102     105     122  
+         000302    000                  
+      24 000303                         	ERRGEN	10,N,<FLOATING POINT OVERFLOW>		
+       1 000303    106     114     117  ERN10::	.ASCIZ	\FLOATING POINT OVERFLOW\
+         000306    101     124     111  
+         000311    116     107     040  
+         000314    120     117     111  
+         000317    116     124     040  
+         000322    117     126     105  
+         000325    122     106     114  
+         000330    117     127     000  
+      25 000333                         	ERRGEN	11,T,<TRUNCTATION ERROR>
+       1 000333    124     122     125  ERN11::	.ASCIZ	\TRUNCTATION ERROR\
+         000336    116     103     124  
+         000341    101     124     111  
+         000344    117     116     040  
+         000347    105     122     122  
+         000352    117     122     000  
+      26 000355                         	ERRGEN	12,L,<LINE TOO LONG>
+       1 000355    114     111     116  ERN12::	.ASCIZ	\LINE TOO LONG\
+         000360    105     040     124  
+         000363    117     117     040  
+         000366    114     117     116  
+         000371    107     000          
+      27 000373                         	ERRGEN	13,I,<ILLEGAL CHARACTER>
+       1 000373    111     114     114  ERN13::	.ASCIZ	\ILLEGAL CHARACTER\
+         000376    105     107     101  
+         000401    114     040     103  
+         000404    110     101     122  
+         000407    101     103     124  
+         000412    105     122     000  
+      28 000415                         	ERRGEN	14,E,<.END NOT FOUND>	
+       1 000415    056     105     116  ERN14::	.ASCIZ	\.END NOT FOUND\
+         000420    104     040     116  
+         000423    117     124     040  
+         000426    106     117     125  
+         000431    116     104     000  
+      29 000434                         	ERRGEN	140,E,<END OF INPUT WITH UNTERMINATED MACRO OR REPEAT>
+       1 000434    105     116     104  ERN140::	.ASCIZ	\END OF INPUT WITH UNTERMINATED MACRO OR REPEAT\
+         000437    040     117     106  
+         000442    040     111     116  
+         000445    120     125     124  
+         000450    040     127     111  
+         000453    124     110     040  
+         000456    125     116     124  
+         000461    105     122     115  
+         000464    111     116     101  
+         000467    124     105     104  
+         000472    040     115     101  
+         000475    103     122     117  
+         000500    040     117     122  
+         000503    040     122     105  
+         000506    120     105     101  
+         000511    124     000          
+      30 000513                         	ERRGEN	15,O,<CONDITIONAL NOT IN PROGRESS>	
+       1 000513    103     117     116  ERN15::	.ASCIZ	\CONDITIONAL NOT IN PROGRESS\
+         000516    104     111     124  
+         000521    111     117     116  
+         000524    101     114     040  
+         000527    116     117     124  
+         000532    040     111     116  
+         000535    040     120     122  
+         000540    117     107     122  
+         000543    105     123     123  
+         000546    000                  
+      31 000547                         	ERRGEN	16,O,<TOO MANY NESTED CONDITIONALS>
+       1 000547    124     117     117  ERN16::	.ASCIZ	\TOO MANY NESTED CONDITIONALS\
+         000552    040     115     101  
+         000555    116     131     040  
+         000560    116     105     123  
+         000563    124     105     104  
+         000566    040     103     117  
+         000571    116     104     111  
+         000574    124     111     117  
+         000577    116     101     114  
+         000602    123     000          
+      32 000604                         	ERRGEN	17,A,<CONDITIONAL ARGUMENT NOT SPECIFIED>
+       1 000604    103     117     116  ERN17::	.ASCIZ	\CONDITIONAL ARGUMENT NOT SPECIFIED\
+         000607    104     111     124  
+         000612    111     117     116  
+         000615    101     114     040  
+         000620    101     122     107  
+         000623    125     115     105  
+         000626    116     124     040  
+         000631    116     117     124  
+         000634    040     123     120  
+         000637    105     103     111  
+         000642    106     111     105  
+         000645    104     000          
+      33 000647                         	ERRGEN	18,T,<ILLEGAL LOCAL SYMBOL>	
+       1 000647    111     114     114  ERN18::	.ASCIZ	\ILLEGAL LOCAL SYMBOL\
+         000652    105     107     101  
+         000655    114     040     114  
+         000660    117     103     101  
+         000663    114     040     123  
+         000666    131     115     102  
+         000671    117     114     000  
+      34 000674                         	ERRGEN	19,Q,<RANDOM JUNK AT END OF STATEMENT IGNORED>
+       1 000674    122     101     116  ERN19::	.ASCIZ	\RANDOM JUNK AT END OF STATEMENT IGNORED\
+         000677    104     117     115  
+         000702    040     112     125  
+         000705    116     113     040  
+         000710    101     124     040  
+         000713    105     116     104  
+         000716    040     117     106  
+         000721    040     123     124  
+         000724    101     124     105  
+         000727    115     105     116  
+         000732    124     040     111  
+         000735    107     116     117  
+         000740    122     105     104  
+         000743    000                  
+      35 000744                         	ERRGEN	20,A,<MISSING TITLE>
+       1 000744    115     111     123  ERN20::	.ASCIZ	\MISSING TITLE\
+         000747    123     111     116  
+         000752    107     040     124  
+         000755    111     124     114  
+         000760    105     000          
+      36 000762                         	ERRGEN	0,<>,<USER GENERATED ERROR>	
+       1 000762    125     123     105  ERN0::	.ASCIZ	\USER GENERATED ERROR\
+         000765    122     040     107  
+         000770    105     116     105  
+         000773    122     101     124  
+         000776    105     104     040  
+         001001    105     122     122  
+         001004    117     122     000  
+      37 001007                         	ERRGEN	22,A,<MISSING DELIMITING CHARACTER>
+       1 001007    115     111     123  ERN22::	.ASCIZ	\MISSING DELIMITING CHARACTER\
+         001012    123     111     116  
+         001015    107     040     104  
+         001020    105     114     111  
+         001023    115     111     124  
+         001026    111     116     107  
+         001031    040     103     110  
+         001034    101     122     101  
+         001037    103     124     105  
+         001042    122     000          
+      38 001044                         	ERRGEN	23,A,<UNKNOWN .LIST/.NLIST ARGUMENT>
+       1 001044    125     116     113  ERN23::	.ASCIZ	\UNKNOWN .LIST/.NLIST ARGUMENT\
+         001047    116     117     127  
+         001052    116     040     056  
+         001055    114     111     123  
+         001060    124     057     056  
+         001063    116     114     111  
+         001066    123     124     040  
+         001071    101     122     107  
+         001074    125     115     105  
+         001077    116     124     000  
+      39 001102                         	ERRGEN	24,O,<OPCODE OUT OF CONTEXT>
+       1 001102    117     120     103  ERN24::	.ASCIZ	\OPCODE OUT OF CONTEXT\
+         001105    117     104     105  
+         001110    040     117     125  
+         001113    124     040     117  
+         001116    106     040     103  
+         001121    117     116     124  
+         001124    105     130     124  
+         001127    000                  
+      40 001130                         	ERRGEN	25,O,<MISSING MACRO NAME>
+       1 001130    115     111     123  ERN25::	.ASCIZ	\MISSING MACRO NAME\
+         001133    123     111     116  
+         001136    107     040     115  
+         001141    101     103     122  
+         001144    117     040     116  
+         001147    101     115     105  
+         001152    000                  
+      41 001153                         	ERRGEN	26,A,<.ENDM NAME DOESN'T MATCH .MACRO NAME>
+       1 001153    056     105     116  ERN26::	.ASCIZ	\.ENDM NAME DOESN'T MATCH .MACRO NAME\
+         001156    104     115     040  
+         001161    116     101     115  
+         001164    105     040     104  
+         001167    117     105     123  
+         001172    116     047     124  
+         001175    040     115     101  
+         001200    124     103     110  
+         001203    040     056     115  
+         001206    101     103     122  
+         001211    117     040     116  
+         001214    101     115     105  
+         001217    000                  
+      42 001220                         	ERRGEN	27,A,<ILLEGAL ARGUMENTS>
+       1 001220    111     114     114  ERN27::	.ASCIZ	\ILLEGAL ARGUMENTS\
+         001223    105     107     101  
+         001226    114     040     101  
+         001231    122     107     125  
+         001234    115     105     116  
+         001237    124     123     000  
+      43 001242                         	ERRGEN	28,A,<NO SYMBOL TO ASSIGN TO>
+       1 001242    116     117     040  ERN28::	.ASCIZ	\NO SYMBOL TO ASSIGN TO\
+         001245    123     131     115  
+         001250    102     117     114  
+         001253    040     124     117  
+         001256    040     101     123  
+         001261    123     111     107  
+         001264    116     040     124  
+         001267    117     000          
+      44 001271                         	ERRGEN	29,O,<UNBALANCED .ENDM>		
+       1 001271    125     116     102  ERN29::	.ASCIZ	\UNBALANCED .ENDM\
+         001274    101     114     101  
+         001277    116     103     105  
+         001302    104     040     056  
+         001305    105     116     104  
+         001310    115     000          
+      45 001312                         	ERRGEN	30,A,<MISSING ARGUMENT IN 'IF' CONSTRUCTION>
+       1 001312    115     111     123  ERN30::	.ASCIZ	\MISSING ARGUMENT IN 'IF' CONSTRUCTION\
+         001315    123     111     116  
+         001320    107     040     101  
+         001323    122     107     125  
+         001326    115     105     116  
+         001331    124     040     111  
+         001334    116     040     047  
+         001337    111     106     047  
+         001342    040     103     117  
+         001345    116     123     124  
+         001350    122     125     103  
+         001353    124     111     117  
+         001356    116     000          
+      46 001360                         	ERRGEN	31,A,<MISSING ARGUMENT>
+       1 001360    115     111     123  ERN31::	.ASCIZ	\MISSING ARGUMENT\
+         001363    123     111     116  
+         001366    107     040     101  
+         001371    122     107     125  
+         001374    115     105     116  
+         001377    124     000          
+      47 001401                         	ERRGEN	70,A,<LOCAL OFFSET OUT OF RANGE>	
+       1 001401    114     117     103  ERN70::	.ASCIZ	\LOCAL OFFSET OUT OF RANGE\
+         001404    101     114     040  
+         001407    117     106     106  
+         001412    123     105     124  
+         001415    040     117     125  
+         001420    124     040     117  
+         001423    106     040     122  
+         001426    101     116     107  
+         001431    105     000          
+      48 001433                         	ERRGEN	71,A,<ILLEGAL REGISTER NUMBER>
+       1 001433    111     114     114  ERN71::	.ASCIZ	\ILLEGAL REGISTER NUMBER\
+         001436    105     107     101  
+         001441    114     040     122  
+         001444    105     107     111  
+         001447    123     124     105  
+         001452    122     040     116  
+         001455    125     115     102  
+         001460    105     122     000  
+      49 001463                         	ERRGEN	32,P,<PHASE ERROR IN LABEL DEFINITION>
+       1 001463    120     110     101  ERN32::	.ASCIZ	\PHASE ERROR IN LABEL DEFINITION\
+         001466    123     105     040  
+         001471    105     122     122  
+         001474    117     122     040  
+         001477    111     116     040  
+         001502    114     101     102  
+         001505    105     114     040  
+         001510    104     105     106  
+         001513    111     116     111  
+         001516    124     111     117  
+         001521    116     000          
+      50 001523                         	ERRGEN	33,Q,<ILLEGAL LABEL>
+       1 001523    111     114     114  ERN33::	.ASCIZ	\ILLEGAL LABEL\
+         001526    105     107     101  
+         001531    114     040     114  
+         001534    101     102     105  
+         001537    114     000          
+      51 001541                         	ERRGEN	34,M,<LABEL MULTIPLY DEFINED>
+       1 001541    114     101     102  ERN34::	.ASCIZ	\LABEL MULTIPLY DEFINED\
+         001544    105     114     040  
+         001547    115     125     114  
+         001552    124     111     120  
+         001555    114     131     040  
+         001560    104     105     106  
+         001563    111     116     105  
+         001566    104     000          
+      52 001570                         	ERRGEN	35,Z,<OP CODE NOT IN STANDARD SET>
+       1 001570    117     120     040  ERN35::	.ASCIZ	\OP CODE NOT IN STANDARD SET\
+         001573    103     117     104  
+         001576    105     040     116  
+         001601    117     124     040  
+         001604    111     116     040  
+         001607    123     124     101  
+         001612    116     104     101  
+         001615    122     104     040  
+         001620    123     105     124  
+         001623    000                  
+      53 001624                         	ERRGEN	36,B,<ODD ADDRESSING ERROR>
+       1 001624    117     104     104  ERN36::	.ASCIZ	\ODD ADDRESSING ERROR\
+         001627    040     101     104  
+         001632    104     122     105  
+         001635    123     123     111  
+         001640    116     107     040  
+         001643    105     122     122  
+         001646    117     122     000  
+      54 001651                         	ERRGEN	37,Z,<UNPREDICTABLE INSTRUCTION>
+       1 001651    125     116     120  ERN37::	.ASCIZ	\UNPREDICTABLE INSTRUCTION\
+         001654    122     105     104  
+         001657    111     103     124  
+         001662    101     102     114  
+         001665    105     040     111  
+         001670    116     123     124  
+         001673    122     125     103  
+         001676    124     111     117  
+         001701    116     000          
+      55 001703                         	ERRGEN	38,R,<NO SUCH REGISTER NUMBER>	
+       1 001703    116     117     040  ERN38::	.ASCIZ	\NO SUCH REGISTER NUMBER\
+         001706    123     125     103  
+         001711    110     040     122  
+         001714    105     107     111  
+         001717    123     124     105  
+         001722    122     040     116  
+         001725    125     115     102  
+         001730    105     122     000  
+      56 001733                         	ERRGEN	39,T,<LOW ORDER BYTE ONLY>	
+       1 001733    114     117     127  ERN39::	.ASCIZ	\LOW ORDER BYTE ONLY\
+         001736    040     117     122  
+         001741    104     105     122  
+         001744    040     102     131  
+         001747    124     105     040  
+         001752    117     116     114  
+         001755    131     000          
+      57 001757                         	ERRGEN	40,Q,<QUESTIONABLE EXPRESSION SYNTAX>
+       1 001757    121     125     105  ERN40::	.ASCIZ	\QUESTIONABLE EXPRESSION SYNTAX\
+         001762    123     124     111  
+         001765    117     116     101  
+         001770    102     114     105  
+         001773    040     105     130  
+         001776    120     122     105  
+         002001    123     123     111  
+         002004    117     116     040  
+         002007    123     131     116  
+         002012    124     101     130  
+         002015    000                  
+      58 002016                         	ERRGEN	41,R,<ILLEGAL USE OF REGISTER>
+       1 002016    111     114     114  ERN41::	.ASCIZ	\ILLEGAL USE OF REGISTER\
+         002021    105     107     101  
+         002024    114     040     125  
+         002027    123     105     040  
+         002032    117     106     040  
+         002035    122     105     107  
+         002040    111     123     124  
+         002043    105     122     000  
+      59 002046                         	ERRGEN	42,Q,<MISSING RIGHT ')'>	
+       1 002046    115     111     123  ERN42::	.ASCIZ	\MISSING RIGHT ')'\
+         002051    123     111     116  
+         002054    107     040     122  
+         002057    111     107     110  
+         002062    124     040     047  
+         002065    051     047     000  
+      60 002070                         	ERRGEN	43,A,<MISSING EXPRESSION>	
+       1 002070    115     111     123  ERN43::	.ASCIZ	\MISSING EXPRESSION\
+         002073    123     111     116  
+         002076    107     040     105  
+         002101    130     120     122  
+         002104    105     123     123  
+         002107    111     117     116  
+         002112    000                  
+      61 002113                         	ERRGEN	44,R,<ILLEGAL REGISTER USAGE>
+       1 002113    111     114     114  ERN44::	.ASCIZ	\ILLEGAL REGISTER USAGE\
+         002116    105     107     101  
+         002121    114     040     122  
+         002124    105     107     111  
+         002127    123     124     105  
+         002132    122     040     125  
+         002135    123     101     107  
+         002140    105     000          
+      62 002142                         	ERRGEN	45,A,<ILLEGAL .PSECT ATTRIBUTE>
+       1 002142    111     114     114  ERN45::	.ASCIZ	\ILLEGAL .PSECT ATTRIBUTE\
+         002145    105     107     101  
+         002150    114     040     056  
+         002153    120     123     105  
+         002156    103     124     040  
+         002161    101     124     124  
+         002164    122     111     102  
+         002167    125     124     105  
+         002172    000                  
+      63 002173                         	ERRGEN	90,A,<CONFLICTS WITH .ENABL ABS>
+       1 002173    103     117     116  ERN90::	.ASCIZ	\CONFLICTS WITH .ENABL ABS\
+         002176    106     114     111  
+         002201    103     124     123  
+         002204    040     127     111  
+         002207    124     110     040  
+         002212    056     105     116  
+         002215    101     102     114  
+         002220    040     101     102  
+         002223    123     000          
+      64 002225                         	ERRGEN	46,A,<ILLEGAL RADIX>
+       1 002225    111     114     114  ERN46::	.ASCIZ	\ILLEGAL RADIX\
+         002230    105     107     101  
+         002233    114     040     122  
+         002236    101     104     111  
+         002241    130     000          
+      65 002243                         	ERRGEN	47,A,<PREMATURE END OF LINE>
+       1 002243    120     122     105  ERN47::	.ASCIZ	\PREMATURE END OF LINE\
+         002246    115     101     124  
+         002251    125     122     105  
+         002254    040     105     116  
+         002257    104     040     117  
+         002262    106     040     114  
+         002265    111     116     105  
+         002270    000                  
+      66 002271                         	ERRGEN	48,T,<ILLEGAL RAD50 CHARACTER>
+       1 002271    111     114     114  ERN48::	.ASCIZ	\ILLEGAL RAD50 CHARACTER\
+         002274    105     107     101  
+         002277    114     040     122  
+         002302    101     104     065  
+         002305    060     040     103  
+         002310    110     101     122  
+         002313    101     103     124  
+         002316    105     122     000  
+      67 002321                         	ERRGEN	49,A,<ILLEGAL .ENABL/.DSABL ARGUMENT>
+       1 002321    111     114     114  ERN49::	.ASCIZ	\ILLEGAL .ENABL/.DSABL ARGUMENT\
+         002324    105     107     101  
+         002327    114     040     056  
+         002332    105     116     101  
+         002335    102     114     057  
+         002340    056     104     123  
+         002343    101     102     114  
+         002346    040     101     122  
+         002351    107     125     115  
+         002354    105     116     124  
+         002357    000                  
+      68 002360                         	ERRGEN	50,A,<ILLEGAL USE OF '.'>
+       1 002360    111     114     114  ERN50::	.ASCIZ	\ILLEGAL USE OF '.'\
+         002363    105     107     101  
+         002366    114     040     125  
+         002371    123     105     040  
+         002374    117     106     040  
+         002377    047     056     047  
+         002402    000                  
+      69 002403                         	ERRGEN	51,A,<COMMA REQUIRED>
+       1 002403    103     117     115  ERN51::	.ASCIZ	\COMMA REQUIRED\
+         002406    115     101     040  
+         002411    122     105     121  
+         002414    125     111     122  
+         002417    105     104     000  
+      70 002422                         	ERRGEN	52,A,<SEPARATOR REQUIRED>
+       1 002422    123     105     120  ERN52::	.ASCIZ	\SEPARATOR REQUIRED\
+         002425    101     122     101  
+         002430    124     117     122  
+         002433    040     122     105  
+         002436    121     125     111  
+         002441    122     105     104  
+         002444    000                  
+      71 002445                         	ERRGEN	53,P,<USER GENERATED ERROR>		
+       1 002445    125     123     105  ERN53::	.ASCIZ	\USER GENERATED ERROR\
+         002450    122     040     107  
+         002453    105     116     105  
+         002456    122     101     124  
+         002461    105     104     040  
+         002464    105     122     122  
+         002467    117     122     000  
+      72 002472                         	ERRGEN	54,T,<NO GENERATED SYMBOLS AFTER 127$>
+       1 002472    116     117     040  ERN54::	.ASCIZ	\NO GENERATED SYMBOLS AFTER 127$\
+         002475    107     105     116  
+         002500    105     122     101  
+         002503    124     105     104  
+         002506    040     123     131  
+         002511    115     102     117  
+         002514    114     123     040  
+         002517    101     106     124  
+         002522    105     122     040  
+         002525    061     062     067  
+         002530    044     000          
+      73 002532                         	ERRGEN	55,A,<NO SUCH CREF ARGUMENT>
+       1 002532    116     117     040  ERN55::	.ASCIZ	\NO SUCH CREF ARGUMENT\
+         002535    123     125     103  
+         002540    110     040     103  
+         002543    122     105     106  
+         002546    040     101     122  
+         002551    107     125     115  
+         002554    105     116     124  
+         002557    000                  
+      74 002560                         	ERRGEN	56,O,<.ENDM OUT OF CONTEXT>
+       1 002560    056     105     116  ERN56::	.ASCIZ	\.ENDM OUT OF CONTEXT\
+         002563    104     115     040  
+         002566    117     125     124  
+         002571    040     117     106  
+         002574    040     103     117  
+         002577    116     124     105  
+         002602    130     124     000  
+      75 002605                         	ERRGEN	57,O,<.ENDR OUT OF CONTEXT>
+       1 002605    056     105     116  ERN57::	.ASCIZ	\.ENDR OUT OF CONTEXT\
+         002610    104     122     040  
+         002613    117     125     124  
+         002616    040     117     106  
+         002621    040     103     117  
+         002624    116     124     105  
+         002627    130     124     000  
+      76 002632                         	ERRGEN	59,A,<NOT A SYMBOL>
+       1 002632    116     117     124  ERN59::	.ASCIZ	\NOT A SYMBOL\
+         002635    040     101     040  
+         002640    123     131     115  
+         002643    102     117     114  
+         002646    000                  
+      77 002647                         	ERRGEN	60,U,<.MCALL ERROR>			
+       1 002647    056     115     103  ERN60::	.ASCIZ	\.MCALL ERROR\
+         002652    101     114     114  
+         002655    040     105     122  
+         002660    122     117     122  
+         002663    000                  
+      78 002664                         	ERRGEN	61,U,<MACRO NOT DEFINED BY .MCALL>
+       1 002664    115     101     103  ERN61::	.ASCIZ	\MACRO NOT DEFINED BY .MCALL\
+         002667    122     117     040  
+         002672    116     117     124  
+         002675    040     104     105  
+         002700    106     111     116  
+         002703    105     104     040  
+         002706    102     131     040  
+         002711    056     115     103  
+         002714    101     114     114  
+         002717    000                  
+      79 002720                         	ERRGEN	62,U,<CANNOT OPEN .MCALL FILE>
+       1 002720    103     101     116  ERN62::	.ASCIZ	\CANNOT OPEN .MCALL FILE\
+         002723    116     117     124  
+         002726    040     117     120  
+         002731    105     116     040  
+         002734    056     115     103  
+         002737    101     114     114  
+         002742    040     106     111  
+         002745    114     105     000  
+      80 002750                         	ERRGEN	63,U,<ILLEGAL .MACRO SYNTAX IN .MCALL>
+       1 002750    111     114     114  ERN63::	.ASCIZ	\ILLEGAL .MACRO SYNTAX IN .MCALL\
+         002753    105     107     101  
+         002756    114     040     056  
+         002761    115     101     103  
+         002764    122     117     040  
+         002767    123     131     116  
+         002772    124     101     130  
+         002775    040     111     116  
+         003000    040     056     115  
+         003003    103     101     114  
+         003006    114     000          
+      81 003010                         	ERRGEN	80,A,<BRANCH OUT OF CURRENT PSECT>
+       1 003010    102     122     101  ERN80::	.ASCIZ	\BRANCH OUT OF CURRENT PSECT\
+         003013    116     103     110  
+         003016    040     117     125  
+         003021    124     040     117  
+         003024    106     040     103  
+         003027    125     122     122  
+         003032    105     116     124  
+         003035    040     120     123  
+         003040    105     103     124  
+         003043    000                  
+      82 003044                         	ERRGEN	81,A,<TOO FAR TO BRANCH>
+       1 003044    124     117     117  ERN81::	.ASCIZ	\TOO FAR TO BRANCH\
+         003047    040     106     101  
+         003052    122     040     124  
+         003055    117     040     102  
+         003060    122     101     116  
+         003063    103     110     000  
+      83                                	.END
+      83                                
+       8                                
+
+
+Symbol table
+
+$TIMDF=000007           ERN19  000674RG     003 ERN35  001570RG     003 ERN50  002360RG     003 ERN8   000216RG     003 
+.      ******R      003 ERN2   000033RG     003 ERN36  001624RG     003 ERN51  002403RG     003 ERN80  003010RG     003 
+BPMB  =000020           ERN20  000744RG     003 ERN37  001651RG     003 ERN52  002422RG     003 ERN81  003044RG     003 
+CR    =000015           ERN22  001007RG     003 ERN38  001703RG     003 ERN53  002445RG     003 ERN9   000247RG     003 
+DEBUG =000000           ERN23  001044RG     003 ERN39  001733RG     003 ERN54  002472RG     003 ERN90  002173RG     003 
+ERN0   000762RG     003 ERN24  001102RG     003 ERN4   000076RG     003 ERN55  002532RG     003 FF    =000014           
+ERN1   000000RG     003 ERN25  001130RG     003 ERN40  001757RG     003 ERN56  002560RG     003 FT.ID =000001           
+ERN10  000303RG     003 ERN26  001153RG     003 ERN41  002016RG     003 ERN57  002605RG     003 FT.UNX=000001           
+ERN11  000333RG     003 ERN27  001220RG     003 ERN42  002046RG     003 ERN59  002632RG     003 LF    =000012           
+ERN12  000355RG     003 ERN28  001242RG     003 ERN43  002070RG     003 ERN6   000140RG     003 MK.SYM=000001           
+ERN13  000373RG     003 ERN29  001271RG     003 ERN44  002113RG     003 ERN60  002647RG     003 PDPV45=000000           
+ERN14  000415RG     003 ERN3   000057RG     003 ERN45  002142RG     003 ERN61  002664RG     003 RSX11D=000000           
+ERN140 000434RG     003 ERN30  001312RG     003 ERN46  002225RG     003 ERN62  002720RG     003 SPACE =000040           
+ERN15  000513RG     003 ERN31  001360RG     003 ERN47  002243RG     003 ERN63  002750RG     003 TAB   =000011           
+ERN16  000547RG     003 ERN32  001463RG     003 ERN48  002271RG     003 ERN7   000177RG     003 VT    =000013           
+ERN17  000604RG     003 ERN33  001523RG     003 ERN49  002321RG     003 ERN70  001401RG     003 X40   =000000           
+ERN18  000647RG     003 ERN34  001541RG     003 ERN5   000117RG     003 ERN71  001433RG     003 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+.TEXT   000000    002   (RW,I,LCL,REL,CON,NOSAV)
+.DATA   003066    003   (RW,I,LCL,REL,CON,NOSAV)
+.BSS    000000    004   (RW,I,LCL,REL,CON,NOSAV)
+DPURE   000000    005   (RW,I,LCL,REL,CON,NOSAV)
+MIXED   000000    006   (RW,I,LCL,REL,CON,NOSAV)
+ERRMES  000000    007   (RW,I,LCL,REL,CON,NOSAV)
+IMPURE  000000    008   (RW,I,LCL,REL,CON,NOSAV)
+IMPPAS  000000    009   (RW,I,LCL,REL,CON,NOSAV)
+IMPLIN  000000    010   (RW,I,LCL,REL,CON,NOSAV)
+SWTSEC  000000    011   (RW,I,LCL,REL,CON,NOSAV)
+CNDSEC  000000    012   (RW,I,LCL,REL,CON,NOSAV)
+CRFSEC  000000    013   (RW,I,LCL,REL,CON,NOSAV)
+EDTSEC  000000    014   (RW,I,LCL,REL,CON,NOSAV)
+LCTSEC  000000    015   (RW,I,LCL,REL,CON,NOSAV)
+PSASEC  000000    016   (RW,I,LCL,REL,CON,NOSAV)
+PSTSEC  000000    017   (RW,I,LCL,REL,CON,NOSAV)
+ROLBAS  000000    018   (RW,I,LCL,REL,CON,NOSAV)
+ROLSIZ  000000    019   (RW,I,LCL,REL,CON,NOSAV)
+ROLTOP  000000    020   (RW,I,LCL,REL,CON,NOSAV)
+XPCOR   000000    021   (RW,I,LCL,REL,CON,NOSAV)

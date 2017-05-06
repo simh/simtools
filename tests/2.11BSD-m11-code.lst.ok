@@ -1,0 +1,1294 @@
+       1                                ;;;; Wrapper for 2.11BSD/m11/code.m11
+       2                                	.list
+       3                                	.list
+       4                                	.list
+       5                                	.enabl lc
+       6        000001                  debug	=	1
+       7                                	.include "2.11BSD/m11/at.sml"
+       1                                	.title	at.sml	-   assembler/translator system macros
+       2                                	; @(#)at.sml	1.3 11/3/82
+       3                                
+       4                                	.ident	/10may4/
+       5                                
+       6                                	.macro	always		;all files of macro
+       7                                
+       8                                	.macro	.data
+       9                                	entsec	.data
+      10                                	.endm	.data
+      11                                
+      12                                	.macro	.text
+      13                                	entsec	.text
+      14                                	.endm
+      15                                
+      16                                	.macro	.bss
+      17                                	entsec	.bss
+      18                                	.endm
+      19                                
+      20                                mk.symbol=1			;one to make symbols, 0 otherwise
+      21                                x40=	0
+      22                                pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      23                                				; if not you will have to write macros for them
+      24                                $timdf=	7			; California Time Zone
+      25                                				; should really use ftime(2) for this and for
+      26                                				; DST.
+      27                                ;xfltg=	0		;define to assmbl out floating hardware
+      28                                rsx11d	=	0	; rsx11d features 
+      29                                debug	=	0	; <<< REEDS if non zero includes debug junk
+      30                                
+      31                                ft.id=	1			;have set i & d.  set =0 if not
+      32                                
+      33                                ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      34                                
+      35                                	.nlist	bex
+      36                                
+      37                                tab=	11
+      38                                lf=	12
+      39                                vt=	13
+      40                                ff=	14
+      41                                cr=	15
+      42                                space=	40
+      43                                
+      44                                bpmb	=	20		;bytes per macro block
+      45                                
+      46                                
+      47                                
+      48                                
+      49                                
+      50                                	.psect	.text	con, shr, gbl,ins
+      51                                	.psect	.data	con, dat, prv, gbl
+      52                                	.psect	.bss	con, bss, gbl
+      53                                
+      54                                	.psect	dpure	con, dat, prv, gbl
+      55                                	.psect	mixed	con, prv, gbl
+      56                                	.psect	errmes	con, dat, prv, gbl
+      57                                	.psect	impure	con, bss, gbl
+      58                                	.psect	imppas	con, bss, gbl
+      59                                	.psect	implin	con, bss, gbl
+      60                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+      61                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+      62                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+      63                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+      64                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+      65                                	.psect	psasec 	con, dat, prv, gbl
+      66                                	.psect	pstsec 	con, dat, prv, gbl
+      67                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+      68                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+      69                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+      70                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      71                                
+      72                                
+      72                                
+      73                                	.macro	entsec	name 	;init a section
+      74                                	.psect	name	con
+      75                                	.endm	entsec
+      76                                
+      77                                
+      78                                
+      79                                	.macro jeq	x,?fred
+      80                                	bne	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	jne	x,?fred
+      85                                	beq	fred
+      86                                	jmp	x
+      87                                fred:
+      88                                	.endm
+      89                                	.macro	xitsec
+      90                                	entsec	.text
+      91                                	.endm	xitsec
+      92                                
+      93                                
+      94                                	.macro	call	address
+      95                                	jsr	pc,address
+      96                                	.endm
+      97                                
+      98                                	.macro	return
+      99                                	rts	pc
+     100                                	.endm
+     101                                
+     102                                
+     103                                	.macro	always
+     104                                	.nlist	bex
+     105                                	.endm	always
+     106                                	.endm	always
+     107                                
+     108                                
+     109        000001                  	.if ne debug
+     110                                	
+     111                                	.macro	ndebug n
+     112                                	.globl	ndebug,..z
+     113                                	mov	n,..z
+     114                                	call	ndebug
+     115                                	.endm
+     116                                
+     117                                	.macro	sdebug	string
+     118                                	.globl	sdebug,..z,..zbuf
+     119                                	x = 0
+     120                                	.irpc	t,<string>
+     121                                	movb	#''t,..zbuf+x
+     122                                	x = x+1
+     123                                	.endm
+     124                                	movb	#0,..zbuf+x
+     125                                	mov	#..zbuf,..z
+     126                                	call	sdebug
+     127                                	.endm
+     128                                
+     129                                	.iff
+     130                                	
+     131                                	.macro	ndebug n
+     132                                	.endm
+     133                                
+     134                                	.macro	sdebug	string
+     135                                	.endm
+     136                                	
+     137                                	.endc
+     138                                	
+     139                                	
+     140                                	.macro	param	mne,	value	;define default parameters
+     141                                	.iif ndf mne,	mne=	value
+     142                                	.list
+     143                                mne=	mne
+     144                                	.nlist
+     145                                	.endm
+     145                                
+     146                                	.macro	putkb	addr	;list to kb
+     147                                	.globl	putkb
+     148                                	mov	addr,r0
+     149                                	call	putkb
+     150                                	.endm
+     151                                
+     152                                	.macro	putlp	addr	;list to lp
+     153                                	.globl	putlp
+     154                                	mov	addr,r0
+     155                                	call	putlp
+     156                                	.endm
+     157                                
+     158                                	.macro	putkbl	addr	;list to kb and lp
+     159                                	.globl	putkbl
+     160                                	mov	addr,r0
+     161                                	call	putkbl
+     162                                	.endm
+     163                                
+     164                                
+     165                                	.macro	xmit	wrdcnt	;move small # of words
+     166                                	.globl	xmit0
+     167                                	call	xmit0-<wrdcnt*2>
+     168                                	.endm	xmit
+     169                                
+     170                                
+     171                                ;the macro "genswt" is used to specify  a command
+     172                                ;string switch (1st argument) and the address of
+     173                                ;the routine to be called when encountered (2nd arg).
+     174                                ; the switch is made upper-case.
+     175                                
+     176                                	.macro	genswt	mne,addr,?label
+     177                                	entsec	swtsec
+     178                                label:	.irpc	x,mne
+     179                                	.if ge ''x-141
+     180                                		.if le ''x-172
+     181                                			.byte ''x-40
+     182                                		.iff
+     183                                			.byte ''x
+     184                                		.endc
+     185                                	.iff
+     186                                	.byte ''x
+     187                                	.endc
+     188                                	.endm
+     189                                	.iif ne <.-label&1>,	.byte	0
+     190                                	.word	addr
+     191                                	xitsec
+     192                                	.endm
+     192                                
+     193                                	.macro	zread	chan
+     194                                	.globl	zread
+     195                                	mov	#chan'chn,r0
+     196                                	call	zread
+     197                                	.endm	zread
+     198                                
+     199                                	.macro	zwrite	chan
+     200                                	.globl	zwrite
+     201                                	mov	#chan'chn,r0
+     202                                	call	zwrite
+     203                                	.endm	zwrite
+     203                                
+     204                                	.macro	genedt	mne,subr	;gen enable/disable table
+     205                                	entsec	edtsec
+     206                                	.rad50	/mne/
+     207                                	.if nb	subr
+     208                                	.word	subr
+     209                                	.iff
+     210                                	.word	cpopj
+     211                                	.endc
+     212                                	.word	ed.'mne
+     213                                	xitsec
+     214                                	.endm	genedt
+     215                                
+     216                                
+     217                                ;the macro "gencnd" is used to specify conditional
+     218                                ;arguments.  it takes two or three arguments:
+     219                                
+     220                                ;	1-	mnemonic
+     221                                ;	2-	subroutine to be called
+     222                                ;	3-	if non-blank, complement condition
+     223                                
+     224                                	.macro	gencnd	mne,subr,toggle	;generate conditional
+     225                                	entsec	cndsec
+     226                                	.rad50	/mne/
+     227                                	.if b	<toggle>
+     228                                	.word	subr
+     229                                	.iff
+     230                                	.word	subr+1
+     231                                	.endc
+     232                                	xitsec
+     233                                	.endm
+     233                                
+     234                                	.macro	ch.mne
+     235                                
+     236                                ch.ior=	'!
+     237                                ch.qtm=	'"
+     238                                ch.hsh=	'#
+     239                                ch.dol=	'$
+     240                                ch.pct=	'%
+     241                                ch.and=	'&
+     242                                ch.xcl=	''
+     243                                
+     244                                ch.lp=	'(
+     245                                ch.rp=	')
+     246                                ch.mul=	'*
+     247                                ch.add=	'+
+     248                                ch.com=	',
+     249                                ch.sub=	'-
+     250                                ch.dot=	'.
+     251                                ch.div=	'/
+     252                                
+     253                                ch.col=	':
+     254                                ch.smc=	';
+     255                                ch.lab=	'<
+     256                                ch.equ=	'=
+     257                                ch.rab=	'>
+     258                                ch.qm=	'?
+     259                                
+     260                                ch.ind=	'@
+     261                                ch.bsl=	'\
+     262                                ch.uar=	'^
+     263                                
+     264                                let.a=	'a&^c40
+     265                                let.b=	'b&^c40
+     266                                let.c=	'c&^c40
+     267                                let.d=	'd&^c40
+     268                                let.e=	'e&^c40
+     269                                let.f=	'f&^c40
+     270                                let.g=	'g&^c40
+     271                                let.o=	'o&^c40
+     272                                let.p=	'p&^c40
+     273                                let.r=	'r&^c40
+     274                                let.z=	'z&^c40
+     275                                
+     276                                dig.0=	'0
+     277                                dig.9=	'9
+     278                                	.macro	ch.mne
+     279                                	.endm	ch.mne
+     280                                	.endm	ch.mne
+     281                                
+     282                                	.macro error num,arg, mess ,?x
+     283                                	sdebug	<num>
+     284                                	.globl	err.'arg,ern'num, errbts,errref
+     285                                	.if	b	<mess>
+     286                                	deliberate error mistake
+     287                                	.endc
+     288                                	.if	dif	0,num
+     289                                	.globl	err.xx
+     290                                	tst	err.xx
+     291                                	bne	x
+     292                                	mov	#ern'num,err.xx
+     293                                x:
+     294                                	.endc
+     295                                	bis	#err.'arg,errbts
+     296                                	.endm
+     297                                
+     298                                
+     299                                
+     300                                	.macro	setnz	addr	;set addr to non-zero for t/f flags
+     301                                	mov	sp,addr
+     302                                	.endm
+     303                                
+     304                                
+     305                                	.macro	bisbic	arg	; used by .list/.nlist, .enabl/.dsabl
+     306                                	.globl	bisbic
+     307                                	mov	#arg,-(sp)
+     308                                	call	bisbic
+     309                                	tst	(sp)+
+     310                                	.endm
+     310                                
+     311                                				;roll handler calls
+     312                                
+     313                                	.macro	search	rolnum	;binary search
+     314                                	mov	#rolnum,r0
+     315                                	.globl	search
+     316                                	call	search
+     317                                	.endm
+     318                                
+     319                                	.macro	scan	rolnum	;linear scan
+     320                                	mov	#rolnum,r0
+     321                                	.globl	scan
+     322                                	call	scan
+     323                                	.endm
+     324                                
+     325                                	.macro	scanw	rolnum	;linear scan, one word
+     326                                	mov	#rolnum,r0
+     327                                	.globl	scanw
+     328                                	call	scanw
+     329                                	.endm
+     330                                
+     331                                	.macro	next	rolnum	;fetch next entry
+     332                                	mov	#rolnum,r0
+     333                                	.globl	next
+     334                                	call	next
+     335                                	.endm
+     336                                
+     337                                	.macro	append	rolnum	;append to end of roll
+     338                                	mov	#rolnum,r0
+     339                                	.globl	append
+     340                                	call	append
+     341                                	.endm
+     342                                
+     343                                	.macro	zap	rolnum	;clear roll
+     344                                	mov	#rolnum,r0
+     345                                	.globl	zap
+     346                                	call	zap
+     347                                	.endm
+     348                                
+     349                                ;	call	insert		;insert (must be preceded by one 
+     350                                				;of the above to set pointers)
+     351                                ;	call	setrol		;save and set regs for above
+     351                                
+     352                                ;flags used in symbol table mode
+     353                                
+     354                                	.macro	st.flg
+     355                                
+     356                                .if le ft.unx
+     357                                
+     358                                ovrflg=	000004		;overlay (psect only)
+     359                                defflg=	000010		;defined
+     360                                relflg=	000040		;relocatable
+     361                                glbflg=	000100		;global
+     362                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     363                                
+     364                                
+     365                                .endc
+     366                                
+     367                                .if gt ft.unx
+     368                                
+     369                                			; ****** these should not be changed!! ******
+     370                                shrflg=	000001		;shareable (psect only)
+     371                                .if gt ft.id
+     372                                insflg=	shrflg*2	;instruction space (psect only)
+     373                                bssflg=	insflg*2	;blank section (psect only)
+     374                                m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+     375                                .iff
+     376                                bssflg=	shrflg*2
+     377                                m.idf=	shrflg!bssflg
+     378                                .endc
+     379                                b.idf=	1		;shift count to make above bits word offset
+     380                                			; ***********************************
+     381                                defflg=	000010		;defined
+     382                                ovrflg=	000020		;overlay (psect only)
+     383                                relflg=	000040		;relocatable
+     384                                glbflg=	000100		;global
+     385                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     386                                
+     387                                .endc
+     388                                
+     389                                ;
+     390                                ; default psect attribs.
+     391                                ; can be changed, but make sure all customers know about
+     392                                ; it, including all the linkers.
+     393                                ;
+     394                                pattrs=relflg!defflg		; For .psects and blank .csects
+     395                                aattrs=glbflg!defflg!ovrflg		; For .asect
+     396                                cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+     397                                
+     398                                regflg=	000001		;register
+     399                                lblflg=	000002		;label
+     400                                mdfflg=	000004		;multilpy defined
+     401                                	.macro	st.flg
+     402                                	.endm
+     403                                	.endm	st.flg
+     404                                
+     405                                
+     406                                
+     407                                	.macro	ct.mne
+     408                                	.globl	cttbl
+     409                                ct.eol	=	000		; eol
+     410                                ct.com	=	001		; comma
+     411                                ct.tab	=	002		; tab
+     412                                ct.sp	=	004		; space
+     413                                ct.pcx	=	010		; printing character
+     414                                ct.num	=	020		; numeric
+     415                                ct.alp	=	040		; alpha, dot, dollar
+     416                                ct.lc	=	100		; lower case alpha
+     417                                ct.smc	=	200		; semi-colon (sign bit)
+     418                                
+     419                                ct.pc	=	ct.com!ct.smc!ct.pcx!ct.num!ct.alp
+     420                                	.macro	ct.mne
+     421                                	.endm	ct.mne
+     422                                	.endm	ct.mne
+     423                                
+     424                                
+     425                                	.end
+     425                                
+       8                                	.include "2.11BSD/m11/code.m11"
+       1                                	.title	code
+       2                                
+       3                                	.ident	/10may4/
+       4                                
+       5                                	.mcall	(at)always,st.flg,xmit,zwrite
+       6 000000                         	always
+       1                                
+       2                                	.macro	.data
+       3                                	entsec	.data
+       4                                	.endm	.data
+       5                                
+       6                                	.macro	.text
+       7                                	entsec	.text
+       8                                	.endm
+       9                                
+      10                                	.macro	.bss
+      11                                	entsec	.bss
+      12                                	.endm
+      13                                
+      14        000001                  mk.symbol=1			;one to make symbols, 0 otherwise
+      15        000000                  x40=	0
+      16        000000                  pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      17                                				; if not you will have to write macros for them
+      18        000007                  $timdf=	7			; California Time Zone
+      19                                				; should really use ftime(2) for this and for
+      20                                				; DST.
+      21                                ;xfltg=	0		;define to assmbl out floating hardware
+      22        000000                  rsx11d	=	0	; rsx11d features 
+      23        000000                  debug	=	0	; <<< REEDS if non zero includes debug junk
+      24                                
+      25        000001                  ft.id=	1			;have set i & d.  set =0 if not
+      26                                
+      27        000001                  ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      28                                
+      29                                	.nlist	bex
+      30                                
+      31        000011                  tab=	11
+      32        000012                  lf=	12
+      33        000013                  vt=	13
+      34        000014                  ff=	14
+      35        000015                  cr=	15
+      36        000040                  space=	40
+      37                                
+      38        000020                  bpmb	=	20		;bytes per macro block
+      39                                
+      40                                
+      41                                
+      42                                
+      43                                
+./2.11BSD/m11/code.m11:6->ALWAYS:44: ***ERROR Unknown flag SHR given to .PSECT directive
+      44                                	.psect	.text	con, shr, gbl,ins
+./2.11BSD/m11/code.m11:6->ALWAYS:45: ***ERROR Unknown flag DAT given to .PSECT directive
+      45                                	.psect	.data	con, dat, prv, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:46: ***ERROR Unknown flag BSS given to .PSECT directive
+      46                                	.psect	.bss	con, bss, gbl
+      47                                
+./2.11BSD/m11/code.m11:6->ALWAYS:48: ***ERROR Unknown flag DAT given to .PSECT directive
+      48                                	.psect	dpure	con, dat, prv, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:49: ***ERROR Unknown flag PRV given to .PSECT directive
+      49                                	.psect	mixed	con, prv, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:50: ***ERROR Unknown flag DAT given to .PSECT directive
+      50                                	.psect	errmes	con, dat, prv, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:51: ***ERROR Unknown flag BSS given to .PSECT directive
+      51                                	.psect	impure	con, bss, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:52: ***ERROR Unknown flag BSS given to .PSECT directive
+      52                                	.psect	imppas	con, bss, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:53: ***ERROR Unknown flag BSS given to .PSECT directive
+      53                                	.psect	implin	con, bss, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:54: ***ERROR Unknown flag DAT given to .PSECT directive
+      54                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+./2.11BSD/m11/code.m11:6->ALWAYS:55: ***ERROR Unknown flag DAT given to .PSECT directive
+      55                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+./2.11BSD/m11/code.m11:6->ALWAYS:56: ***ERROR Unknown flag DAT given to .PSECT directive
+      56                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+./2.11BSD/m11/code.m11:6->ALWAYS:57: ***ERROR Unknown flag DAT given to .PSECT directive
+      57                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+./2.11BSD/m11/code.m11:6->ALWAYS:58: ***ERROR Unknown flag DAT given to .PSECT directive
+      58                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+./2.11BSD/m11/code.m11:6->ALWAYS:59: ***ERROR Unknown flag DAT given to .PSECT directive
+      59                                	.psect	psasec 	con, dat, prv, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:60: ***ERROR Unknown flag DAT given to .PSECT directive
+      60                                	.psect	pstsec 	con, dat, prv, gbl
+./2.11BSD/m11/code.m11:6->ALWAYS:61: ***ERROR Unknown flag DAT given to .PSECT directive
+      61                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+./2.11BSD/m11/code.m11:6->ALWAYS:62: ***ERROR Unknown flag DAT given to .PSECT directive
+      62                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+./2.11BSD/m11/code.m11:6->ALWAYS:63: ***ERROR Unknown flag DAT given to .PSECT directive
+      63                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+./2.11BSD/m11/code.m11:6->ALWAYS:64: ***ERROR Unknown flag BSS given to .PSECT directive
+      64                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      65                                
+      66                                
+      67                                
+      68                                	.macro	entsec	name 	;init a section
+      69                                	.psect	name	con
+      70                                	.endm	entsec
+      71                                
+      72                                
+      73                                
+      74                                	.macro jeq	x,?fred
+      75                                	bne	fred
+      76                                	jmp	x
+      77                                fred:
+      78                                	.endm
+      79                                	.macro	jne	x,?fred
+      80                                	beq	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	xitsec
+      85                                	entsec	.text
+      86                                	.endm	xitsec
+      87                                
+      88                                
+      89                                	.macro	call	address
+      90                                	jsr	pc,address
+      91                                	.endm
+      92                                
+      93                                	.macro	return
+      94                                	rts	pc
+      95                                	.endm
+      96                                
+      97                                
+      98                                	.macro	always
+      99                                	.nlist	bex
+     100                                	.endm	always
+       7 000000                         	st.flg
+       1                                
+       2        000001                  .if le ft.unx
+       3                                
+       4                                ovrflg=	000004		;overlay (psect only)
+       5                                defflg=	000010		;defined
+       6                                relflg=	000040		;relocatable
+       7                                glbflg=	000100		;global
+       8                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+       9                                
+      10                                
+      11                                .endc
+      12                                
+      13        000001                  .if gt ft.unx
+      14                                
+      15                                			; ****** these should not be changed!! ******
+      16        000001                  shrflg=	000001		;shareable (psect only)
+      17        000001                  .if gt ft.id
+      18        000002                  insflg=	shrflg*2	;instruction space (psect only)
+      19        000004                  bssflg=	insflg*2	;blank section (psect only)
+      20        000007                  m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+      21                                .iff
+      22                                bssflg=	shrflg*2
+      23                                m.idf=	shrflg!bssflg
+      24                                .endc
+      25        000001                  b.idf=	1		;shift count to make above bits word offset
+      26                                			; ***********************************
+      27        000010                  defflg=	000010		;defined
+      28        000020                  ovrflg=	000020		;overlay (psect only)
+      29        000040                  relflg=	000040		;relocatable
+      30        000100                  glbflg=	000100		;global
+      31        000200                  dfgflg= 000200		; default global <rsx11d>... reeds's guess
+      32                                
+      33                                .endc
+      34                                
+      35                                ;
+      36                                ; default psect attribs.
+      37                                ; can be changed, but make sure all customers know about
+      38                                ; it, including all the linkers.
+      39                                ;
+      40        000050                  pattrs=relflg!defflg		; For .psects and blank .csects
+      41        000130                  aattrs=glbflg!defflg!ovrflg		; For .asect
+      42        000170                  cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+      43                                
+      44        000001                  regflg=	000001		;register
+      45        000002                  lblflg=	000002		;label
+      46        000004                  mdfflg=	000004		;multilpy defined
+      47                                	.macro	st.flg
+      48                                	.endm
+       8                                
+       9                                	.mcall	(at)genedt,setnz,next,append,zap,error
+      10                                
+      11                                	.globl	objchn,	objlen
+      12                                	.globl	savreg,	ioftbl,	buftbl,	cnttbl
+      13                                
+      14                                	.globl	dmprld,	endp1c,	endp2c,	pcroll,	prgttl
+      15                                	.globl	setdsp,	setimm,	setrld,	stcode
+      16                                
+      17                                	.globl	abserr,	clcloc,	clcnam,	clcsec
+      18                                	.globl	codrol,	endvec,	mode,	objsec
+      19                                	;.globl	pass,	psaflg,	rolupd,	secrol
+      20                                	.globl	pass,	rolupd,	secrol
+      21                                	.globl	sector,	setpf0,	setpf1,	setsec,	setxpr
+      22                                	.globl	symbol,	symrol,	value
+      23                                	.globl	edmask,	ed.abs,	ed.pnc
+      24                                	.globl	dflgbm,	opclas
+      24                                
+      25        000040                  cc.opr	=	040
+      26        000020                  cc.nam	=	020
+      27        000010                  cc.sec	=	010
+      28        000004                  cc.val	=	004
+      29        000002                  cc.dsp	=	002
+      30                                
+      31                                
+      32        000000                  gsdt00=	00*400		; object module name
+      33        000400                  gsdt01=	01*400		; program section name
+      34        001000                  gsdt02=	02*400		; internal symbol table
+      35        001400                  gsdt03=	03*400		; transfer address
+      36        002000                  gsdt04=	04*400		; symbol declaration
+      37        002400                  gsdt05=	05*400		; local section name
+      38        003000                  gsdt06=	06*400		; version identification
+      39                                
+      40        000001                  blkt01=	01		; gsd
+      41        000002                  blkt02=	02		; gsd end
+      42        000003                  blkt03=	03		; text block
+      43        000004                  blkt04=	04		; rld block
+      44        000005                  blkt05=	05		; isd
+      45        000006                  blkt06=	06		; module end
+      46        000017                  blkt17=	17
+      46                                
+      47                                	.sbttl	expression to code-roll conversions
+      48                                
+      49 000000                         	xitsec			;start in default psect
+       1 000000                         	entsec	.text
+       1 000000                         	.psect	.text	con
+      50                                
+      51                                setimm:				;
+      52 000000                         	call	savreg
+       1 000000 004767  000000G         	jsr	pc,savreg
+      53 000004                         	call	setxpr
+       1 000004 004767  000000G         	jsr	pc,setxpr
+      54 000010 005046                  	clr	-(sp)
+      55 000012 132713  000100          	bitb	#glbflg,(r3)
+      56 000016 001047                  	bne	setds3
+      57 000020 032713  000040          	bit	#relflg,(r3)
+      58 000024 001446                  	beq	setdsx
+      59 000026 121267  000000G         	cmpb	(r2),clcsec
+      60 000032 001022                  	bne	setds1
+      61 000034 052716  000010          	bis	#cc.sec,(sp)
+      62 000040 000440                  	br	setdsx
+      63                                
+      64                                setdsp:
+      65 000042                         	call	savreg
+       1 000042 004767  000000G         	jsr	pc,savreg
+      66 000046                         	call	setxpr
+       1 000046 004767  000000G         	jsr	pc,setxpr
+      67 000052 012746  000002          	mov	#cc.dsp,-(sp)
+      68 000056 032713  000100          	bit	#glbflg,(r3)
+      69 000062 001025                  	bne	setds3
+      70 000064 121267  000000G         	cmpb	(r2),clcsec
+      71 000070 001410                  	beq	setds2
+      72 000072 032713  000040          	bit	#relflg,(r3)
+      73 000076 001421                  	beq	setdsx
+      74 000100                         setds1:	call	setsec
+       1 000100 004767  000000G         	jsr	pc,setsec
+      75 000104 052716  000030          	bis	#cc.sec!cc.nam,(sp)
+      76 000110 000414                  	br	setdsx
+      77                                
+      78 000112 005013                  setds2:	clr	(r3)
+      79 000114 005016                  	clr	(sp)
+      80 000116 116700  000000C         	movb	<^pl rolsiz>+codrol+1,r0
+      81                                	;movb	@(pc)+,r0
+      82                                	; .word	<^pl rolsiz>+codrol+1
+      83 000122 005200                  	inc	r0
+      84 000124 006300                  	asl	r0
+      85 000126 066700  000000G         	add	clcloc,r0
+      86 000132 160014                  	sub	r0,(r4)
+      87 000134 000402                  	br	setdsx
+      88                                
+      89 000136 052716  000020          setds3:	bis	#cc.nam,(sp)
+      90 000142 032767  000000G 000000G setdsx:	bit	#dflgbm,opclas
+      91 000150 001415                  	beq	4$
+      92 000152 105724                  	tstb	(r4)+
+      93 000154 111400                  	movb	(r4),r0
+      94 000156 001402                  	beq	1$
+      95 000160 005200                  	inc	r0
+      96 000162 001003                  	bne	2$
+      97 000164 032716  000010          1$:	bit	#cc.sec,(sp)
+      98 000170 001402                  	beq	3$
+      99 000172                         2$:	call	abserr
+       1 000172 004767  000000G         	jsr	pc,abserr
+     100 000176 105014                  3$:	clrb	(r4)
+     101 000200 052716  000200          	bis	#200,(sp)
+     102 000204 112612                  4$:	movb	(sp)+,(r2)
+     103 000206                         	return
+       1 000206 000207                  	rts	pc
+     103                                
+     104                                	.globl	limit
+     105                                
+     106                                limit:
+     107 000210                         	call	setrld
+       1 000210 004767  001270          	jsr	pc,setrld
+     108 000214 005203                  1$:	inc	r3
+     109 000216 112722  000040          	movb	#cc.opr,(r2)+
+     110 000222 110322                  	movb	r3,(r2)+
+     111 000224 110322                  	movb	r3,(r2)+
+     112 000226                         	call	dmprld
+       1 000226 004767  001166          	jsr	pc,dmprld
+     113 000232 012700  000000G         	mov	#symbol,r0
+     114 000236 005020                  	clr	(r0)+
+     115 000240 010320                  	mov	r3,(r0)+
+     116 000242 012720  010000          	mov	#cc.nam*400,(r0)+
+     117 000246 005020                  	clr	(r0)+
+     118 000250                         	call	stcode
+       1 000250 004767  000552          	jsr	pc,stcode
+     119 000254 020327  000002          	cmp	r3,#2
+     120 000260 103755                  	blo	1$
+     121 000262                         	return
+       1 000262 000207                  	rts	pc
+     122                                
+     123                                	.globl	ident,	rad50
+     124                                ident:				;"ident" directive
+     125 000264                         	call	rad50		;treat as rad 50
+       1 000264 004767  000000G         	jsr	pc,rad50
+     126 000270 005067  000000G         	clr	rolupd		;point to start of code roll
+     127 000274 012702  000010'         	mov	#prgidn,r2	;  and to ident block
+     128 000300                         1$:	next	codrol		;get the next entry
+       1 000300 012700  000000G         	mov	#codrol,r0
+       2                                	.globl	next
+       3 000304                         	call	next
+       1 000304 004767  000000G         	jsr	pc,next
+     129 000310 016722  000000G         	mov	value,(r2)+	;stuff it
+     130 000314 020227  000014'         	cmp	r2,#prgidn+4	;two words?
+     131 000320 103767                  	blo	1$		;  no
+     132 000322 012722  003000          	mov	#gsdt06,(r2)+	;yes, set gsd type
+     133 000326                         	zap	codrol		;clear code
+       1 000326 012700  000000G         	mov	#codrol,r0
+       2                                	.globl	zap
+       3 000332                         	call	zap
+       1 000332 004767  000000G         	jsr	pc,zap
+     134 000336                         	return
+       1 000336 000207                  	rts	pc
+     135                                
+     136                                
+     137 000340                         	entsec	impure
+       1 000000                         	.psect	impure	con
+     138        000000                  prgttl:	.blkw	4		;title block
+     139        000010                  prgidn:	.blkw	4		;ident   "
+     140 000020                         	xitsec
+       1 000020                         	entsec	.text
+       1 000340                         	.psect	.text	con
+     140                                
+     141                                	.sbttl	object code handlers
+     142                                
+     143                                endp1c:				;end pass1 code init
+     144 000340 105767  000000C         	tstb	ioftbl+objchn	;any obj file?
+     145 000344 001522                  	beq	9$		;  no
+     146 000346                         	call	objini		;init output
+       1 000346 004767  001030          	jsr	pc,objini
+     147 000352 012777  000001  000000C 	mov	#blkt01,@buftbl+objchn	;set block type 1
+     148 000360 012701  000000'         	mov	#prgttl,r1	;set "from" index
+     149 000364                         	call	gsddmp		;output gsd block
+       1 000364 004767  000230          	jsr	pc,gsddmp
+     150 000370 012701  000010'         	mov	#prgidn,r1	;point to sub-ttl buffer
+     151 000374 005761  000004          	tst	4(r1)		;set?
+     152 000400 001402                  	beq	1$		;  no
+     153 000402                         	call	gsddmp		;yes, stuff it
+       1 000402 004767  000212          	jsr	pc,gsddmp
+     154 000406 005046                  1$:	clr	-(sp)		;init for sector scan
+     155 000410 012667  000000G         2$:	mov	(sp)+,rolupd	;set scan marker
+     156 000414                         	next	secrol		;get the next sector
+       1 000414 012700  000000G         	mov	#secrol,r0
+       2                                	.globl	next
+       3 000420                         	call	next
+       1 000420 004767  000000G         	jsr	pc,next
+     157 000424 001446                  	beq	6$		;branch if through
+     158 000426 016746  000000G         	mov	rolupd,-(sp)	;save marker
+     159 000432 012701  000002G         	mov	#value+2,r1
+     160 000436 011141                  	mov	(r1),-(r1)
+     161 000440 005005                  	clr	r5
+     162 000442 154105                  	bisb	-(r1),r5
+     163 000444 112711  000005          	movb	#gsdt05/400,(r1)
+     164                                	;tst	psaflg				; who cares?  a .csect is a 
+     165                                	;bne	3$				;special kind of .psect
+     166                                	;movb	#gsdt01/400,(r1)		; so dont need this code
+     167                                	;bicb	#^c<defflg!relflg>,-(r1)	;	j reeds sept 81.
+     168 000450 005067  000000G         3$:	clr	rolupd		;set for inner scan
+     169 000454 012701  000000G         4$:	mov	#symbol,r1
+     170 000460                         	call	gsddmp		;output this block
+       1 000460 004767  000134          	jsr	pc,gsddmp
+     171 000464                         5$:	next	symrol		;fetch the next symbol
+       1 000464 012700  000000G         	mov	#symrol,r0
+       2                                	.globl	next
+       3 000470                         	call	next
+       1 000470 004767  000000G         	jsr	pc,next
+     172 000474 001745                  	beq	2$		;  finished with this guy
+     173 000476 032767  000100  000000G 	bit	#glbflg,mode	;global?
+     174 000504 001767                  	beq	5$		;  no
+     175 000506 032767  000001  000000G 	bit	#regflg,mode	;is register (prevent god's wrath)
+     176 000514 001363                  	bne	5$		;no global registers with ==*
+     177 000516 126705  000000G         	cmpb	sector,r5	;yes, proper sector?
+     178 000522 001360                  	bne	5$		;  no
+     179 000524 042767  177427  000000G 	bic	#^c<defflg!200!relflg!glbflg>,mode	;clear most (leave hk up)
+     180 000532 052767  002000  000000G 	bis	#gsdt04,mode	;set type 4
+     181 000540 000745                  	br	4$		;output it
+     182                                
+     183                                
+     184 000542 042767  177737  000004G 6$:	bic	#^c<relflg>,endvec+4	;clear all but rel flag
+     185 000550 052767  001410  000004G 	bis	#gsdt03+defflg,endvec+4
+     186 000556 012701  000000G         	mov	#endvec,r1
+     187 000562                         	call	gsddmp		;output end block
+       1 000562 004767  000032          	jsr	pc,gsddmp
+     188 000566                         	call	objdmp		;dump it
+       1 000566 004767  000542          	jsr	pc,objdmp
+     189 000572 012777  000002  000000C 	mov	#blkt02,@buftbl+objchn	;set "end of gsd"
+     190 000600                         	call	objdmf
+       1 000600 004767  000552          	jsr	pc,objdmf
+     191 000604 012777  000017  000000C 	mov	#blkt17,@buftbl+objchn	;init for text blocks
+     192                                9$:
+     193 000612 005267  000000G         	inc	pass		;set for pass 2
+     194 000616                         	return
+       1 000616 000207                  	rts	pc
+     195                                
+     196                                
+     197                                gsddmp:				;dump a gsd block
+     198 000620                         	call	setrld
+       1 000620 004767  000660          	jsr	pc,setrld
+     199 000624                         	xmit	4
+       1                                	.globl	xmit0
+       2 000624                         	call	xmit0-<4*2>
+       1 000624 004767  177770G         	jsr	pc,xmit0-<4*2>
+     200 000630 000167  000564          	jmp	dmprld
+     200                                
+     201                                endp2c:
+     202 000634 005767  000022'         	tst	objpnt		;any object output?
+     203 000640 001426                  	beq	1$		;  no
+     204 000642                         	call	objdmp		;yes, dump it
+       1 000642 004767  000466          	jsr	pc,objdmp
+     205        000001                  .if	ne,mk.symbol
+     206 000646 005767  000020'         	tst	out$ym
+     207 000652 001422                  	beq	22$
+     208                                .endc
+     209 000654 012777  000006  000000C 32$:	mov	#blkt06,@buftbl+objchn	;set end
+     210 000662                         	call	objdmf		;dump it
+       1 000662 004767  000470          	jsr	pc,objdmf
+     211                                	.if ndf	xedabs
+     212 000666 032767  000000G 000000G 	bit	#ed.abs,edmask	;abs output?
+     213 000674 001010                  	bne	1$		;  no
+     214 000676 016700  000022'         	mov	objpnt,r0
+     215 000702 016720  000006G         	mov	endvec+6,(r0)+	;set end vector
+     216 000706 010067  000022'         	mov	r0,objpnt
+     217 000712                         	call	objdmp
+       1 000712 004767  000416          	jsr	pc,objdmp
+     218                                	.endc
+     219 000716                         1$:	return
+       1 000716 000207                  	rts	pc
+     220                                
+     221        000001                  .if	ne,mk.symbol
+     222 000720 012777  000022  000000C 22$:	mov	#blkssym,@buftbl+objchn
+     223 000726 005067  000000G         	clr	rolupd
+     224 000732                         3$:	next	symrol
+       1 000732 012700  000000G         	mov	#symrol,r0
+       2                                	.globl	next
+       3 000736                         	call	next
+       1 000736 004767  000000G         	jsr	pc,next
+     225 000742 001411                  	beq	31$
+     226 000744 032767  000100  000000G 	bit	#glbflg,mode
+     227 000752 001367                  	bne	3$
+     228 000754 012701  000000G         	mov	#symbol,r1
+     229 000760                         	call	gsddmp
+       1 000760 004767  177634          	jsr	pc,gsddmp
+     230 000764 000762                  	br	3$
+     231                                
+     232 000766 005767  000022'         31$:	tst	objpnt
+     233 000772 001402                  	beq	30$
+     234 000774                         	call	objdmp
+       1 000774 004767  000334          	jsr	pc,objdmp
+     235                                30$:
+     236 001000                         	call	locdmp
+       1 001000 004767  000506          	jsr	pc,locdmp
+     237 001004 012777  000021  000000C 	mov	#blksye,@buftbl+objchn
+     238 001012 005767  000022'         	tst	objpnt
+     239 001016 001716                  	beq	32$
+     240 001020                         	call	objdmf
+       1 001020 004767  000332          	jsr	pc,objdmf
+     241 001024 000713                  	br	32$
+     242                                
+     243 001026                         	entsec	impure
+       1 000020                         	.psect	impure	con
+     244        000020                  out$ym:	.blkw	1
+     245 000022                         	xitsec
+       1 000022                         	entsec	.text
+       1 001026                         	.psect	.text	con
+     246                                
+     247        000021                  blksye=21
+     248        000022                  blkssys=22
+     249                                
+     250                                .globl	out$ym
+     251                                .endc
+     252                                
+     252                                
+     253                                	.sbttl	code roll handlers
+     254                                
+     255 001026                         stcode:	append	codrol		;append to codrol
+       1 001026 012700  000000G         	mov	#codrol,r0
+       2                                	.globl	append
+       3 001032                         	call	append
+       1 001032 004767  000000G         	jsr	pc,append
+     256 001036                         	return
+       1 001036 000207                  	rts	pc
+     257                                
+     258                                	.globl	pcrcnt
+     259                                pcroll:				;
+     260 001040                         	next	codrol
+       1 001040 012700  000000G         	mov	#codrol,r0
+       2                                	.globl	next
+       3 001044                         	call	next
+       1 001044 004767  000000G         	jsr	pc,next
+     261 001050 001477                  	beq	9$
+     262 001052                         	call	savreg
+       1 001052 004767  000000G         	jsr	pc,savreg
+     263 001056 116704  000000G         	movb	sector,r4
+     264 001062 005767  000000G         	tst	pass
+     265 001066 001453                  	beq	7$
+     266 001070 005267  000000'         	inc	pcrcnt
+     267 001074 001002                  	bne	1$
+     268 001076                         	call	setpf0
+       1 001076 004767  000000G         	jsr	pc,setpf0
+     269 001102                         1$:	call	setpf1
+       1 001102 004767  000000G         	jsr	pc,setpf1
+     270 001106 005767  000022'         	tst	objpnt
+     271 001112 001441                  	beq	7$
+     272                                	.if ndf	xedpnc
+     273 001114 032767  000000G 000000G 	bit	#ed.pnc,edmask
+     274 001122 001035                  	bne	7$
+     275                                	.endc
+     276 001124                         	call	setrld
+       1 001124 004767  000354          	jsr	pc,setrld
+     277 001130 010446                  	mov	r4,-(sp)
+     278 001132 012704  000070          	mov	#cc.sec!cc.nam!cc.opr,r4
+     279 001136 126767  000000G 000001' 	cmpb	clcsec,objsec
+     280 001144 001006                  	bne	2$
+     281 001146 026767  000000G 000002' 	cmp	clcloc,objloc
+     282 001154 001411                  	beq	3$
+     283 001156 042704  000020          	bic	#cc.nam,r4
+     284 001162 012701  000000G         2$:	mov	#clcnam,r1
+     285 001166                         	call	pcrolx
+       1 001166 004767  000060          	jsr	pc,pcrolx
+     286 001172 105022                  	clrb	(r2)+
+     287 001174                         	call	dmprld
+       1 001174 004767  000220          	jsr	pc,dmprld
+     288 001200 012604                  3$:	mov	(sp)+,r4
+     289 001202 012701  000000G         	mov	#symbol,r1
+     290 001206                         	call	pcrolx
+       1 001206 004767  000040          	jsr	pc,pcrolx
+     291 001212                         	call	dmprld
+       1 001212 004767  000202          	jsr	pc,dmprld
+     292 001216 005267  000000G         7$:	inc	clcloc
+     293 001222 105704                  	tstb	r4
+     294 001224 100402                  	bmi	8$
+     295 001226 005267  000000G         	inc	clcloc
+     296 001232 116767  000000G 000001' 8$:	movb	clcsec,objsec
+     297 001240 016767  000000G 000002' 	mov	clcloc,objloc
+     298 001246                         	setnz	r0
+       1 001246 010600                  	mov	sp,r0
+     299 001250                         9$:	return
+       1 001250 000207                  	rts	pc
+     299                                
+     300                                pcrolx:
+     301 001252 110422                  	movb	r4,(r2)+
+     302 001254 032704  000020          	bit	#cc.nam,r4
+     303 001260 001405                  	beq	3$
+     304                                	.rept	4
+     305                                	movb	(r1)+,(r2)+
+     306                                	.endm
+       1 001262 112122                  	movb	(r1)+,(r2)+
+       1 001264 112122                  	movb	(r1)+,(r2)+
+       1 001266 112122                  	movb	(r1)+,(r2)+
+       1 001270 112122                  	movb	(r1)+,(r2)+
+     307 001272 024141                  	cmp	-(r1),-(r1)
+     308 001274 062701  000006          3$:	add	#6,r1
+     309 001300 005711                  	tst	(r1)
+     310 001302 001407                  	beq	4$
+     311 001304 112122                  	movb	(r1)+,(r2)+
+     312 001306 152767  000004  000024' 	bisb	#cc.val,rldtmp
+     313 001314 105704                  	tstb	r4
+     314 001316 100401                  	bmi	4$
+     315 001320 112122                  	movb	(r1)+,(r2)+
+     316 001322                         4$:	return
+       1 001322 000207                  	rts	pc
+     317                                
+     318 001324                         	entsec	implin
+       1 000000                         	.psect	implin	con
+     319        000000                  pcrcnt:	.blkw			;extension line flag
+     319                                
+     320 000002                         	entsec	imppas
+       1 000000                         	.psect	imppas	con
+     321 000000    000                  	.odd
+     322        000001                  objsec:	.blkb	1		;object file sector
+     323        000002                  objloc:	.blkw	1		;object file location
+     324                                
+     325                                
+     326                                
+     327                                
+     328                                
+     329                                	.if ndf	xedpnc
+     330 000004                         	genedt	pnc,pncset	;punch control
+       1 000004                         	entsec	edtsec
+       1 000000                         	.psect	edtsec	con
+       2 000000 063063                  	.rad50	/pnc/
+       3                                	.if nb	pncset
+       4 000002 001324'                 	.word	pncset
+       5                                	.iff
+       6                                	.word	cpopj
+       7                                	.endc
+       8 000004 000000G                 	.word	ed.pnc
+       9 000006                         	xitsec
+       1 000006                         	entsec	.text
+       1 001324                         	.psect	.text	con
+     331                                
+     332 001324 112767  000377  000001' pncset:	movb	#377,objsec	;force sequence break
+     333 001332                         	return
+       1 001332 000207                  	rts	pc
+     334                                	.endc
+     334                                
+     335                                objdmp:				;dump the object buffer
+     336 001334 005767  000022'         	tst	objpnt
+     337 001340 001426                  	beq	objinx		;exit if not pre-set
+     338 001342 016700  000000C         	mov	buftbl+objchn,r0
+     339 001346 005720                  	tst	(r0)+		;ignore first word
+     340 001350 026700  000022'         	cmp	objpnt,r0	;anything in rld?
+     341 001354 101412                  	blos	objini		;  no, just init
+     342                                objdmf:
+     343 001356 016777  000022' 000000C 	mov	objpnt,@cnttbl+objchn
+     344 001364 166777  000000C 000000C 	sub	buftbl+objchn,@cnttbl+objchn	;compute byte count
+     345 001372                         	zwrite	obj
+       1                                	.globl	zwrite
+       2 001372 012700  000000G         	mov	#objchn,r0
+       3 001376                         	call	zwrite
+       1 001376 004767  000000G         	jsr	pc,zwrite
+     346                                
+     347 001402 016767  000000C 000022' objini:	mov	buftbl+objchn,objpnt
+     348 001410 062767  000002  000022' 	add	#2,objpnt	;reserve word for block type
+     349 001416                         objinx:	return
+       1 001416 000207                  	rts	pc
+     350                                
+     351 001420 005767  000022'         dmprld:	tst	objpnt
+     352 001424 001427                  	beq	setrld
+     353 001426 010146                  	mov	r1,-(sp)	;save byte count
+     354 001430 012701  000024'         	mov	#rldtmp,r1
+     355 001434 010200                  	mov	r2,r0
+     356 001436 160100                  	sub	r1,r0
+     357 001440 001420                  	beq	9$
+     358 001442 066700  000022'         	add	objpnt,r0
+     359 001446 166700  000000C         	sub	buftbl+objchn,r0
+     360 001452 020027  000000G         	cmp	r0,#objlen	;room to store?
+     361 001456 101402                  	blos	1$		;  yes
+     362 001460                         	call	objdmp		;no, dump current
+       1 001460 004767  177650          	jsr	pc,objdmp
+     363 001464 016700  000022'         1$:	mov	objpnt,r0	;return with pointer in r2
+     364 001470 112120                  2$:	movb	(r1)+,(r0)+
+     365 001472 020102                  	cmp	r1,r2
+     366 001474 103775                  	blo	2$
+     367 001476 010067  000022'         	mov	r0,objpnt
+     368 001502 012601                  9$:	mov	(sp)+,r1
+     369 001504 012702  000024'         setrld:	mov	#rldtmp,r2
+     370 001510                         	return
+       1 001510 000207                  	rts	pc
+     371                                
+     372 001512                         	entsec	impure
+       1 000022                         	.psect	impure	con
+     373        000022                  objpnt:	.blkw
+     374        000024                  rldtmp:	.blkb	100.
+     375 000170                         	xitsec
+       1 000170                         	entsec	.text
+       1 001512                         	.psect	.text	con
+     376                                
+     377                                
+     378 001512                         	xitsec
+       1 001512                         	entsec	.text
+       1 001512                         	.psect	.text	con
+     379                                	.globl	sx.flg ,lsyrol
+     380                                locdmp:
+     381 001512                         	call	savreg
+       1 001512 004767  000000G         	jsr	pc,savreg
+     382 001516 010046                  	mov	r0,-(sp)
+     383 001520 005767  000000G         	tst	sx.flg
+     384 001524 001427                  	beq	9$
+     385 001526 005067  000000G         	clr	rolupd
+     386                                1$:
+     387 001532                         	next	lsyrol
+       1 001532 012700  000000G         	mov	#lsyrol,r0
+       2                                	.globl	next
+       3 001536                         	call	next
+       1 001536 004767  000000G         	jsr	pc,next
+     388 001542 001413                  	beq	2$
+     389 001544 032767  000100  000000G 	bit	#glbflg,mode
+     390 001552 001367                  	bne	1$
+     391 001554                         	call	unlocl
+       1 001554 004767  000030          	jsr	pc,unlocl
+     392 001560 012701  000000G         	mov	#symbol,r1
+     393 001564                         	call	gsddmp
+       1 001564 004767  177030          	jsr	pc,gsddmp
+     394 001570 000760                  	br	1$
+     395                                2$:
+     396 001572 005767  000022'         	tst	objpnt
+     397 001576 001402                  	beq	9$
+     398 001600                         	call	objdmp
+       1 001600 004767  177530          	jsr	pc,objdmp
+     399                                9$:
+     400 001604 012600                  	mov	(sp)+,r0
+     401 001606                         	return
+       1 001606 000207                  	rts	pc
+     402                                
+     403                                .globl	dnc ,chrpnt,	getsym,..z
+     404                                unlocl:
+     405 001610                         	call	savreg
+       1 001610 004767  000000G         	jsr	pc,savreg
+     406 001614 010046                  	mov	r0,-(sp)
+     407 001616 012702  000000'         	mov	#work.x,r2
+     408 001622 016701  000002G         	mov	symbol+2,r1
+     409 001626                         	call	dnc
+       1 001626 004767  000000G         	jsr	pc,dnc
+     410 001632 112722  000044          	movb	#'$,(r2)+
+     411 001636 112722  000000          	movb	#0,(r2)+		
+     412 001642                         	call	tor50
+       1 001642 004767  000004          	jsr	pc,tor50
+     413 001646 012600                  	mov	(sp)+,r0
+     414 001650                         	return
+       1 001650 000207                  	rts	pc
+     415 001652                         	entsec	mixed
+       1 000000                         	.psect	mixed	con
+     416        000000                  work.x:	.blkw	5
+     417 000012                         	xitsec
+       1 000012                         	entsec	.text
+       1 001652                         	.psect	.text	con
+     418                                tor50:
+     419 001652                         	call	savreg
+       1 001652 004767  000000G         	jsr	pc,savreg
+     420 001656 012704  000000'         	mov	#work.x,r4
+     421 001662                         	call	1$
+       1 001662 004767  000022          	jsr	pc,1$
+     422 001666 010067  000000G         	mov	r0,symbol
+     423 001672 012704  000003'         	mov	#3+work.x,r4
+     424 001676                         	call	1$
+       1 001676 004767  000006          	jsr	pc,1$
+     425 001702 010067  000002G         	mov	r0,2+symbol
+     426 001706                         	return
+       1 001706 000207                  	rts	pc
+     427                                1$:
+     428 001710 005003                  	clr	r3
+     429 001712 105714                  	tstb	(r4)
+     430 001714 001402                  	beq	10$
+     431 001716 112400                  	movb	(r4)+,r0
+     432 001720 000401                  	br	20$
+     433 001722 111400                  10$:	movb	(r4),r0
+     434 001724 010002                  20$:	mov	r0,r2
+     435 001726                         	call	40$
+       1 001726 004767  000062          	jsr	pc,40$
+     436 001732 010003                  	mov	r0,r3
+     437 001734 010301                  	mov	r3,r1
+     438 001736 070127  000050          	mul	#50,r1
+     439 001742 010103                  	mov	r1,r3
+     440 001744 105714                  	tstb	(r4)
+     441 001746 001402                  	beq	12$
+     442 001750 112400                  	movb	(r4)+,r0
+     443 001752 000401                  	br	21$
+     444 001754 111400                  12$:	movb	(r4),r0
+     445 001756 010002                  21$:	mov	r0,r2
+     446 001760                         	call	40$
+       1 001760 004767  000030          	jsr	pc,40$
+     447 001764 060003                  	add	r0,r3
+     448 001766 010301                  	mov	r3,r1
+     449 001770 070127  000050          	mul	#50,r1
+     450 001774 010103                  	mov	r1,r3
+     451 001776 111400                  	movb	(r4),r0
+     452 002000 010002                  	mov	r0,r2
+     453 002002                         	call	40$
+       1 002002 004767  000006          	jsr	pc,40$
+     454 002006 060003                  	add	r0,r3
+     455 002010 010300                  	mov	r3,r0
+     456 002012                         	return
+       1 002012 000207                  	rts	pc
+     457                                40$:
+     458 002014 122702  000044          	cmpb	#44,r2
+     459 002020 001005                  	bne	30$
+     460 002022 012700  000033          	mov	#33,r0
+     461 002026 000401                  	br	9$
+     462 002030 005000                  14$:	clr	r0
+     463 002032                         9$:	return
+       1 002032 000207                  	rts	pc
+     464 002034 105702                  30$:	tstb	r2
+     465 002036 001774                  	beq	14$
+     466 002040 122702  000040          	cmpb	#40,r2
+     467 002044 001771                  	beq	14$
+     468 002046 110200                  	movb	r2,r0
+     469 002050 062700  177756          	add	#-22,r0
+     470 002054 000766                  	br	9$
+     471                                	.end
+     472                                
+     473                                	.end
+     473                                
+       8                                
+
+
+Symbol table
+
+$TIMDF=000007           4$6    001322R  L   002 CLCLOC=****** G         LBLFLG=000002           RLDTMP 000024R      008 
+.      ******R      002 40$9   002014R  L   002 CLCNAM=****** G         LF    =000012           ROLUPD=****** G         
+..Z   =****** G         5$3    000464R  L   002 CLCSEC=****** G         LIMIT  000210RG     002 RSX11D=000000           
+1$0    000164R  L   002 6$3    000542R  L   002 CNTTBL=****** G         LOCDMP 001512R      002 SAVREG=****** G         
+1$1    000214R  L   002 7$5    001216R  L   002 CODROL=****** G         LSYROL=****** G         SECROL=****** G         
+1$2    000300R  L   002 8$5    001232R  L   002 CR    =000015           M.IDF =000007           SECTOR=****** G         
+1$3    000406R  L   002 9$3    000612R  L   002 DEBUG =000000           MDFFLG=000004           SETDS1 000100R      002 
+1$4    000716R  L   002 9$5    001250R  L   002 DEFFLG=000010           MK.SYM=000001           SETDS2 000112R      002 
+1$5    001102R  L   002 9$7    001502R  L   002 DFGFLG=000200           MODE  =****** G         SETDS3 000136R      002 
+1$7    001464R  L   002 9$8    001604R  L   002 DFLGBM=****** G         NEXT  =****** G         SETDSP 000042RG     002 
+1$8    001532R  L   002 9$9    002032R  L   002 DMPRLD 001420RG     002 OBJCHN=****** G         SETDSX 000142R      002 
+1$9    001710R  L   002 AATTRS=000130           DNC   =****** G         OBJDMF 001356R      002 SETIMM 000000RG     002 
+10$9   001722R  L   002 ABSERR=****** G         ED.ABS=****** G         OBJDMP 001334R      002 SETPF0=****** G         
+12$9   001754R  L   002 APPEND=****** G         ED.PNC=****** G         OBJINI 001402R      002 SETPF1=****** G         
+14$9   002030R  L   002 B.IDF =000001           EDMASK=****** G         OBJINX 001416R      002 SETRLD 001504RG     002 
+2$0    000172R  L   002 BLKSSY=000022           ENDP1C 000340RG     002 OBJLEN=****** G         SETSEC=****** G         
+2$3    000410R  L   002 BLKSYE=000021           ENDP2C 000634RG     002 OBJLOC 000002R      009 SETXPR=****** G         
+2$5    001162R  L   002 BLKT01=000001           ENDVEC=****** G         OBJPNT 000022R      008 SHRFLG=000001           
+2$7    001470R  L   002 BLKT02=000002           FF    =000014           OBJSEC 000001RG     009 SPACE =000040           
+2$8    001572R  L   002 BLKT03=000003           FT.ID =000001           OPCLAS=****** G         STCODE 001026RG     002 
+20$9   001724R  L   002 BLKT04=000004           FT.UNX=000001           OUT$YM 000020RG     008 SX.FLG=****** G         
+21$9   001756R  L   002 BLKT05=000005           GETSYM=****** G         OVRFLG=000020           SYMBOL=****** G         
+22$4   000720R  L   002 BLKT06=000006           GLBFLG=000100           PASS  =****** G         SYMROL=****** G         
+3$0    000176R  L   002 BLKT17=000017           GSDDMP 000620R      002 PATTRS=000050           TAB   =000011           
+3$3    000450R  L   002 BPMB  =000020           GSDT00=000000           PCRCNT 000000RG     010 TOR50  001652R      002 
+3$4    000732R  L   002 BSSFLG=000004           GSDT01=000400           PCROLL 001040RG     002 UNLOCL 001610R      002 
+3$5    001200R  L   002 BUFTBL=****** G         GSDT02=001000           PCROLX 001252R      002 VALUE =****** G         
+3$6    001274R  L   002 CATTRS=000170           GSDT03=001400           PDPV45=000000           VT    =000013           
+30$4   001000R  L   002 CC.DSP=000002           GSDT04=002000           PNCSET 001324R      002 WORK.X 000000R      006 
+30$9   002034R  L   002 CC.NAM=000020           GSDT05=002400           PRGIDN 000010R      008 X40   =000000           
+31$4   000766R  L   002 CC.OPR=000040           GSDT06=003000           PRGTTL 000000RG     008 XMIT0 =****** G         
+32$4   000654R  L   002 CC.SEC=000010           IDENT  000264RG     002 RAD50 =****** G         ZAP   =****** G         
+4$0    000204R  L   002 CC.VAL=000004           INSFLG=000002           REGFLG=000001           ZWRITE=****** G         
+4$3    000454R  L   002 CHRPNT=****** G         IOFTBL=****** G         RELFLG=000040           
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+.TEXT   002056    002   (RW,I,LCL,REL,CON,NOSAV)
+.DATA   000000    003   (RW,I,LCL,REL,CON,NOSAV)
+.BSS    000000    004   (RW,I,LCL,REL,CON,NOSAV)
+DPURE   000000    005   (RW,I,LCL,REL,CON,NOSAV)
+MIXED   000012    006   (RW,I,LCL,REL,CON,NOSAV)
+ERRMES  000000    007   (RW,I,LCL,REL,CON,NOSAV)
+IMPURE  000170    008   (RW,I,LCL,REL,CON,NOSAV)
+IMPPAS  000004    009   (RW,I,LCL,REL,CON,NOSAV)
+IMPLIN  000002    010   (RW,I,LCL,REL,CON,NOSAV)
+SWTSEC  000000    011   (RW,I,LCL,REL,CON,NOSAV)
+CNDSEC  000000    012   (RW,I,LCL,REL,CON,NOSAV)
+CRFSEC  000000    013   (RW,I,LCL,REL,CON,NOSAV)
+EDTSEC  000006    014   (RW,I,LCL,REL,CON,NOSAV)
+LCTSEC  000000    015   (RW,I,LCL,REL,CON,NOSAV)
+PSASEC  000000    016   (RW,I,LCL,REL,CON,NOSAV)
+PSTSEC  000000    017   (RW,I,LCL,REL,CON,NOSAV)
+ROLBAS  000000    018   (RW,I,LCL,REL,CON,NOSAV)
+ROLSIZ  000000    019   (RW,I,LCL,REL,CON,NOSAV)
+ROLTOP  000000    020   (RW,I,LCL,REL,CON,NOSAV)
+XPCOR   000000    021   (RW,I,LCL,REL,CON,NOSAV)

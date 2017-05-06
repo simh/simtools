@@ -26,8 +26,9 @@ TESTS="test-asciz \
     test-undef \
     test-word-comma"
 
-for t in $TESTS
-do
+assemble() {
+    t="$1"
+
     ../macro11 -l "$t".lst -o "$t".obj "$t".mac 2>/dev/null
 
     if [ -e "$t".lst.ok ]
@@ -40,4 +41,27 @@ do
         ../dumpobj "$t".obj >"$t".objd
         diff -u "$t".objd.ok "$t".objd
     fi
+}
+
+for t in $TESTS
+do
+    assemble "$t"
+done
+
+for t in 2.11BSD/m11/*.m11
+do
+    fn=$( echo ${t%.m11} | sed 's;/;-;g' )
+
+    cat >${fn}.mac <<EOF
+;;;; Wrapper for $t
+	.list
+	.list
+	.list
+	.enabl lc
+debug	=	1
+	.include "2.11BSD/m11/at.sml"
+	.include "${t}"
+EOF
+    
+    assemble "$fn"
 done

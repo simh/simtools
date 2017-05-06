@@ -1,0 +1,1007 @@
+       1                                ;;;; Wrapper for 2.11BSD/m11/fltg.m11
+       2                                	.list
+       3                                	.list
+       4                                	.list
+       5                                	.enabl lc
+       6        000001                  debug	=	1
+       7                                	.include "2.11BSD/m11/at.sml"
+       1                                	.title	at.sml	-   assembler/translator system macros
+       2                                	; @(#)at.sml	1.3 11/3/82
+       3                                
+       4                                	.ident	/10may4/
+       5                                
+       6                                	.macro	always		;all files of macro
+       7                                
+       8                                	.macro	.data
+       9                                	entsec	.data
+      10                                	.endm	.data
+      11                                
+      12                                	.macro	.text
+      13                                	entsec	.text
+      14                                	.endm
+      15                                
+      16                                	.macro	.bss
+      17                                	entsec	.bss
+      18                                	.endm
+      19                                
+      20                                mk.symbol=1			;one to make symbols, 0 otherwise
+      21                                x40=	0
+      22                                pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      23                                				; if not you will have to write macros for them
+      24                                $timdf=	7			; California Time Zone
+      25                                				; should really use ftime(2) for this and for
+      26                                				; DST.
+      27                                ;xfltg=	0		;define to assmbl out floating hardware
+      28                                rsx11d	=	0	; rsx11d features 
+      29                                debug	=	0	; <<< REEDS if non zero includes debug junk
+      30                                
+      31                                ft.id=	1			;have set i & d.  set =0 if not
+      32                                
+      33                                ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      34                                
+      35                                	.nlist	bex
+      36                                
+      37                                tab=	11
+      38                                lf=	12
+      39                                vt=	13
+      40                                ff=	14
+      41                                cr=	15
+      42                                space=	40
+      43                                
+      44                                bpmb	=	20		;bytes per macro block
+      45                                
+      46                                
+      47                                
+      48                                
+      49                                
+      50                                	.psect	.text	con, shr, gbl,ins
+      51                                	.psect	.data	con, dat, prv, gbl
+      52                                	.psect	.bss	con, bss, gbl
+      53                                
+      54                                	.psect	dpure	con, dat, prv, gbl
+      55                                	.psect	mixed	con, prv, gbl
+      56                                	.psect	errmes	con, dat, prv, gbl
+      57                                	.psect	impure	con, bss, gbl
+      58                                	.psect	imppas	con, bss, gbl
+      59                                	.psect	implin	con, bss, gbl
+      60                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+      61                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+      62                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+      63                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+      64                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+      65                                	.psect	psasec 	con, dat, prv, gbl
+      66                                	.psect	pstsec 	con, dat, prv, gbl
+      67                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+      68                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+      69                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+      70                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      71                                
+      72                                
+      72                                
+      73                                	.macro	entsec	name 	;init a section
+      74                                	.psect	name	con
+      75                                	.endm	entsec
+      76                                
+      77                                
+      78                                
+      79                                	.macro jeq	x,?fred
+      80                                	bne	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	jne	x,?fred
+      85                                	beq	fred
+      86                                	jmp	x
+      87                                fred:
+      88                                	.endm
+      89                                	.macro	xitsec
+      90                                	entsec	.text
+      91                                	.endm	xitsec
+      92                                
+      93                                
+      94                                	.macro	call	address
+      95                                	jsr	pc,address
+      96                                	.endm
+      97                                
+      98                                	.macro	return
+      99                                	rts	pc
+     100                                	.endm
+     101                                
+     102                                
+     103                                	.macro	always
+     104                                	.nlist	bex
+     105                                	.endm	always
+     106                                	.endm	always
+     107                                
+     108                                
+     109        000001                  	.if ne debug
+     110                                	
+     111                                	.macro	ndebug n
+     112                                	.globl	ndebug,..z
+     113                                	mov	n,..z
+     114                                	call	ndebug
+     115                                	.endm
+     116                                
+     117                                	.macro	sdebug	string
+     118                                	.globl	sdebug,..z,..zbuf
+     119                                	x = 0
+     120                                	.irpc	t,<string>
+     121                                	movb	#''t,..zbuf+x
+     122                                	x = x+1
+     123                                	.endm
+     124                                	movb	#0,..zbuf+x
+     125                                	mov	#..zbuf,..z
+     126                                	call	sdebug
+     127                                	.endm
+     128                                
+     129                                	.iff
+     130                                	
+     131                                	.macro	ndebug n
+     132                                	.endm
+     133                                
+     134                                	.macro	sdebug	string
+     135                                	.endm
+     136                                	
+     137                                	.endc
+     138                                	
+     139                                	
+     140                                	.macro	param	mne,	value	;define default parameters
+     141                                	.iif ndf mne,	mne=	value
+     142                                	.list
+     143                                mne=	mne
+     144                                	.nlist
+     145                                	.endm
+     145                                
+     146                                	.macro	putkb	addr	;list to kb
+     147                                	.globl	putkb
+     148                                	mov	addr,r0
+     149                                	call	putkb
+     150                                	.endm
+     151                                
+     152                                	.macro	putlp	addr	;list to lp
+     153                                	.globl	putlp
+     154                                	mov	addr,r0
+     155                                	call	putlp
+     156                                	.endm
+     157                                
+     158                                	.macro	putkbl	addr	;list to kb and lp
+     159                                	.globl	putkbl
+     160                                	mov	addr,r0
+     161                                	call	putkbl
+     162                                	.endm
+     163                                
+     164                                
+     165                                	.macro	xmit	wrdcnt	;move small # of words
+     166                                	.globl	xmit0
+     167                                	call	xmit0-<wrdcnt*2>
+     168                                	.endm	xmit
+     169                                
+     170                                
+     171                                ;the macro "genswt" is used to specify  a command
+     172                                ;string switch (1st argument) and the address of
+     173                                ;the routine to be called when encountered (2nd arg).
+     174                                ; the switch is made upper-case.
+     175                                
+     176                                	.macro	genswt	mne,addr,?label
+     177                                	entsec	swtsec
+     178                                label:	.irpc	x,mne
+     179                                	.if ge ''x-141
+     180                                		.if le ''x-172
+     181                                			.byte ''x-40
+     182                                		.iff
+     183                                			.byte ''x
+     184                                		.endc
+     185                                	.iff
+     186                                	.byte ''x
+     187                                	.endc
+     188                                	.endm
+     189                                	.iif ne <.-label&1>,	.byte	0
+     190                                	.word	addr
+     191                                	xitsec
+     192                                	.endm
+     192                                
+     193                                	.macro	zread	chan
+     194                                	.globl	zread
+     195                                	mov	#chan'chn,r0
+     196                                	call	zread
+     197                                	.endm	zread
+     198                                
+     199                                	.macro	zwrite	chan
+     200                                	.globl	zwrite
+     201                                	mov	#chan'chn,r0
+     202                                	call	zwrite
+     203                                	.endm	zwrite
+     203                                
+     204                                	.macro	genedt	mne,subr	;gen enable/disable table
+     205                                	entsec	edtsec
+     206                                	.rad50	/mne/
+     207                                	.if nb	subr
+     208                                	.word	subr
+     209                                	.iff
+     210                                	.word	cpopj
+     211                                	.endc
+     212                                	.word	ed.'mne
+     213                                	xitsec
+     214                                	.endm	genedt
+     215                                
+     216                                
+     217                                ;the macro "gencnd" is used to specify conditional
+     218                                ;arguments.  it takes two or three arguments:
+     219                                
+     220                                ;	1-	mnemonic
+     221                                ;	2-	subroutine to be called
+     222                                ;	3-	if non-blank, complement condition
+     223                                
+     224                                	.macro	gencnd	mne,subr,toggle	;generate conditional
+     225                                	entsec	cndsec
+     226                                	.rad50	/mne/
+     227                                	.if b	<toggle>
+     228                                	.word	subr
+     229                                	.iff
+     230                                	.word	subr+1
+     231                                	.endc
+     232                                	xitsec
+     233                                	.endm
+     233                                
+     234                                	.macro	ch.mne
+     235                                
+     236                                ch.ior=	'!
+     237                                ch.qtm=	'"
+     238                                ch.hsh=	'#
+     239                                ch.dol=	'$
+     240                                ch.pct=	'%
+     241                                ch.and=	'&
+     242                                ch.xcl=	''
+     243                                
+     244                                ch.lp=	'(
+     245                                ch.rp=	')
+     246                                ch.mul=	'*
+     247                                ch.add=	'+
+     248                                ch.com=	',
+     249                                ch.sub=	'-
+     250                                ch.dot=	'.
+     251                                ch.div=	'/
+     252                                
+     253                                ch.col=	':
+     254                                ch.smc=	';
+     255                                ch.lab=	'<
+     256                                ch.equ=	'=
+     257                                ch.rab=	'>
+     258                                ch.qm=	'?
+     259                                
+     260                                ch.ind=	'@
+     261                                ch.bsl=	'\
+     262                                ch.uar=	'^
+     263                                
+     264                                let.a=	'a&^c40
+     265                                let.b=	'b&^c40
+     266                                let.c=	'c&^c40
+     267                                let.d=	'd&^c40
+     268                                let.e=	'e&^c40
+     269                                let.f=	'f&^c40
+     270                                let.g=	'g&^c40
+     271                                let.o=	'o&^c40
+     272                                let.p=	'p&^c40
+     273                                let.r=	'r&^c40
+     274                                let.z=	'z&^c40
+     275                                
+     276                                dig.0=	'0
+     277                                dig.9=	'9
+     278                                	.macro	ch.mne
+     279                                	.endm	ch.mne
+     280                                	.endm	ch.mne
+     281                                
+     282                                	.macro error num,arg, mess ,?x
+     283                                	sdebug	<num>
+     284                                	.globl	err.'arg,ern'num, errbts,errref
+     285                                	.if	b	<mess>
+     286                                	deliberate error mistake
+     287                                	.endc
+     288                                	.if	dif	0,num
+     289                                	.globl	err.xx
+     290                                	tst	err.xx
+     291                                	bne	x
+     292                                	mov	#ern'num,err.xx
+     293                                x:
+     294                                	.endc
+     295                                	bis	#err.'arg,errbts
+     296                                	.endm
+     297                                
+     298                                
+     299                                
+     300                                	.macro	setnz	addr	;set addr to non-zero for t/f flags
+     301                                	mov	sp,addr
+     302                                	.endm
+     303                                
+     304                                
+     305                                	.macro	bisbic	arg	; used by .list/.nlist, .enabl/.dsabl
+     306                                	.globl	bisbic
+     307                                	mov	#arg,-(sp)
+     308                                	call	bisbic
+     309                                	tst	(sp)+
+     310                                	.endm
+     310                                
+     311                                				;roll handler calls
+     312                                
+     313                                	.macro	search	rolnum	;binary search
+     314                                	mov	#rolnum,r0
+     315                                	.globl	search
+     316                                	call	search
+     317                                	.endm
+     318                                
+     319                                	.macro	scan	rolnum	;linear scan
+     320                                	mov	#rolnum,r0
+     321                                	.globl	scan
+     322                                	call	scan
+     323                                	.endm
+     324                                
+     325                                	.macro	scanw	rolnum	;linear scan, one word
+     326                                	mov	#rolnum,r0
+     327                                	.globl	scanw
+     328                                	call	scanw
+     329                                	.endm
+     330                                
+     331                                	.macro	next	rolnum	;fetch next entry
+     332                                	mov	#rolnum,r0
+     333                                	.globl	next
+     334                                	call	next
+     335                                	.endm
+     336                                
+     337                                	.macro	append	rolnum	;append to end of roll
+     338                                	mov	#rolnum,r0
+     339                                	.globl	append
+     340                                	call	append
+     341                                	.endm
+     342                                
+     343                                	.macro	zap	rolnum	;clear roll
+     344                                	mov	#rolnum,r0
+     345                                	.globl	zap
+     346                                	call	zap
+     347                                	.endm
+     348                                
+     349                                ;	call	insert		;insert (must be preceded by one 
+     350                                				;of the above to set pointers)
+     351                                ;	call	setrol		;save and set regs for above
+     351                                
+     352                                ;flags used in symbol table mode
+     353                                
+     354                                	.macro	st.flg
+     355                                
+     356                                .if le ft.unx
+     357                                
+     358                                ovrflg=	000004		;overlay (psect only)
+     359                                defflg=	000010		;defined
+     360                                relflg=	000040		;relocatable
+     361                                glbflg=	000100		;global
+     362                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     363                                
+     364                                
+     365                                .endc
+     366                                
+     367                                .if gt ft.unx
+     368                                
+     369                                			; ****** these should not be changed!! ******
+     370                                shrflg=	000001		;shareable (psect only)
+     371                                .if gt ft.id
+     372                                insflg=	shrflg*2	;instruction space (psect only)
+     373                                bssflg=	insflg*2	;blank section (psect only)
+     374                                m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+     375                                .iff
+     376                                bssflg=	shrflg*2
+     377                                m.idf=	shrflg!bssflg
+     378                                .endc
+     379                                b.idf=	1		;shift count to make above bits word offset
+     380                                			; ***********************************
+     381                                defflg=	000010		;defined
+     382                                ovrflg=	000020		;overlay (psect only)
+     383                                relflg=	000040		;relocatable
+     384                                glbflg=	000100		;global
+     385                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     386                                
+     387                                .endc
+     388                                
+     389                                ;
+     390                                ; default psect attribs.
+     391                                ; can be changed, but make sure all customers know about
+     392                                ; it, including all the linkers.
+     393                                ;
+     394                                pattrs=relflg!defflg		; For .psects and blank .csects
+     395                                aattrs=glbflg!defflg!ovrflg		; For .asect
+     396                                cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+     397                                
+     398                                regflg=	000001		;register
+     399                                lblflg=	000002		;label
+     400                                mdfflg=	000004		;multilpy defined
+     401                                	.macro	st.flg
+     402                                	.endm
+     403                                	.endm	st.flg
+     404                                
+     405                                
+     406                                
+     407                                	.macro	ct.mne
+     408                                	.globl	cttbl
+     409                                ct.eol	=	000		; eol
+     410                                ct.com	=	001		; comma
+     411                                ct.tab	=	002		; tab
+     412                                ct.sp	=	004		; space
+     413                                ct.pcx	=	010		; printing character
+     414                                ct.num	=	020		; numeric
+     415                                ct.alp	=	040		; alpha, dot, dollar
+     416                                ct.lc	=	100		; lower case alpha
+     417                                ct.smc	=	200		; semi-colon (sign bit)
+     418                                
+     419                                ct.pc	=	ct.com!ct.smc!ct.pcx!ct.num!ct.alp
+     420                                	.macro	ct.mne
+     421                                	.endm	ct.mne
+     422                                	.endm	ct.mne
+     423                                
+     424                                
+     425                                	.end
+     425                                
+       8                                	.include "2.11BSD/m11/fltg.m11"
+       1                                	.title	fltg
+       2                                
+       3                                	.ident	/27dec3/
+       4                                
+       5                                	.mcall	(at)always,xmit,genedt,error
+       6                                	.mcall	(at)sdebug,ndebug
+       7 000000                         	always
+       1                                
+       2                                	.macro	.data
+       3                                	entsec	.data
+       4                                	.endm	.data
+       5                                
+       6                                	.macro	.text
+       7                                	entsec	.text
+       8                                	.endm
+       9                                
+      10                                	.macro	.bss
+      11                                	entsec	.bss
+      12                                	.endm
+      13                                
+      14        000001                  mk.symbol=1			;one to make symbols, 0 otherwise
+      15        000000                  x40=	0
+      16        000000                  pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      17                                				; if not you will have to write macros for them
+      18        000007                  $timdf=	7			; California Time Zone
+      19                                				; should really use ftime(2) for this and for
+      20                                				; DST.
+      21                                ;xfltg=	0		;define to assmbl out floating hardware
+      22        000000                  rsx11d	=	0	; rsx11d features 
+      23        000000                  debug	=	0	; <<< REEDS if non zero includes debug junk
+      24                                
+      25        000001                  ft.id=	1			;have set i & d.  set =0 if not
+      26                                
+      27        000001                  ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      28                                
+      29                                	.nlist	bex
+      30                                
+      31        000011                  tab=	11
+      32        000012                  lf=	12
+      33        000013                  vt=	13
+      34        000014                  ff=	14
+      35        000015                  cr=	15
+      36        000040                  space=	40
+      37                                
+      38        000020                  bpmb	=	20		;bytes per macro block
+      39                                
+      40                                
+      41                                
+      42                                
+      43                                
+./2.11BSD/m11/fltg.m11:7->ALWAYS:44: ***ERROR Unknown flag SHR given to .PSECT directive
+      44                                	.psect	.text	con, shr, gbl,ins
+./2.11BSD/m11/fltg.m11:7->ALWAYS:45: ***ERROR Unknown flag DAT given to .PSECT directive
+      45                                	.psect	.data	con, dat, prv, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:46: ***ERROR Unknown flag BSS given to .PSECT directive
+      46                                	.psect	.bss	con, bss, gbl
+      47                                
+./2.11BSD/m11/fltg.m11:7->ALWAYS:48: ***ERROR Unknown flag DAT given to .PSECT directive
+      48                                	.psect	dpure	con, dat, prv, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:49: ***ERROR Unknown flag PRV given to .PSECT directive
+      49                                	.psect	mixed	con, prv, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:50: ***ERROR Unknown flag DAT given to .PSECT directive
+      50                                	.psect	errmes	con, dat, prv, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:51: ***ERROR Unknown flag BSS given to .PSECT directive
+      51                                	.psect	impure	con, bss, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:52: ***ERROR Unknown flag BSS given to .PSECT directive
+      52                                	.psect	imppas	con, bss, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:53: ***ERROR Unknown flag BSS given to .PSECT directive
+      53                                	.psect	implin	con, bss, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:54: ***ERROR Unknown flag DAT given to .PSECT directive
+      54                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+./2.11BSD/m11/fltg.m11:7->ALWAYS:55: ***ERROR Unknown flag DAT given to .PSECT directive
+      55                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+./2.11BSD/m11/fltg.m11:7->ALWAYS:56: ***ERROR Unknown flag DAT given to .PSECT directive
+      56                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+./2.11BSD/m11/fltg.m11:7->ALWAYS:57: ***ERROR Unknown flag DAT given to .PSECT directive
+      57                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:58: ***ERROR Unknown flag DAT given to .PSECT directive
+      58                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+./2.11BSD/m11/fltg.m11:7->ALWAYS:59: ***ERROR Unknown flag DAT given to .PSECT directive
+      59                                	.psect	psasec 	con, dat, prv, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:60: ***ERROR Unknown flag DAT given to .PSECT directive
+      60                                	.psect	pstsec 	con, dat, prv, gbl
+./2.11BSD/m11/fltg.m11:7->ALWAYS:61: ***ERROR Unknown flag DAT given to .PSECT directive
+      61                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+./2.11BSD/m11/fltg.m11:7->ALWAYS:62: ***ERROR Unknown flag DAT given to .PSECT directive
+      62                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+./2.11BSD/m11/fltg.m11:7->ALWAYS:63: ***ERROR Unknown flag DAT given to .PSECT directive
+      63                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+./2.11BSD/m11/fltg.m11:7->ALWAYS:64: ***ERROR Unknown flag BSS given to .PSECT directive
+      64                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      65                                
+      66                                
+      67                                
+      68                                	.macro	entsec	name 	;init a section
+      69                                	.psect	name	con
+      70                                	.endm	entsec
+      71                                
+      72                                
+      73                                
+      74                                	.macro jeq	x,?fred
+      75                                	bne	fred
+      76                                	jmp	x
+      77                                fred:
+      78                                	.endm
+      79                                	.macro	jne	x,?fred
+      80                                	beq	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	xitsec
+      85                                	entsec	.text
+      86                                	.endm	xitsec
+      87                                
+      88                                
+      89                                	.macro	call	address
+      90                                	jsr	pc,address
+      91                                	.endm
+      92                                
+      93                                	.macro	return
+      94                                	rts	pc
+      95                                	.endm
+      96                                
+      97                                
+      98                                	.macro	always
+      99                                	.nlist	bex
+     100                                	.endm	always
+       8                                
+       9                                	.globl	savreg,	abstrm,	chrpnt,	cpopj,	cradix
+      10                                	.globl	getchr,	getnb,	mode
+      11                                	.globl	setnb,	stcode,	tstarg,	value
+      12                                	.globl	edmask,	ed.fpt
+      13                                
+      14                                
+      15                                	.if ndf	xfltg
+      16                                
+      17                                	.globl	flt2,	flt4,	fltg1w
+      18                                
+      19 000000                         	xitsec			;start in default sector
+       1 000000                         	entsec	.text
+       1 000000                         	.psect	.text	con
+      20                                
+      21                                
+      22 000000 005203                  flt4:	inc	r3
+      23                                flt2:
+      24 000002 005203                  	inc	r3		;make it 1 or 2
+      25 000004 006303                  	asl	r3		;now 2 or 4
+      26 000006                         fp.1:	call	tstarg
+       1 000006 004767  000000G         	jsr	pc,tstarg
+      27 000012 001440                  	beq	fp.9
+      28 000014 016346  177776'         	mov	fltpnt-2(r3),-(sp)	;evaluate number
+      29 000020                         	call	@(sp)+
+       1 000020 004736                  	jsr	pc,@(sp)+
+      30 000022 001024                  	bne	fp.2		;branch if non-null
+      31 000024                         	error	9,a,<empty floating point number>		;  null, flag error
+       1 000024                         	sdebug	<9>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<9>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 000024 112767  000071  000000G 	movb	#'9,..zbuf+x
+       2        000001                  	x = x+1
+       7 000032 112767  000000  000001G 	movb	#0,..zbuf+x
+       8 000040 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 000046                         	call	sdebug
+       1 000046 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.a,ern9, errbts,errref
+       3                                	.if	b	<empty floating point number>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,9
+       7                                	.globl	err.xx
+       8 000052 005767  000000G         	tst	err.xx
+       9 000056 001003                  	bne	32768$
+      10 000060 012767  000000G 000000G 	mov	#ern9,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 000066 052767  000000G 000000G 	bis	#err.a,errbts
+      32 000074 010302                  fp.2:	mov	r3,r2		;get a working count
+      33 000076 012701  000010'         	mov	#fltbuf,r1	;point to floating point buffer
+      34 000102 012114                  3$:	mov	(r1)+,(r4)	;move in next number
+      35 000104                         	call	stcode		;place on code roll
+       1 000104 004767  000000G         	jsr	pc,stcode
+      36 000110 077204                  	sob	r2,3$		;loop on word count
+      37 000112 000735                  	br	fp.1		;continue
+      38                                
+      39 000114                         fp.9:	return
+       1 000114 000207                  	rts	pc
+      40                                
+      41 000116                         	entsec	dpure
+       1 000000                         	.psect	dpure	con
+      42 000000 000122' 000116'         fltpnt:	.word	fltg2w,	fltg4w
+      43 000004                         	xitsec
+       1 000004                         	entsec	.text
+       1 000116                         	.psect	.text	con
+      44                                
+      45                                	.if ndf	xedfpt
+      46 000116                         	genedt	fpt		;floating point truncation
+       1 000116                         	entsec	edtsec
+       1 000000                         	.psect	edtsec	con
+       2 000000 024024                  	.rad50	/fpt/
+       3                                	.if nb	
+       4                                	.word	
+       5                                	.iff
+       6 000002 000000G                 	.word	cpopj
+       7                                	.endc
+       8 000004 000000G                 	.word	ed.fpt
+       9 000006                         	xitsec
+       1 000006                         	entsec	.text
+       1 000116                         	.psect	.text	con
+      47                                	.endc
+      48                                
+      48                                
+      49 000116 005267  000000'         fltg4w:	inc	fltwdc		;floating point number evaluator
+      50 000122 005267  000000'         fltg2w:	inc	fltwdc
+      51                                fltg1w:
+      52 000126                         	call	savreg		;save registers
+       1 000126 004767  000000G         	jsr	pc,savreg
+      53 000132 016746  000000G         	mov	chrpnt,-(sp)	;stack current character pointer
+      54 000136 012703  000010'         	mov	#fltbuf,r3	;convenient copy of pointers
+      55 000142 012704  000020'         	mov	#fltsav,r4	;  to buffer and save area
+      56 000146 010401                  	mov	r4,r1
+      57 000150 005041                  1$:	clr	-(r1)		;init variables
+      58 000152 020127  000000'         	cmp	r1,#fltbeg
+      59 000156 101374                  	bhi	1$		;loop until done
+      60 000160 012767  000101  000006' 	mov	#65.,fltbex	;init binary exponent
+      61 000166 022705  000053          	cmp	#'+,r5		;  "+"?
+      62 000172 001406                  	beq	10$		;  yes, bypass and ignore
+      63 000174 022705  000055          	cmp	#'-,r5		; "-"?
+      64 000200 001005                  	bne	11$		;  no
+      65 000202 012767  100000  000000' 	mov	#100000,fltsgn	;yes, set sign and bypass char
+      66 000210                         10$:	call	getchr		;get the next character
+       1 000210 004767  000000G         	jsr	pc,getchr
+      67 000214 020527  000060          11$:	cmp	r5,#'0		;numeric?
+      68 000220 103431                  	blo	20$
+      69 000222 020527  000071          	cmp	r5,#'9
+      70 000226 101026                  	bhi	20$		;  no
+      71 000230 032713  174000          	bit	#174000,(r3)	;numeric, room for multiplication?
+      72 000234 001403                  	beq	12$		;  yes
+      73 000236 005267  000004'         	inc	fltexp		;no, compensate for the snub
+      74 000242 000413                  	br	13$
+      75                                
+      76 000244                         12$:	call	fltm50		;multiply by 5
+       1 000244 004767  000660          	jsr	pc,fltm50
+      77 000250                         	call	fltgls		;correction, make that *10
+       1 000250 004767  000730          	jsr	pc,fltgls
+      78 000254 162705  000060          	sub	#'0,r5		;make absolute
+      79 000260 010402                  	mov	r4,r2		;point to end of buffer
+      80 000262 060542                  	add	r5,-(r2)	;add in
+      81 000264 005542                  	adc	-(r2)		;ripple carry
+      82 000266 005542                  	adc	-(r2)
+      83 000270 005542                  	adc	-(r2)
+      84 000272 066767  000002' 000004' 13$:	add	fltdot,fltexp	;decrement if processing fraction
+      85 000300 005016                  	clr	(sp)		;clear initial char pointer (we're good)
+      86 000302 000742                  	br	10$		;try for more
+      87                                
+      88 000304 022705  000056          20$:	cmp	#'.,r5		;decimal point?
+      89 000310 001003                  	bne	21$		;  no
+      90 000312 005167  000002'         	com	fltdot		;yes, mark it
+      91 000316 100734                  	bmi	10$		;loop if first time around
+      92 000320 022705  000105          21$:	cmp	#105,r5		;exponent?(routine  is passed upper case)
+      93 000324 001015                  	bne	fltg3		;  no
+      94 000326                         	call	getnb		;yes, bypass "e" and blanks
+       1 000326 004767  000000G         	jsr	pc,getnb
+      95 000332 016746  000000G         	mov	cradix,-(sp)	;stack current radix
+      96 000336 012767  000012  000000G 	mov	#10.,cradix	;set to decimal
+      97 000344                         	call	abstrm		;absolute term
+       1 000344 004767  000000G         	jsr	pc,abstrm
+      98 000350 012667  000000G         	mov	(sp)+,cradix	;restore radix
+      99 000354 060067  000004'         	add	r0,fltexp	;update exponent
+     100                                ;	br	fltg3		;fall through
+     100                                
+     101 000360 010301                  fltg3:	mov	r3,r1
+     102 000362 012100                  	mov	(r1)+,r0	;test for zero
+     103 000364 052100                  	bis	(r1)+,r0
+     104 000366 052100                  	bis	(r1)+,r0
+     105 000370 052100                  	bis	(r1)+,r0
+     106 000372                         	jeq	fltgex		;exit if so
+       1 000372 001002                  	bne	32768$
+       2 000374 000167  000440          	jmp	fltgex
+       3                                32768$:
+     107 000400 005767  000004'         31$:	tst	fltexp		;time to scale
+     108 000404 001461                  	beq	fltg5		;fini if zero
+     109 000406 002424                  	blt	41$		;divide if .lt. zero
+     110 000410 021327  031426          	cmp	(r3),#031426	;multiply, can we *5?
+     111 000414 101005                  	bhi	32$		;  no
+     112 000416                         	call	fltm50		;yes, multiply by 5
+       1 000416 004767  000506          	jsr	pc,fltm50
+     113 000422 005267  000006'         	inc	fltbex		;  and by two
+     114 000426 000405                  	br	33$
+     115                                
+     116 000430                         32$:	call	fltm54		;multiply by 5/4
+       1 000430 004767  000440          	jsr	pc,fltm54
+     117 000434 062767  000003  000006' 	add	#3.,fltbex	;  and by 8
+     118 000442 005367  000004'         33$:	dec	fltexp		;  over 10
+     119 000446 000754                  	br	31$
+     120                                
+     121 000450 005367  000006'         40$:	dec	fltbex		;division, left justify bits
+     122 000454                         	call	fltgls
+       1 000454 004767  000524          	jsr	pc,fltgls
+     123 000460 005713                  41$:	tst	(r3)		;sign bit set?
+     124 000462 100372                  	bpl	40$		;  no, loop
+     125 000464 012746  000040          	mov	#16.*2,-(sp)	;16 outer, 2 inner
+     126 000470                         	call	fltgrs		;shift right
+       1 000470 004767  000472          	jsr	pc,fltgrs
+     127 000474                         	call	fltgsv		;place in save buffer
+       1 000474 004767  000520          	jsr	pc,fltgsv
+     128 000500 032716  000001          42$:	bit	#1,(sp)		;odd lap?
+     129 000504 001004                  	bne	43$		;  yes
+     130 000506                         	call	fltgrs		;move a couple of bits right
+       1 000506 004767  000454          	jsr	pc,fltgrs
+     131 000512                         	call	fltgrs
+       1 000512 004767  000450          	jsr	pc,fltgrs
+     132 000516                         43$:	call	fltgrs		;once more to the right
+       1 000516 004767  000444          	jsr	pc,fltgrs
+     133 000522                         	call	fltgad		;add in save buffer
+       1 000522 004767  000416          	jsr	pc,fltgad
+     134 000526 005316                  	dec	(sp)		;end of loop?
+     135 000530 003363                  	bgt	42$		;  no
+     136 000532 005726                  	tst	(sp)+		;yes, prune stack
+     137 000534 162767  000003  000006' 	sub	#3.,fltbex
+     138 000542 005267  000004'         	inc	fltexp
+     139 000546 000714                  	br	31$
+     139                                
+     140 000550 005367  000006'         fltg5:	dec	fltbex		;left justift
+     141 000554                         	call	fltgls
+       1 000554 004767  000424          	jsr	pc,fltgls
+     142 000560 103373                  	bcc	fltg5		;lose one bit
+     143 000562 062767  000200  000006' 	add	#200,fltbex	;set excess 128.
+     144 000570 003403                  	ble	2$		;branch if under-flow
+     145 000572 105767  000007'         	tstb	fltbex+1	;high order zero?
+     146 000576 001427                  	beq	fg53$		;  yes
+     147 000600                         2$:	error	10,n,<floating point overflow>		;no, error
+       1 000600                         	sdebug	<10>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<10>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 000600 112767  000061  000000G 	movb	#'1,..zbuf+x
+       2        000001                  	x = x+1
+       3 000606 112767  000060  000001G 	movb	#'0,..zbuf+x
+       4        000002                  	x = x+1
+       7 000614 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 000622 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 000630                         	call	sdebug
+       1 000630 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.n,ern10, errbts,errref
+       3                                	.if	b	<floating point overflow>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,10
+       7                                	.globl	err.xx
+       8 000634 005767  000000G         	tst	err.xx
+       9 000640 001003                  	bne	32768$
+      10 000642 012767  000000G 000000G 	mov	#ern10,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 000650 052767  000000G 000000G 	bis	#err.n,errbts
+     148 000656 010402                  fg53$:	mov	r4,r2		;set to shift eight bits
+     149 000660 010201                  	mov	r2,r1
+     150 000662 005741                  	tst	-(r1)		;r1 is one lower than r2
+     151 000664 024142                  4$:	cmp	-(r1),-(r2)	;down one word
+     152 000666 111112                  	movb	(r1),(r2)	;move up a byte
+     153 000670 000312                  	swab	(r2)		;beware of the inside-out pc!!
+     154 000672 020203                  	cmp	r2,r3		;end?
+     155 000674 001373                  	bne	4$
+     156 000676                         	call	fltgrs		;shift one place right
+       1 000676 004767  000264          	jsr	pc,fltgrs
+     157 000702 006014                  	ror	(r4)		;set high carry
+     158                                	.if ndf	xedfpt
+     159 000704 032767  000000G 000000G 	bit	#ed.fpt,edmask	;truncation?
+     160 000712 001450                  	beq	fp57$		;  yes
+     161                                	.endc
+     162 000714 016702  000000'         	mov	fltwdc,r2	;get size count
+     163 000720 006302                  	asl	r2		;double
+     164 000722 001001                  	bne	8$		;preset type
+     165 000724 005202                  	inc	r2		;single word
+     166 000726 006302                  8$:	asl	r2		;convert to bytes
+     167 000730 052762  077777  000010' 	bis	#077777,fltbuf(r2)
+     168 000736 000261                  	sec
+     169 000740 005562  000010'         5$:	adc	fltbuf(r2)
+     170 000744 005302                  	dec	r2
+     171 000746 005302                  	dec	r2
+     172 000750 002373                  	bge	5$
+     173 000752 005713                  	tst	(r3)		;test sign position
+     174 000754 100027                  	bpl	fp57$		;ok if positive
+     175 000756                         6$:	error	11,t,<trunctation error>
+       1 000756                         	sdebug	<11>
+       1                                	.globl	sdebug,..z,..zbuf
+       2        000000                  	x = 0
+       3                                	.irpc	t,<11>
+       4                                	movb	#''t,..zbuf+x
+       5                                	x = x+1
+       6                                	.endm
+       1 000756 112767  000061  000000G 	movb	#'1,..zbuf+x
+       2        000001                  	x = x+1
+       3 000764 112767  000061  000001G 	movb	#'1,..zbuf+x
+       4        000002                  	x = x+1
+       7 000772 112767  000000  000002G 	movb	#0,..zbuf+x
+       8 001000 012767  000000G 000000G 	mov	#..zbuf,..z
+       9 001006                         	call	sdebug
+       1 001006 004767  000000G         	jsr	pc,sdebug
+       2                                	.globl	err.t,ern11, errbts,errref
+       3                                	.if	b	<trunctation error>
+       4                                	deliberate error mistake
+       5                                	.endc
+       6                                	.if	dif	0,11
+       7                                	.globl	err.xx
+       8 001012 005767  000000G         	tst	err.xx
+       9 001016 001003                  	bne	32768$
+      10 001020 012767  000000G 000000G 	mov	#ern11,err.xx
+      11                                32768$:
+      12                                	.endc
+      13 001026 052767  000000G 000000G 	bis	#err.t,errbts
+     176 001034 066713  000000'         fp57$:	add	fltsgn,(r3)	;set sign, if any
+     177 001040 005067  000000G         fltgex:	clr	mode		;make absolute
+     178 001044 005067  000000'         	clr	fltwdc		;clear count
+     179 001050 011367  000000G         	mov	(r3),value	;place first guy in value
+     180 001054 012600                  	mov	(sp)+,r0	;origional char pointer
+     181 001056 001403                  	beq	1$		;zero (good) if any digits processed
+     182 001060 010067  000000G         	mov	r0,chrpnt	;none, reset to where we came in
+     183 001064 005003                  	clr	r3		;flag as false
+     184 001066 010300                  1$:	mov	r3,r0		;set flag in r0
+     185 001070 000167  000000G         	jmp	setnb		;return with non-blank
+     185                                
+     186                                fltm54:				;*5/4
+     187 001074 021327  146314          	cmp	(r3),#146314	;room?
+     188 001100 103404                  	blo	1$
+     189 001102                         	call	fltgrs
+       1 001102 004767  000060          	jsr	pc,fltgrs
+     190 001106 005267  000006'         	inc	fltbex
+     191 001112                         1$:	call	fltgsv		;save in backup
+       1 001112 004767  000102          	jsr	pc,fltgsv
+     192 001116                         	call	fltgrs		;scale right
+       1 001116 004767  000044          	jsr	pc,fltgrs
+     193 001122                         	call	fltgrs
+       1 001122 004767  000040          	jsr	pc,fltgrs
+     194 001126 000406                  	br	fltgad
+     195                                
+     196                                fltm50:				;*5
+     197 001130                         	call	fltgsv
+       1 001130 004767  000064          	jsr	pc,fltgsv
+     198 001134                         	call	fltgls
+       1 001134 004767  000044          	jsr	pc,fltgls
+     199 001140                         	call	fltgls
+       1 001140 004767  000040          	jsr	pc,fltgls
+     200                                
+     201                                fltgad:				;add save buffer to fltbuf
+     202 001144 010402                  	mov	r4,r2		;point to save area
+     203 001146 066242  000006          1$:	add	6(r2),-(r2)	;add in word
+     204 001152 010201                  	mov	r2,r1		;set for carries
+     205 001154 005541                  2$:	adc	-(r1)		;add in
+     206 001156 103776                  	bcs	2$		;continue ripple, if necessary
+     207 001160 020203                  	cmp	r2,r3		;through?
+     208 001162 001371                  	bne	1$		;  no
+     209 001164                         	return
+       1 001164 000207                  	rts	pc
+     209                                
+     210 001166 000241                  fltgrs:	clc			;right shift
+     211 001170 010301                  	mov	r3,r1		;right rotate
+     212 001172 006021                  	ror	(r1)+
+     213 001174 006021                  	ror	(r1)+
+     214 001176 006021                  	ror	(r1)+
+     215 001200 006021                  	ror	(r1)+
+     216 001202                         	return
+       1 001202 000207                  	rts	pc
+     217                                
+     218                                fltgls:				;left shift
+     219 001204 010402                  	mov	r4,r2
+     220 001206 006342                  	asl	-(r2)
+     221 001210 006142                  	rol	-(r2)
+     222 001212 006142                  	rol	-(r2)
+     223 001214 006142                  	rol	-(r2)
+     224 001216                         	return
+       1 001216 000207                  	rts	pc
+     225                                
+     226 001220 010301                  fltgsv:	mov	r3,r1		;move fltbuf to fltsav
+     227 001222 010402                  	mov	r4,r2
+     228 001224                         	xmit	4
+       1                                	.globl	xmit0
+       2 001224                         	call	xmit0-<4*2>
+       1 001224 004767  177770G         	jsr	pc,xmit0-<4*2>
+     229 001230                         	return
+       1 001230 000207                  	rts	pc
+     230                                
+     231                                
+     232 001232                         	entsec	impure
+       1 000000                         	.psect	impure	con
+     233                                fltbeg:				;start of floating point impure
+     234        000000                  fltsgn:	.blkw			;sign bit
+     235        000002                  fltdot:	.blkw			;decimal point flag
+     236        000004                  fltexp:	.blkw			;decimal exponent
+     237        000006                  fltbex:	.blkw	1		;binary exponent (must preceed fltbuf)
+     238        000010                  fltbuf:	.blkw	4		;main ac
+     239        000020                  fltsav:	.blkw	4
+     240                                
+     241 000030                         	entsec	implin
+       1 000000                         	.psect	implin	con
+     242        000000                  fltwdc:	.blkw			;word count
+     243                                
+     244 000002                         	xitsec
+       1 000002                         	entsec	.text
+       1 001232                         	.psect	.text	con
+     245                                
+     246                                
+     247                                	.endc
+     248                                
+     249                                	.end
+     249                                
+     250                                
+     250                                
+       8                                
+
+
+Symbol table
+
+$TIMDF =000007           32768$3 000400R  L   002 EDMASK =****** G         FLTG2W  000122R      002 FT.UNX =000001           
+.       ******R      002 32768$4 000650R  L   002 ERN10  =****** G         FLTG3   000360R      002 GETCHR =****** G         
+..Z    =****** G         32768$5 001026R  L   002 ERN11  =****** G         FLTG4W  000116R      002 GETNB  =****** G         
+..ZBUF =****** G         33$3    000442R  L   002 ERN9   =****** G         FLTG5   000550R      002 LF     =000012           
+1$2     000150R  L   002 4$5     000664R  L   002 ERR.A  =****** G         FLTGAD  001144R      002 MK.SYM =000001           
+1$6     001066R  L   002 40$3    000450R  L   002 ERR.N  =****** G         FLTGEX  001040R      002 MODE   =****** G         
+1$7     001112R  L   002 41$3    000460R  L   002 ERR.T  =****** G         FLTGLS  001204R      002 PDPV45 =000000           
+1$8     001146R  L   002 42$3    000500R  L   002 ERR.XX =****** G         FLTGRS  001166R      002 RSX11D =000000           
+10$2    000210R  L   002 43$3    000516R  L   002 ERRBTS =****** G         FLTGSV  001220R      002 SAVREG =****** G         
+11$2    000214R  L   002 5$5     000740R  L   002 ERRREF =****** G         FLTM50  001130R      002 SDEBUG =****** G         
+12$2    000244R  L   002 6$5     000756R  L   002 FF     =000014           FLTM54  001074R      002 SETNB  =****** G         
+13$2    000272R  L   002 8$5     000726R  L   002 FG53$   000656R      002 FLTPNT  000000R      005 SPACE  =000040           
+2$4     000600R  L   002 ABSTRM =****** G         FLT2    000002RG     002 FLTSAV  000020R      008 STCODE =****** G         
+2$8     001154R  L   002 BPMB   =000020           FLT4    000000RG     002 FLTSGN  000000R      008 TAB    =000011           
+20$2    000304R  L   002 CHRPNT =****** G         FLTBEG  000000R      008 FLTWDC  000000R      010 TSTARG =****** G         
+21$2    000320R  L   002 CPOPJ  =****** G         FLTBEX  000006R      008 FP.1    000006R      002 VALUE  =****** G         
+3$1     000102R  L   002 CR     =000015           FLTBUF  000010R      008 FP.2    000074R      002 VT     =000013           
+31$3    000400R  L   002 CRADIX =****** G         FLTDOT  000002R      008 FP.9    000114R      002 X      =000002           
+32$3    000430R  L   002 DEBUG  =000000           FLTEXP  000004R      008 FP57$   001034R      002 X40    =000000           
+32768$0 000066R  L   002 ED.FPT =****** G         FLTG1W  000126RG     002 FT.ID  =000001           XMIT0  =****** G         
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+.TEXT   001232    002   (RW,I,LCL,REL,CON,NOSAV)
+.DATA   000000    003   (RW,I,LCL,REL,CON,NOSAV)
+.BSS    000000    004   (RW,I,LCL,REL,CON,NOSAV)
+DPURE   000004    005   (RW,I,LCL,REL,CON,NOSAV)
+MIXED   000000    006   (RW,I,LCL,REL,CON,NOSAV)
+ERRMES  000000    007   (RW,I,LCL,REL,CON,NOSAV)
+IMPURE  000030    008   (RW,I,LCL,REL,CON,NOSAV)
+IMPPAS  000000    009   (RW,I,LCL,REL,CON,NOSAV)
+IMPLIN  000002    010   (RW,I,LCL,REL,CON,NOSAV)
+SWTSEC  000000    011   (RW,I,LCL,REL,CON,NOSAV)
+CNDSEC  000000    012   (RW,I,LCL,REL,CON,NOSAV)
+CRFSEC  000000    013   (RW,I,LCL,REL,CON,NOSAV)
+EDTSEC  000006    014   (RW,I,LCL,REL,CON,NOSAV)
+LCTSEC  000000    015   (RW,I,LCL,REL,CON,NOSAV)
+PSASEC  000000    016   (RW,I,LCL,REL,CON,NOSAV)
+PSTSEC  000000    017   (RW,I,LCL,REL,CON,NOSAV)
+ROLBAS  000000    018   (RW,I,LCL,REL,CON,NOSAV)
+ROLSIZ  000000    019   (RW,I,LCL,REL,CON,NOSAV)
+ROLTOP  000000    020   (RW,I,LCL,REL,CON,NOSAV)
+XPCOR   000000    021   (RW,I,LCL,REL,CON,NOSAV)

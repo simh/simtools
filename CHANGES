@@ -1,5 +1,11 @@
 ??.??.201?: Rhialto
         version 0.5:
+        - Object-ified macro libraries with an eye to support the .sml
+          files from 2.11BSD's m11. But since the given file does not 
+          just contain .MACROs (it even contains conditionals) I'm not
+          sure how it is supposed to work.
+        - Added 2.11BSD/m11 as test files. To make this reasonable, a
+          few small features they use have been recognized and ignored.
 
 09.11.2015: Rhialto
         version 0.4:
