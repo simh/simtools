@@ -46,7 +46,8 @@ Files:
     rept_irpc.c     stream2 subclass for processing .REPT and .IREPT.
     object.c        Functions for writing RSX-11 compatible .OBJ files.
     mlb-rsx.c       Classes (!) for reading RSX-11 macro libraries.
-    mlb.c           Classes (!) for reading RT-11 macro libraries.
+    mlb-rt11.c      Classes (!) for reading RT-11 macro libraries.
+    mlb2.c          Glue functions for macro libraries in general.
     stream2.c       Functions for managing input streams and buffers.
     rad50.c         Functions for converting text to and from RAD50.
     util.c          A few general utility fuctions.
