@@ -200,6 +200,7 @@ void prepare_pass(int this_pass, STACK *stack, int nr_files, char **fnames)
     last_cond = -1;
     sect_sp = -1;
     suppressed = 0;
+    enabl_lc = 1;
 }
 
 int main(

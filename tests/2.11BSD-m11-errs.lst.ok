@@ -1,8 +1,8 @@
-       1                                ;;;; WRAPPER FOR 2.11BSD/M11/ERRS.M11
-       2                                	.LIST
-       3                                	.LIST
-       4                                	.LIST
-       5                                	.ENABL LC
+       1                                ;;;; Wrapper for 2.11BSD/m11/errs.m11
+       2                                	.list
+       3                                	.list
+       4                                	.list
+       5                                	.enabl lc
        6        000001                  debug	=	1
        7                                	.include "2.11BSD/m11/at.sml"
        1                                	.title	at.sml	-   assembler/translator system macros
