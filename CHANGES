@@ -1,5 +1,8 @@
 ??.??.201?: Rhialto
         version 0.5:
+        - Fixed bug with checking addressing mode for JSR.
+        - Very simple .LIST and .NLIST implementation.
+        - Add ^pl and ^ph expressions from 2.11BSD's m11.
         - Object-ified macro libraries with an eye to support the .sml
           files from 2.11BSD's m11. But since the given file does not 
           just contain .MACROs (it even contains conditionals) I'm not
