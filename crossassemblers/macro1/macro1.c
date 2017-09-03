@@ -1891,6 +1891,11 @@ void readLine()
 	    end_of_input = TRUE;
     } /* fgets failed */
 
+
+    char *ch;
+    if ( (ch = strchr(inpline, '\r')) != NULL && ch[1] != '\n' )
+	fprintf( stderr, "Warning: bare CR found in input; check your line endings\n");
+
     ffseen = FALSE;
     for( ix = 0, iy = 0; inpline[ix] != '\0'; ix++ ) {
 	if( inpline[ix] == '\f' ) {
