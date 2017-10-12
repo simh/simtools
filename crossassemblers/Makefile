@@ -5,29 +5,17 @@ BIN=/usr/local/bin
 INSTALL=install
 CC=gcc
 
+SUBDIRS=hpasm macro1 macro7 macro8x
+
 .PHONY: all clean install uninstall
 
 # Omitted: macro11: needs more complicated Makefiles.
 all:
-	cd hpasm && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
-	cd macro1 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
-	cd macro7 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
-	cd macro8x && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"
+	for subdir in $(SUBDIRS); do \
+		$(MAKE) -C $$subdir CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)"; \
+	done
 
-clean:
-	cd hpasm && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
-	cd macro1 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
-	cd macro7 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
-	cd macro8x && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" clean
-
-install:
-	cd hpasm && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
-	cd macro1 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
-	cd macro7 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
-	cd macro8x && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" install
-
-uninstall:
-	cd hpasm && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
-	cd macro1 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
-	cd macro7 && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
-	cd macro8x && $(MAKE) CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" uninstall
+clean install uninstall:
+	for subdir in $(SUBDIRS); do \
+		$(MAKE) -C $$subdir CFLAGS="$(CFLAGS)" BIN="$(BIN)" INSTALL="$(INSTALL)" CC="$(CC)" $@; \
+	done
