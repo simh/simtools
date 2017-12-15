@@ -114,7 +114,7 @@ int main(
 )
 {
   int readError = 0, writeError = 0;
-  char *s, filename[16];
+  char *s, filename[16], bot;
   FILE *file;
   unsigned int status;
 
@@ -233,6 +233,8 @@ int main(
       usage();
 
     while (argc >= 1) {
+      bot = 1;
+
       switch (OpenTapeForRead(argv[0])) {
         case TIO_SUCCESS:
         case TIO_ERROR:
@@ -245,8 +247,11 @@ int main(
                 break;
 
               case ST_TM:
-                /* Second tape mark in a row - treat as end of medium */
-                status = ST_EOM;
+                /* Ignore tape mark at the beginning pf a container */
+                if (!bot) {
+                  /* Second tape mark in a row - treat as end of medium */
+                  status = ST_EOM;
+                }
                 break;
 
               default:
@@ -268,6 +273,7 @@ int main(
                 }
                 break;
             }
+            bot = 0;
           } while (status != ST_EOM);
           CloseTape();
           break;
