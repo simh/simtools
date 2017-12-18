@@ -25,7 +25,7 @@ test-blkb.mac:21: ***ERROR Argument to .BLKB/.BLKW must be constant
       23                                
 test-blkb.mac:24: ***ERROR .EVEN must not have an argument
       24                                	.even	1	; error: no argument allowed
-test-blkb.mac:25: ***ERROR .EVEN must not have an argument
+test-blkb.mac:25: ***ERROR .ODD must not have an argument
       25 000324    000                  	.odd	1	; error: no argument allowed
       25                                
 

@@ -969,7 +969,7 @@ static int assemble(
 
                 case P_ODD:
                     if (!EOL(*cp)) {
-                        report(stack->top, ".EVEN must not have an argument\n");
+                        report(stack->top, ".ODD must not have an argument\n");
                     }
                     if (!(DOT & 1)) {
                         list_word(stack->top, DOT, 0, 1, "");
