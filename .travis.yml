@@ -1,6 +1,9 @@
 language: c
 dist: trusty
 install: false
+os:
+    - linux
+    - osx
 compiler:
     - gcc
     - clang
