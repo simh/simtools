@@ -1,0 +1,10 @@
+language: c
+dist: trusty
+install: false
+compiler:
+    - gcc
+    - clang
+script:
+  - make
+  - cd tests
+  - ./RunTests

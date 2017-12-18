@@ -27,20 +27,27 @@ TESTS="test-asciz \
     test-undef \
     test-word-comma"
 
+status=0
+
 assemble() {
     t="$1"
 
     ../macro11 -l "$t".lst -o "$t".obj "$t".mac 2>/dev/null
 
+    # Ignore error status and messages from the assembler.
+    # We check the listing file to see what we expect.
+
     if [ -e "$t".lst.ok ]
     then
         diff -u "$t".lst.ok "$t".lst
+	status=$((status + $?))
     fi
 
     if [ -e "$t".objd.ok ]
     then
         ../dumpobj "$t".obj >"$t".objd
         diff -u "$t".objd.ok "$t".objd
+	status=$((status + $?))
     fi
 }
 
@@ -65,3 +72,5 @@ EOF
     
     assemble "$fn"
 done
+
+exit $status

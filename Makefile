@@ -39,6 +39,7 @@ git-info.h:
 # Bootstrap dependency on the git header file, which otherwise
 # gets generated too late.
 macro11.o: git-info.h
+macro11.c: git-info.h
 
 clean:
 	-rm -f $(MACRO11_OBJS) $(DUMPOBJ_OBJS) macro11 dumpobj
