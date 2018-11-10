@@ -28,6 +28,28 @@ min1	= -1
 				.byte 1
 	.endc
 
+	; multiple df and ndf
+	.iif df defd & defd2,   .byte 1
+	.iif df defd & undefd   .byte 0
+	.iif df undefd & defd,  .byte 0
+	.iif df undefd & undefd .byte 0
+
+	.iif ndf defd & defd2    .byte 0
+	.iif ndf defd & undefd,  .byte 0
+	.iif ndf undefd & defd,  .byte 0
+	.iif ndf undefd & undefd .byte 1
+
+	; multiple df or ndf
+	.iif df defd ! defd2,   .byte 1
+	.iif df defd ! undefd   .byte 1
+	.iif df undefd ! defd,  .byte 1
+	.iif df undefd ! undefd .byte 0
+
+	.iif ndf defd ! defd2,   .byte 0
+	.iif ndf defd ! undefd   .byte 1
+	.iif ndf undefd ! defd   .byte 1
+	.iif ndf undefd ! undefd .byte 1
+
 	; blank (string)
 	.iif b ^//		.byte 1
 	.iif b <x>		.byte 0
