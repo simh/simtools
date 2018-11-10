@@ -190,7 +190,7 @@ static int assemble(
                        section must = current. */
 
                     if (!express_sym_offset(value, &symb, &offset)) {
-                        report(stack->top, "Illegal ORG\n");
+                        report(stack->top, "Illegal ORG (for relocatable section)\n");
                     } else if ((symb->flags & (SYMBOLFLAG_GLOBAL | SYMBOLFLAG_DEFINITION)) == SYMBOLFLAG_GLOBAL) {
                         report(stack->top, "Can't ORG to external location\n");
                     } else if (symb->flags & SYMBOLFLAG_UNDEFINED) {
