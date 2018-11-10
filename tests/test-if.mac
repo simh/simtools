@@ -132,3 +132,12 @@ min1	= -1
 	.iftf
 	    .byte 1
 	.endc
+
+	; errors
+	.iif
+	.iif 0
+	.iif 1
+	.iif undefd
+	.iif zero
+	.iif one
+	.iif z
