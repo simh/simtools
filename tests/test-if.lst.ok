@@ -6,110 +6,120 @@
        6        000000                  zero	= 0
        7        000001                  one	= 1
        8        000002                  defd	= 2
-       9        177777                  min1	= -1
-      10                                
-      11                                	; defined
-      12 000000    001                  	.iif df defd		.byte 1
-      13                                	.iif df undf		.byte 0
-      14                                	.iif ndf defd		.byte 0
-      15 000001    001                  	.iif ndf undf		.byte 1
-      16                                
-      17                                	.ifdf defd
-      18 000002    001                  				.byte 1
-      19                                	.endc
-      20                                	.ifdf undf
-      21                                				.byte 0
-      22                                	.endc
-      23                                	.ifndf defd
-      24                                				.byte 0
-      25                                	.endc
-      26                                	.ifndf undf
-      27 000003    001                  				.byte 1
-      28                                	.endc
-      29                                
-      30                                	; blank (string)
-      31 000004    001                  	.iif b ^//		.byte 1
-      32                                	.iif b <x>		.byte 0
-      33                                	.iif nb <>		.byte 0
-      34 000005    001                  	.iif nb ^/x/		.byte 1
-      35                                
-      36                                	; identical (strings)
-      37 000006    001                  	.iif idn ^/a/ <a>	.byte 1
-      38                                	.iif idn ^/a/ <b>	.byte 0
-      39                                	.iif dif ^/a/ <a>	.byte 0
-      40 000007    001                  	.iif dif ^/a/ <b>	.byte 1
-      41                                
-      42                                	; skip P1 and P2
-      43                                	
-      44                                	; equal to zero (value)
-      45        000000   001            	.iif eq	zero		.byte 1
-      46        000001                  	.iif eq	one		.byte 0
-      47        000000                  	.iif ne	zero		.byte 0
-      48        000001   001            	.iif ne	one		.byte 1
-      49                                
-      50        000000   001            	.iif z 	zero		.byte 1
-      51        000001                  	.iif z 	one		.byte 0
-      52        000000                  	.iif nz	zero		.byte 0
-      53        000001   001            	.iif nz	one		.byte 1
-      54                                
-      55                                	; greater than zero (value)
-      56        177777                  	.iif gt	min1		.byte 0
-      57        000000                  	.iif gt	zero		.byte 0
-      58        000001   001            	.iif gt	one		.byte 1
-      59                                
-      60        177777                  	.iif g 	min1		.byte 0
-      61        000000                  	.iif g 	zero		.byte 0
-      62        000001   001            	.iif g 	one		.byte 1
-      63                                
-      64                                	; greater than or equal to zero (value)
-      65        177777                  	.iif ge	min1		.byte 0
-      66        000000   001            	.iif ge	zero		.byte 1
-      67        000001   001            	.iif ge	one		.byte 1
-      68                                
-      69                                	; less than zero (value)
-      70        177777   001            	.iif lt	min1		.byte 1
-      71        000000                  	.iif lt	zero		.byte 0
-      72        000001                  	.iif lt	one		.byte 0
-      73                                
-      74        177777   001            	.iif l 	min1		.byte 1
-      75        000000                  	.iif l 	zero		.byte 0
-      76        000001                  	.iif l 	one		.byte 0
-      77                                
-      78                                	; less than or equal to zero (value)
-      79        177777   001            	.iif le	min1		.byte 1
-      80        000000   001            	.iif le	zero		.byte 1
-      81        000001                  	.iif le	one		.byte 0
-      82                                
+       9        000003                  defd2   = 3
+      10        177777                  min1	= -1
+      11                                
+      12                                	; defined
+      13 000000    001                  	.iif df defd		.byte 1
+      14                                	.iif df undf		.byte 0
+      15                                	.iif ndf defd		.byte 0
+      16 000001    001                  	.iif ndf undf		.byte 1
+      17                                
+      18                                	.ifdf defd
+      19 000002    001                  				.byte 1
+      20                                	.endc
+      21                                	.ifdf undf
+      22                                				.byte 0
+      23                                	.endc
+      24                                	.ifndf defd
+      25                                				.byte 0
+      26                                	.endc
+      27                                	.ifndf undf
+      28 000003    001                  				.byte 1
+      29                                	.endc
+      30                                
+      31                                	; blank (string)
+      32 000004    001                  	.iif b ^//		.byte 1
+      33                                	.iif b <x>		.byte 0
+      34                                	.iif nb <>		.byte 0
+      35 000005    001                  	.iif nb ^/x/		.byte 1
+      36                                
+      37                                	; identical (strings)
+      38 000006    001                  	.iif idn ^/a/ <a>	.byte 1
+      39                                	.iif idn ^/a/ <b>	.byte 0
+      40                                	.iif dif ^/a/ <a>	.byte 0
+      41 000007    001                  	.iif dif ^/a/ <b>	.byte 1
+      42                                
+      43                                	; skip P1 and P2
+      44                                	
+      45                                	; equal to zero (value)
+      46        000000   001            	.iif eq	zero		.byte 1
+      47        000001                  	.iif eq	one		.byte 0
+      48        000000                  	.iif ne	zero		.byte 0
+      49        000001   001            	.iif ne	one		.byte 1
+      50                                
+      51        000000   001            	.iif z 	zero		.byte 1
+      52        000001                  	.iif z 	one		.byte 0
+      53        000000                  	.iif nz	zero		.byte 0
+      54        000001   001            	.iif nz	one		.byte 1
+      55                                
+      56                                	; greater than zero (value)
+      57        177777                  	.iif gt	min1		.byte 0
+      58        000000                  	.iif gt	zero		.byte 0
+      59        000001   001            	.iif gt	one		.byte 1
+      60                                
+      61        177777                  	.iif g 	min1		.byte 0
+      62        000000                  	.iif g 	zero		.byte 0
+      63        000001   001            	.iif g 	one		.byte 1
+      64                                
+      65                                	; greater than or equal to zero (value)
+      66        177777                  	.iif ge	min1		.byte 0
+      67        000000   001            	.iif ge	zero		.byte 1
+      68        000001   001            	.iif ge	one		.byte 1
+      69                                
+      70                                	; less than zero (value)
+      71        177777   001            	.iif lt	min1		.byte 1
+      72        000000                  	.iif lt	zero		.byte 0
+      73        000001                  	.iif lt	one		.byte 0
+      74                                
+      75        177777   001            	.iif l 	min1		.byte 1
+      76        000000                  	.iif l 	zero		.byte 0
+      77        000001                  	.iif l 	one		.byte 0
+      78                                
+      79                                	; less than or equal to zero (value)
+      80        177777   001            	.iif le	min1		.byte 1
+      81        000000   001            	.iif le	zero		.byte 1
+      82        000001                  	.iif le	one		.byte 0
       83                                
-      84                                	; multiline conditions
-      85        000001                  	.if ne one
-      86 000024    001                  	    .byte 1
-      87                                	.iff
-      88                                	    .byte 0
-      89                                	.ift
-      90 000025    001                  	    .byte 1
-      91                                	.iftf
-      92 000026    001                  	    .byte 1
-      93                                	.endc
-      94                                
-      95        000001                  	.if eq one
-      96                                	    .byte 0
-      97                                	.iff
-      98 000027    001                  	    .byte 1
-      99                                	.ift
-     100                                	    .byte 0
-     101                                	.iftf
-     102 000030    001                  	    .byte 1
-     103                                	.endc
+      84                                	; expression with separating comma
+      85        000000   001            	.iif z	one - one,	.byte 1
+      86        000000                  	.iif nz	one - one,	.byte 0
+      87        000001   001            	.iif nz	2 - one,	.byte 1
+      88                                
+      89                                	; labels
+      90        000000   001            	.iif z	zero,	lab1:	.byte 1
+      91        000001   001            	.iif nz	one,	lab2:	.byte 1
+      92                                
+      93                                	; multiline conditions
+      94        000001                  	.if ne one
+      95 000030    001                  	    .byte 1
+      96                                	.iff
+      97                                	    .byte 0
+      98                                	.ift
+      99 000031    001                  	    .byte 1
+     100                                	.iftf
+     101 000032    001                  	    .byte 1
+     102                                	.endc
      103                                
+     104        000001                  	.if eq one
+     105                                	    .byte 0
+     106                                	.iff
+     107 000033    001                  	    .byte 1
+     108                                	.ift
+     109                                	    .byte 0
+     110                                	.iftf
+     111 000034    001                  	    .byte 1
+     112                                	.endc
+     112                                
 
 
 Symbol table
 
-.      ******R      001 DEFD  =000002           MIN1  =177777           ONE   =000001           ZERO  =000000           
+.      ******R      001 DEFD2 =000003           LAB2   000027R      001 ONE   =000001           
+DEFD  =000002           LAB1   000026R      001 MIN1  =177777           ZERO  =000000           
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000031    001   (RW,I,LCL,REL,CON,NOSAV)
+        000035    001   (RW,I,LCL,REL,CON,NOSAV)

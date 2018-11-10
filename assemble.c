@@ -107,6 +107,8 @@ static int assemble(
 
     /* The line may begin with "label<ws>:[:]" */
 
+    /* PSEUDO P_IIF jumps here.  */
+  reassemble:
     opcp = cp;
     if ((label = get_symbol(cp, &ncp, &local)) != NULL) {
         int             flag = SYMBOLFLAG_PERMANENT | SYMBOLFLAG_DEFINITION | local;
@@ -140,8 +142,6 @@ static int assemble(
         }
     }
 
-    /* PSEUDO P_IIF jumps here.  */
-  reassemble:
     cp = skipwhite(cp);
 
     if (EOL(*cp))
@@ -779,12 +779,14 @@ static int assemble(
                 case P_IF:
                     {
                         EX_TREE        *value;
-                        int             ok;
+                        int             ok = FALSE;
 
                         label = get_symbol(cp, &cp, NULL);      /* Get condition */
                         cp = skipdelim(cp);
 
-                        if (strcmp(label, "DF") == 0) {
+                        if (!label) {
+                            report(stack->top, "Missing .(I)IF condition\n");
+                        } else if (strcmp(label, "DF") == 0) {
                             value = parse_expr(cp, 1);
                             cp = value->cp;
                             ok = eval_defined(value);
@@ -904,7 +906,6 @@ static int assemble(
                                 /* The "immediate if" */
                                 /* Only slightly tricky. */
                                 cp = skipdelim(cp);
-                                label = get_symbol(cp, &ncp, &local);
                                 goto reassemble;
                             }
                             return 1;

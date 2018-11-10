@@ -6,6 +6,7 @@
 zero	= 0
 one	= 1
 defd	= 2
+defd2   = 3
 min1	= -1
 
 	; defined
@@ -80,6 +81,14 @@ min1	= -1
 	.iif le	zero		.byte 1
 	.iif le	one		.byte 0
 
+	; expression with separating comma
+	.iif z	one - one,	.byte 1
+	.iif nz	one - one,	.byte 0
+	.iif nz	2 - one,	.byte 1
+
+	; labels
+	.iif z	zero,	lab1:	.byte 1
+	.iif nz	one,	lab2:	.byte 1
 
 	; multiline conditions
 	.if ne one
