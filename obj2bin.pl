@@ -822,7 +822,7 @@ sub parse_rec ($$$) {
 	printf $LOG "..ENDGSD\n\n" if $DEBUG;
 
 	$program{END}{ADDRESS} = 0;
-	foreach my $nam (sort(keys(%psect))) {
+	foreach my $nam (sort({$psect{$a}{START} == $psect{$b}{START} ? $psect{$a}{LENGTH} <=> $psect{$b}{LENGTH} : $psect{$a}{START} <=> $psect{$b}{START}} keys(%psect))) {
 	    my $start = $psect{$nam}{START};
 	    my $length = $psect{$nam}{LENGTH};
 	    my $end = $length ? $start + $length - 1 : $start;
