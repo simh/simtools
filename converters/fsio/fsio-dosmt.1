@@ -1,0 +1,110 @@
+.TH FSIO-DOSMT 1 "January 28,2019" "FFS I/O - DOS-11 magtape"
+.SH NAME
+fsio-dosmt \- Foreign File System I/O - DOS-11 magtape
+.br
+.SH DESCRIPTION
+\fBfsio\fP allows access to DOS-11 magtapes using the file system type
+"\fIdosmt\fP"
+.br
+.SH WILDCARD CHARACTERS
+The wildcard character \fI'*'\fP may be used to match filename, extension,
+group number and user number. Wildcard characters may be used with the
+\fIdir\fP command to limit the number of files being displayed. They may also
+be used with commands to read files; \fIdump\fP, \fItype\fP and \fIcopy\fP
+(only the source file for \fIcopy\fP), in which case the next file which
+matches the wildcard character(s) will be used for input. As a consequence
+of this, the empty filename may be used to select the next file on the tape,
+so:
+.RS
+
+fsio> type mt:
+.RE
+
+will type the next file on the tape.
+.br
+.SH MOUNT OPERATION
+DOS/BATCH-11 defined magtape headers to be 14 bytes long with 2 bytes unused.
+Some tapes use these unused bytes to add an additional 3 characters to the
+filename (e.g. ABCDEFGHI.EXT rather than ABCDEF.EXT). By default, fsio will
+ignore these unused bytes. If the \fI-x\fP switch is used on the \fImount\fP
+command, fsio will make use of the extra 3 characters on file lookup,
+directory listing and file creation.
+.SH NEWFS OPERATION
+\fInewfs\fP creates an empty (zero length) file.
+.SH SET OPERATION
+The following \fIset\fP commands are supported:
+.br
+.TP
+.B "\fIuic\fP [proj,prog]"
+Sets the default UIC for file access (was [1,1] after mount).
+.br
+.RS
+.RS
+.B "\fIproj\fP    \- Project number (octal 1 - 377)"
+.br
+.B "\fIprog\fP    \- Programmer number (octal 1 - 377)"
+.br
+.RE
+.RE
+.TP
+.B "\fIprot\fP <code>"
+Set the default protection code when writing new files to magtape.
+.br
+.RS
+.RS
+.B "\fIprot\fP    \- Protection code (octal 0 - 377)"
+.br
+.RE
+.RE
+.SH INFO OPERATION
+\fIinfo\fP displays where the tape is currently positioned. If the tape is
+not positioned at the end and it is not an empty tape, the name of the next
+file after the current position will be displayed.
+.SH NOTES
+DOS-11 magtapes differ from disk-based file systems in a number of ways:
+.br
+.RS
+1. Filenames are not unique on a magtape.
+.br
+2. The tape has to be positioned before writing a new file to 
+   avoid over-writing an existing file.
+.br
+.RE
+
+Assuming a magtape is mounted on mt: and has 5 files on it:
+.br
+
+The sequence:
+.br
+.RS
+
+fsio> rewind mt:
+.br
+fsio> copy -a a.b mt:c.d
+.br
+.RE
+
+will result in the tape containing a single file (c.d), while the sequence:
+.br
+.RS
+
+fsio> eom mt:
+.br
+fsio> copy -a a.b mt:c.d
+.br
+.RE
+
+will result in the tape containing 6 files (the original 5 followed by c.d).
+.br
+
+By using skipf/skipr commands it is possible to position the tape just past
+the end of any specific file (see info command for more details on how to
+determine the current tape position).
+.br
+.SH SEE ALSO
+.BR fsio (1),
+.BR fsio-dos11 (1)
+.BR fsio-rt11 (1)
+.SH AUTHOR
+John Forecast, <john@forecast.name>
+.br

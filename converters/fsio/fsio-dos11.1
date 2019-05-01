@@ -1,0 +1,50 @@
+.TH FSIO-DOS11 1 "December 28,2018" "FFS I/O - DOS-11"
+.SH NAME
+fsio-dos11 \- Foreign File System I/O - DOS-11
+.br
+.SH DESCRIPTION
+\fBfsio\fP allows access to DOS-11 file systems using the file system type
+"\fIdos11\fP"
+.br
+.SH WILDCARD CHARACTERS
+The wildcard character \fI'*'\fP may be used to match filename, extension,
+group number and user number. Wildcard characters are only valid with the
+\fIdir\fP command.
+.br
+.SH NEWFS OPERATION
+\fInewfs\fP creates a blank RK05 image (2.5MB, 4800 blocks) with no UFD
+entries.
+.SH SET OPERATION
+The following \fIset\fP commands are supported:
+.br
+.TP
+.B "\fIuic\fP [group,user]"
+Sets the default UIC for file access (was [1,1] after mount).
+.br
+.RS
+.RS
+.B "\fIgroup\fP   \- Group number (octal 1 - 377)"
+.br
+.B "\fIuser\fP    \- User number (octal 1 - 377)"
+.br
+.RE
+.RE
+.TP
+.B "\fIufd\fP [group,user]"
+Creates an empty UFD and sets default UIC for file access.
+.br
+.RS
+.RS
+.B "\fIgroup\fP   \- Group number (octal 1 - 377)"
+.br
+.B "\fIuser\fP    \- User number (octal 1 - 377)"
+.br
+.RE
+.RE
+.SH SEE ALSO
+.BR fsio (1),
+.BR fsio-rt11 (1)
+.BR fsio-dosmt (1)
+.SH AUTHOR
+John Forecast, <john@forecast.name>
+.br

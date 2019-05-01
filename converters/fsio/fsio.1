@@ -1,0 +1,334 @@
+.TH FSIO 1 "December 25,2018" "Foreign File System I/O"
+.SH NAME
+fsio \- Foreign File System I/O
+.SH SYNOPSIS
+.B fsio
+[
+.B \-qv
+]
+[
+.I cmdfile
+]
+.br
+.SH DESCRIPTION
+\fBfsio\fP is a utility for manipulating foreign file systems within container
+files used by various emulators such as
+.B SIMH.
+
+If cmdfile is given, commands will be read and executed from the command file
+otherwise it will prompt the user for commands with \fBfsio> \fP
+.br
+.TP
+\fB-q\fP     - Be quiet, do not output unsolicited text during processing
+.TP
+\fB-v\fP     - Echo each command as it is read from a command file
+.br
+.TP
+Each command occupies one line and has a common format:
+.br
+.RS
+.TP
+verb [switches] args ...
+.RE
+.TP
+The following verbs are supported:
+
+.br
+.B "\fImount\fP   \- make a container file available to fsio"
+.br
+.B "\fIumount\fP  \- remove knowledge of a container file from fsio"
+.br
+.B "\fInewfs\fP   \- create and new container and empty file system"
+.br
+.B "\fIset\fP     \- set parameters on a mounted file system"
+.br
+.B "\fIinfo\fP    \- display information about the container file system"
+.br
+.B "\fIdir\fP     \- list a directory"
+.br
+.B "\fIdump\fP    \- dump a file in hex or octal"
+.br
+.B "\fIcopy\fP    \- copy a single file"
+.br
+.B "\fItype\fP    \- type a file on the terminal"
+.br
+.B "\fIdelete\fP  \- delete a file"
+.br
+.B "\fIstatus\fP  \- display currently mounted file systems"
+.br
+.B "\fIdo\fP      \- echo and execute commands from a file"
+.br
+.B "\fIhelp\fP    \- display help on using fsio"
+.br
+.B "\fIexit\fP    \- terminate fsio (quit is an alias for exit)"
+.br
+.TP
+The following commands are only accepted by file systems which are on magtape devices:
+
+.br
+.B "\fIrewind\fP  \- position the tape to the start of the data stream"
+.br
+.B "\fIeom\fP     \- position the tape to the end of the data stream"
+.br
+.B "\fIskipf\fP   \- position the tape by skipping forward over files"
+.br
+.B "\fIskipr\fP   \- position the tape by skipping backward over files"
+.br
+.SH COMMANDS
+.TP
+.B "\fImount\fP [-drx] dev[:] file type"
+Make the container file available to fsio.
+.br
+.RS
+.RS
+.B "\fI\-d\fP      \- generate debug output on stdout"
+.br
+.B "          Use environment variable \fIFSioDebugLog\fP to"
+.br
+.B "          override stdout"
+.br
+.B "          Only available if built with DEBUG enabled"
+.br
+.B "\fI\-r\fP      \- mount file system read-only"
+.br
+.B "\fI\-x\fP      \- dosmt will use extended filenames when writing"
+.br
+.B "\fIdev[:]\fP  \- user supplied name for the mount"
+.br
+.B "\fIfile\fP    \- name of the container file"
+.br
+.B "\fItype\fP    \- type of container file system"
+.br
+.RE
+.RE
+.TP
+.B "\fIumount\fP dev[:]"
+Remove knowledge of the container file from fsio.
+.br
+.RS
+.RS
+.B "\fIdev[:]\fP  \- name supplied on a previous mount"
+.RE
+.RE
+.TP
+.B "\fInewfs\fP [-t type] file type"
+Create an new container with an empty file system.
+.br
+.RS
+.RS
+.B "\fI\-t type\fP \- use alternate, file-system dependent size"
+.br
+.B "\fIfile\fP    \- name of the container file"
+.br
+.B "\fItype\fP    \- type of container file system"
+.br
+.RE
+.RE
+.TP
+.B "\fIset\fP dev: args ..."
+Set parameters on a mounted file system.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIargs ...\fP\- arguments are passed on to the file system"
+.br
+.RE
+.RE
+.TP
+.B "\fIinfo\fP dev:"
+Display information about the file system(s) within the container file.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.RE
+.RE
+.TP
+.B "\fIdir\fP [-fn] dev:dirspec"
+List the contents of a specific directory.
+.br
+.RS
+.RS
+.B "\fI\-f\fP      \- display a full (vs. brief) directory"
+.br
+.B "\fI\-n\fP      \- don't rewind tape before listing directory"
+.br
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIdirspec\fP \- filespec to display, may include wildcards"
+.br
+.RE
+.RE
+.TP
+.B "\fIdump\fP [-bcdnwx] dev:filespec"
+Dump the contents of the file in octal, hex or characters.
+.br
+.RS
+.RS
+.B "\fI\-b\fP      \- dump byte (8-bits) at a time"
+.br
+.B "\fI\-c\fP      \- dump in character format"
+.br
+.B "\fI\-d\fP      \- dump double-word (32-bits) at a time"
+.br
+.B "\fI\-w\fP      \- dump word (16-bits) at a time"
+.br
+.B "\fI\-x\fP      \- dump in hex format (default is octal)"
+.br
+.B "\fI\-n\fP      \- don't rewind magtape before looking for file"
+.br
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIdirspec\fP \- filespec to dump"
+.br
+.RE
+.RE
+.TP
+.B "\fIcopy\fP [-anpc blks] dev1:srcfile dev2:dstfile"
+Copy a file.
+.br
+.RS
+.RS
+.B "\fI\-a\fP      \- copy in ASCII mode (translates line endings)"
+.br
+.B "\fI\-p\fP      \- pad the file with NULLs"
+.br
+.B "\fI\-n\fP      \- don't rewind magtape before looking for input file"
+.br
+.B "\fI\-c blks\fP \- make contiguous file of specified size"
+.br
+.B "\fIdev1:\fP   \- name supplied on a previous mount"
+.br
+.B "\fIsrcfile\fP \- source file to copy"
+.br
+.B "\fIdev2:\fP   \- name supplied on a previous mount"
+.br
+.B "\fIdstfile\fP \- destination file to copy"
+.br
+.RE
+.RE
+.TP
+.B "\fItype\fP [-n] dev:filespec"
+Types the contents of the file on stdout.
+.br
+.RS
+.RS
+.B "\fI\-n\fP      \- don't rewind magtape before looking for file"
+.br
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIfilespec\fP\- filespec to type"
+.br
+.RE
+.RE
+.TP
+.B "\fIdelete\fP dev:filespec"
+Deletes the specified file.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIfilespec\fP\- filespec to delete"
+.br
+.RE
+.RE
+.TP
+.B "\fIstatus\fP"
+Displays the currently mounted file system(s).
+.br
+.TP
+.B "\fIdo\fP [-q] cmdFile"
+Echo and execute commands from a file.
+.br
+.RS
+.RS
+.B "\fI\-q\fP      \- don't echo commands as they are read"
+.br
+.B "\fIcmdFile\fP  \- file containing fsio commands"
+.br
+.RE
+.RE
+.TP
+.B "\fIhelp\fP"
+Displays help text on stdout.
+.br
+.TP
+.B "\fIexit\fP"
+Causes fsio to exit (the quit command has the same effect).
+.br
+.TP
+.B "\fIrewind\fP dev:"
+Positions the device to the start of the tape.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.RE
+.RE
+.TP
+.B "\fIeom\fP dev:"
+Positions the device to the end of the tape.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.RE
+.RE
+.TP
+.B "\fIskipf\fP dev: n"
+Positions the device by skipping forward over files.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIn\fP       \- # of files to skip (must be > 0)"
+.br
+.RE
+.RE
+.TP
+.B "\fIskipr\fP dev: n"
+Positions the device by skipping backward over files.
+.br
+.RS
+.RS
+.B "\fIdev:\fP    \- name supplied on a previous mount"
+.br
+.B "\fIn\fP       \- # of files to skip (must be > 0)"
+.br
+.RE
+.RE
+.SH NOTES
+If the "\fIdev:\fP" prefix is not present on a file specification, a file in
+the host file system is used. It is also possible to use the "\fIlocal:\fP"
+prefix to reference local files.
+
+.br
+The -c switch on the copy command is used to determine the number of
+contiguous blocks allocated to the destination file before starting the copy.
+This function depends on the value of blks:
+
+.br
+.B "\fI0\fP   \- Use size of source file, if 0 then default to 1 block"
+.br
+.B "\fI!=0\fP \- Use larger of blks and size of the source file"
+.br
+.SH SUPPORTED FILESYSTEMS
+.B "\fIdos11\fP   \- DOS/BATCH-11 on RF11, RK05 or RP03"
+.br
+.B "\fIrt11\fP    \- RT-11 including large drives with multiple partitions"
+.br
+.B "\fIdosmt\fP   \- container file in DOS-11 magtape format"
+.br
+.SH SEE ALSO
+.BR fsio-dos11 (1),
+.BR fsio-rt11 (1)
+.BR fsio-dosmt (1)
+.SH AUTHOR
+John Forecast, <john@forecast.name>
+.br

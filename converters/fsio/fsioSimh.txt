@@ -1,0 +1,291 @@
+How to use fsio to transfer files in/out of SIMH emulators
+----------------------------------------------------------
+
+The examples below assume a basic knowlegde of fsio (see the man pages - fsio.1
+fsio-dos11.1 and fsio-rt11.1). The following examples assume that we want to
+move an ASCII formatted file "file.txt" into the target operating system. If
+fsio understands the target file system (DOS-11 and RT-11 right now), we can
+copy the file directly into the SIMH container file used for booting the
+operating system. For other target file systems we need to transfer into a
+file system that the target operating system understands, even if it is not
+the native file system for that operation system. In the DEC world, this is
+typically RT-11.
+
+Note: all of these examples assume that we are running on a Linux or Unix-like
+operating system (in my case Raspbian on a Raspberry Pi).
+
+WARNING: fsio is alpha-level code. Make sure you make a back-up copy of any
+important file system before mounting it read/write.
+
+
+Native File System Support
+--------------------------
+
+DOS-11
+------
+
+For DOS-11, fsio understands the native disk format so we can transfer
+directly into the bootable SIMH disk ("system.dsk" in the examples).
+
+        pi@host:~ $ fsio
+        fsio> mount dk: system.dsk dos11
+        dk: successfully mounted
+        Total blocks: 4800, Free blocks: 3591, Interleave: 1
+        fsio> copy -a file.txt dk:file.txt
+        fsio> quit
+        pi@host:~ $
+
+This will copy file.txt into the default UFD ([1,1]) on the target file system.
+The copy will be in ASCII mode meaning that line endings will be translated
+into the character pair <cr><lf> which DOS/BATCH-11 requires. If you wish to
+transfer the file into another (existing) UFD (e.g. [200,200]) you can use
+either of the following 2 options:
+
+        fsio> copy -a file.txt dk:file.txt[200,200]
+
+or
+        fsio> set dk: uic [200,200]
+        fsio> copy -a file.txt dk:file.txt
+
+If the destination UFD does not already exist on the target file system use
+the following to create the UFD:
+
+        fsio> set dk: ufd [200,200]
+        fsio> copy -a file.txt dk:file.txt
+
+RT-11
+-----
+
+For RT-11, fsio understands the native disk format so we can transfer
+directly into the bootable SIMH disk ("rt11sys.dsk" in the examples). Note
+that RT-11 disk images can hold multiple partitions, each having a maximum
+size of 32MB. Partitions are named by appending an octal number to the device
+name - xx0: will be the first partition, xx1: the second etc. fsio will only
+allow access to partitions which have been initialized with an RT-11 file
+system. The example below shows a disk with 3 partitions but only the first
+and last have been initialized.
+
+        pi@host:~ $ fsio
+        fsio> mount dk: rt11sys.dsk rt11
+        dk: successfully mounted (2 partitions)
+
+        dk0:
+          Total blocks: 65536, Free blocks: 24279
+          Directory segments: 31 (Highest 4)
+          Extra bytes/directory entry: 0
+        dk2:
+          Total blocks: 65536, Free blocks: 65422
+          Directory segments: 31 (Highest 1)
+          Extra bytes/directory entry: 0
+        fsio> copy -a file.txt dk:file.txt
+        fsio> quit
+        pi@host:~ $
+
+This will copy file.txt into the target file system. The copy will be in
+ASCII mode meaning that line endings will be translated into the character
+pair <cr><lf> which RT-11 requires. In addition, unless the file ends
+exactly on a block (512 bytes) boundary, a ^Z (octal 32) will be appended
+to the file indicating end-of-file.
+
+
+Foreign File System Support
+---------------------------
+
+For other target operating systems we will use an RT-11 format RL02 disk as an
+intermediary for performing the transfer:
+
+        pi@host:~ $ fsio
+        fsio> newfs -a xfer.dsk rt11
+        fsio> mount dk: xfer.dsk rt11
+        fsio> copy -a file.txt dk:file.txt
+        fsio> quit
+        pi@host:~ $
+
+This will create a maximum sized, single partition RT-11 file system in a
+container file called "xfer.dsk" which may be copied to the target system
+running SIMH.
+
+Once on the target system, the commands to copy the file into the emulated
+operating system will depend on that operating system and, possible, its age.
+
+RSX-11M/RSX-11M+
+----------------
+
+Use the FLX utility to copy the file over to the Files-11 file system:
+
+        >set /uic=[1,2]
+        >^E
+        Simulation stopped, PC: 017460 (BR 17426)
+        sim> att rq2 xfer.dsk
+        sim> c
+
+        >all du2:
+        >mou du2:/for
+        >ins $flx
+        >flx [200,200]/fa=du2:file.txt/rt
+        >pip [200,200]file.txt/fu
+
+
+        Directory DU0:[200,200]
+        2019-01-10 18:10
+
+        FILE.TXT;1          (6400,15)       1./1.            2019-01-10 18:09
+          [1,2]    [RWED,RWED,RWED,R]
+
+        Total of 1./1. blocks in 1. file
+
+        >dmo du2:
+        18:10:28  *** DU2:  -- Dismount complete
+        DMO -- TT0:    dismounted from DU2:    *** Final dismount initiated ***
+        >dea du2:
+        >^E
+        Simulation stopped, PC: 017460 (BR 17426)
+        sim> det rq2
+        sim> c
+
+        >
+
+Note that RSX FLX cannot handle formatted ASCII input files with an embedded
+^Z character indicating end-of-file. Use the "-p" switch during the copy to
+pad the file with NULLs.
+
+IAS
+---
+
+The following example assumes that you are logged into a non-console
+terminal. You will still need to break in on the cosole with ^E and attach
+the RT-11 transfer disk as in all the other examples.
+
+        PDS> ALLOC DL0:
+        PDS> MOU/FOR DL0:
+        MOUNT-**Volume Information**
+                Device   =DL0
+                Class    =Foreign
+                UIC      =[201,201]
+                Access   =[RWED,RWED,RWED,RWED]
+                Charac   =[FOR,ATCH,DCF]
+        PDS> DIR DL0:/RT
+
+
+        DIRECTORY        DL0:
+        31-JAN-99
+
+        FILE  .TXT    1. 12-87 
+        < UNUSED > 20411. 
+
+         20411. FREE BLOCKS
+
+        TOTAL OF 1. BLOCKS IN 1. FILES
+
+        PDS> COPY DL:FILE.TXT/RT *.*
+        PDS> DIR
+
+
+        Directory DU0:[201,201]
+        31-JAN-99 15:56
+
+        FILE.TXT;1          1.         31-JAN-99 15:56
+
+        Total of 1./1. blocks in 1. file
+
+        PDS> DISM DL0:
+        DMO -- DL00: ** DISMOUNT COMPLETE **
+
+Note that in order to use the RL02 drive from timesharing, the following
+changes will need to be made to the IAS startup scripts of the PiDP-11
+distribution:
+
+1. [1,1]STARTUP.CMD
+
+   Add the following lines at the start of the file:
+
+       INS [11,1]DL
+       LOA DL
+
+2. [1,1]IASSTART.CMD
+
+   Add the following lines after the one containing "DU0/S":
+
+       DL0
+       DL1
+
+After making these changes, reboot the system and users will be able to access
+the 2 RL02 drives.
+
+
+RSTS/E
+------
+
+For this example I have used the "-a" on the fsio "newfs" command to create an
+empty RL02 disk image. Use the "-p" switch on the fsio "copy" command to pad
+the file with NULLs, otherwise the ^Z will be copied into the RSTS/E file. Use
+the FIT utility to copy the file over to the RSTS/E file system:
+
+        $ ^E
+        Simulation stopped, PC: 065640 (BR 65630)
+        sim> att rl0 xfer.dsk
+        sim> c
+
+        $ run auxlib$:fit
+        FIT   V10.1-A   RSTS V10.1-L RSTS/E V10.1
+        FIT>sy:=dl0:file.txt/rt11
+        FIT>^Z
+        $ dir file.txt/fu
+
+         Name .Typ    Size    Prot  Access      Date     Time   Clu  RTS    Pos  Op/rr    SY:[1,2]
+        FILE  .TXT       1   < 60> 12-Jan-19 12-Jan-87 04:23 PM   8 RT11     214  0/0  
+
+        Total of 1 block in 1 file in SY:[1,2]
+
+        $ ^E
+        Simulation stopped, PC: 065640 (BR 65630)
+        sim> det rl0
+        sim> c
+
+        $ 
+
+VMS
+---
+
+Use the exchange utility to copy the file over to the VMS file system:
+
+        $^E 
+        Simulation stopped, PC: 80B90B8D (BBC #3,26C(R3),80B90BE1)
+        sim> att rq1 xfer.dsk
+        sim> c
+
+        $ mou/for dua1:
+        %MOUNT-I-MOUNTED,  mounted on _ROUTER$DUA1:
+        $ exchange copy dua1:file.txt/volume=rt11/record=stream file.txt
+        %EXCHANGE-S-MOUNTED, the RT-11 volume _ROUTER$DUA1: has been mounted
+        $ dism dua1:
+        $^E 
+        Simulation stopped, PC: 80B90936 (ASHL #1,R3,R0)
+        sim> det rq1
+        sim> c
+
+        $ dir file.txt
+
+        Directory SYS$SYSROOT:[SYSMGR]
+
+        FILE.TXT;1          
+
+        Total of 1 file.
+        $ 
+
+This can be especially useful for getting the Hobbyist licences into VMS
+before you have any network running.
+
+TOPS-10
+-------
+
+Use the RTFLX utility to copy the file over to the TOPS-10 file system. When
+creating the SIMH file using the "newfs" command use the "-t rx20" switch to
+create a floppy image. The RX20 is a double density floppy and is only
+available on KS10 systems.
+
+There is a help file on Tops-10 for RTFLX but no other documentation. The
+default TOPS-10 monitor does not include support for the RX20 so a new
+system generation will be required.
+
+I do not currently have a functioning TOPS-10 system to test this on.

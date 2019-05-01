@@ -1,0 +1,42 @@
+.TH FSIO-RT11 1 "December 28,2018" "FFS I/O - RT-11"
+.SH NAME
+fsio-rt11 \- Foreign File System I/O - RT-11
+.br
+.SH DESCRIPTION
+\fBfsio\fP allows access to RT-11 file systems using the file system type
+"\fIrt11\fP"
+.br
+.SH WILDCARD CHARACTERS
+The wildcard character \fI'%'\fP may be used to match a single character in a
+filename or type. The wildcard character \fI'*'\fP may be used to match
+zero or more characters in a filename or type. Wildcard characters are only
+valid with the \fIdir\fP command.
+.br
+.SH NEWFS OPERATION
+\fInewfs\fP creates a blank MSCP image (32MB, 65535 blocks) with a single
+partition which can be accessed via the DU device (rq in SIMH). If the
+\fI"-t type"\fP switch is present, a smaller container file will be created
+depending on the type of device specified:
+.br
+.TP
+\fIrl02\fP    \- RL02 image (10MB, 20480 blocks)
+.br
+.TP
+\fIrx20\fP    \- RX20 image (512KB, 1024 blocks)
+.br
+.SH COPY OPERATION
+When copying in ASCII mode, \fBfsio\fP will normally write ^Z (octal 032) to
+indicate the end-of-file. Some utilities, such as FLX on RSX-11, cannot
+handle ^Z in the middle of a formatted ASCII file. The \fI"-p"\fP switch
+may be used on a copy operation to skip writing the ^Z and pad the file with
+NULLs up to the next block boundary if this occurs.
+.br
+.SH SET OPERATION
+No \fIset\fP commands are currently supported.
+.SH SEE ALSO
+.BR fsio (1),
+.BR fsio-dos11 (1)
+.BR fsio-dosmt (1)
+.SH AUTHOR
+John Forecast, <john@forecast.name>
+.br
