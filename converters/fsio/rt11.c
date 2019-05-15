@@ -474,7 +474,7 @@ int rt11ReadDirSegment(
 )
 {
   struct RT11data *data = &mount->rt11data;
-  unsigned int block = RT11_DSSTART + ((segment - 1) * 2);
+  unsigned int block = data->first[unit] + ((segment - 1) * 2);
 
   if (rt11ReadBlock(mount, unit, block, &data->buf[0]) != 0)
     if (rt11ReadBlock(mount, unit, block + 1, &data->buf[256]) != 0)
@@ -510,7 +510,7 @@ int rt11WriteDirSegment(
 )
 {
   struct RT11data *data = &mount->rt11data;
-  unsigned int block = RT11_DSSTART + ((segment - 1) * 2);
+  unsigned int block = data->first[unit] + ((segment - 1) * 2);
 
   if (rt11WriteBlock(mount, unit, block, &data->buf[0]) != 0)
     if (rt11WriteBlock(mount, unit, block + 1, &data->buf[256]) != 0)
@@ -1353,10 +1353,10 @@ static void info(
 }
 
 /*++
- *      v a l i d a t e
+ *      p a r t i t i o n T y p e
  *
- *  Verify that a partition contains a valid RT-11 filesystem. First verify
- *  that the checksum is correct and then that the ID fields are correct.
+ *  Determine the type of the partition whose home block is in the mount
+ *  point specific buffer.
  *
  * Inputs:
  *
@@ -1365,39 +1365,156 @@ static void info(
  *
  * Outputs:
  *
- *      The mount point specific buffer will be overwritten.
+ *      ...
  *
  * Returns:
  *
- *      1 if file system is valid, 0 otherwise
+ *      partition type:
+ *
+ *        RT11_NOPART   - Not a valid RT11 partition
+ *        RT11_SINGLE   - 1 partition supported per disk
+ *        RT11_MULTI    - Multiple partitions supported per disk
  *
  --*/
-static int validate(
+static int partitionType(
   struct mountedFS *mount,
   uint8_t unit
 )
 {
   struct RT11data *data = &mount->rt11data;
-  uint16_t i, checksum = 0;
 
-  if (rt11ReadBlock(mount, unit, RT11_HOME, NULL) == 0)
-    return 0;
+  if (strncmp((char *)&data->buf[RT11_HB_SYSID], RT11_SYSID, strlen(RT11_SYSID)) == 0) {
+    uint16_t type = le16toh(data->buf[RT11_HB_SYSVER]);
 
-  /*
-   * Compute the checksum over the Home block.
-   */
-  for (i = 0; i < 255; i++)
-    checksum += le16toh(data->buf[i]);
+    if (unit == 0) {
+      if ((type == RT11_SYSVER_V3A) || (type == RT11_SYSVER_V04))
+        return RT11_SINGLE;
+    }
 
-  if (checksum == le16toh(data->buf[255])) {
-    if ((le16toh(data->buf[RT11_HB_PCS]) == 1) &&
-        (le16toh(data->buf[RT11_HB_FIRST]) == RT11_DSSTART) &&
-        ((strncmp((char *)&data->buf[RT11_HB_SYSID],
-                  RT11_SYSID, strlen(RT11_SYSID))) == 0))
-      return 1;
+    if (type == RT11_SYSVER_V05)
+      return RT11_MULTI;
   }
 
-  return 0;
+  if (strncmp((char *)&data->buf[RT11_HB_SYSID], RT11_VMSSYSID, strlen(RT11_VMSSYSID)) == 0)
+    return RT11_SINGLE;
+
+  return RT11_NOPART;
+}
+
+/*++
+ *      v a l i d a t e
+ *
+ *  Verify that a partition contains a valid RT-11 filesystem. First verify
+ *  that the ID fields are correct, then walk the directory structure to
+ *  make sure that we are looking at a valid RT-11 partition.
+ *
+ * Inputs:
+ *
+ *      mount           - pointer to a mounted file system descriptor
+ *      unit            - partition number
+ *      blocks          - return the actual size of the partition here
+ *      first           - return first directory segment block # here
+ *
+ * Outputs:
+ *
+ *      The mount point specific buffer will be overwritten.
+ *
+ * Returns:
+ *
+ *      partition type:
+ *
+ *        RT11_NOPART   - Not a valid RT11 partition
+ *        RT11_SINGLE   - 1 partition supported per disk
+ *        RT11_MULTI    - Multiple partitions supported per disk
+ *
+ --*/
+static int validate(
+  struct mountedFS *mount,
+  uint8_t unit,
+  uint16_t *blocks,
+  uint16_t *first
+)
+{
+  struct RT11data *data = &mount->rt11data;
+  int type = RT11_SINGLE;
+  uint16_t entrysz, position, dsseg = 1;
+  uint16_t seg_count, seg_highest, highest = 0;
+  uint8_t seen[RT11_DS_MAX + 1];
+
+  if (rt11ReadBlock(mount, unit, RT11_HOME, NULL) == 0)
+    return RT11_NOPART;
+
+  if (!SWISSET('f')) {
+    if ((type = partitionType(mount, unit)) == RT11_NOPART)
+      return RT11_NOPART;
+
+    *first = le16toh(data->buf[RT11_HB_FIRST]);
+  } else *first = RT11_DSSTART;
+
+  memset(seen, 0, sizeof(seen));
+
+  /*
+   * Now walk the directory to validate it's integrity.
+   */
+  do {
+    uint16_t off = RT11_DH_SIZE;
+
+    if (rt11ReadDirSegment(mount, unit, dsseg) == 0)
+      return RT11_NOPART;
+
+    /*
+     * Make sure we only look at each directory segment once - we want to
+     * avoid looping up with invalid input.
+     */
+    if (seen[dsseg]++ != 0)
+      return RT11_NOPART;
+
+    entrysz = RT11_DI_SIZE + (le16toh(data->buf[RT11_DH_EXTRA]) >> 1);
+    position = le16toh(data->buf[RT11_DH_START]);
+ 
+    if (dsseg == 1) {
+      seg_count = le16toh(data->buf[RT11_DH_COUNT]);
+      seg_highest = le16toh(data->buf[RT11_DH_HIGHEST]);
+      if ((seg_highest > RT11_DS_MAX) || (seg_highest > seg_count))
+        return RT11_NOPART;
+    }
+
+    if (seg_count != le16toh(data->buf[RT11_DH_COUNT]))
+      return RT11_NOPART;
+
+    /*
+     * Loop until we see and end-of-segment marker or there is no room for
+     * another directory entry.
+     */
+    while (!RT11EOS(le16toh(data->buf[off + RT11_DI_STATUS])) &&
+           ((RT11_DS_SIZE - off) >= entrysz)) {
+      uint16_t status = le16toh(data->buf[off + RT11_DI_STATUS]);
+
+      if ((status & RT11_E_MPTY) != 0)
+        break;
+
+      /*
+       * Within each directory segment the base address should never
+       * decrease.
+       */
+      if (((position + le16toh(data->buf[off + RT11_DI_LENGTH])) & 0xFFFF) < position)
+        return RT11_NOPART;
+
+      position += le16toh(data->buf[off + RT11_DI_LENGTH]);
+
+      off += entrysz;
+    }
+    if (position > highest)
+      highest = position;
+
+    dsseg = le16toh(data->buf[RT11_DH_NEXT]);
+
+    if (dsseg > seg_highest)
+      return RT11_NOPART;
+   } while (dsseg != 0);
+
+  *blocks = highest;
+  return type;
 }
 
 /*++
@@ -1570,41 +1687,36 @@ static int rt11Mount(
   memset(&data->valid, 0, sizeof(data->valid));
 
   if (fstat(fileno(mount->container), &stat) == 0) {
-    uint16_t i, count, lastsz, validcount;
+    uint16_t i, count, lastsz, validcount = 0;;
 
     data->blocks = stat.st_size / RT11_BLOCKSIZE;
 
     count = data->blocks / RT11_MAXPARTSZ;
     lastsz = data->blocks % RT11_MAXPARTSZ;
 
-    validcount = count;
+    if (lastsz >= RT11_MINPARTSZ)
+      count++;
 
     /*
      * Check each file system for validity.
      */
     for (i = 0; i < count; i++) {
+      int type;
+
       /*
-       * Assume valid
+       * Assume valid and maximal size
        */
       data->valid[i / 16] |= 1 << (i % 16);
       data->maxblk[i] = RT11_MAXPARTSZ - 1;
 
-      if (validate(mount, i) == 0) {
-        data->valid[i / 16] &= ~(1 << (i % 16));
-        validcount--;
-      }
-    }
+      type = validate(mount, i, &data->maxblk[i], &data->first[i]);
 
-    /*
-     * Check for a small partition to complete the disk
-     */
-    if (lastsz >= RT11_MINPARTSZ) {
-      data->valid[count / 16] |= 1 << (count % 16);
-      data->maxblk[count] = lastsz;
+      if (type != RT11_NOPART)
+        validcount++;
+      else data->valid[i / 16] &= ~(1 << (i % 16));
 
-      if (validate(mount, count) == 0)
-        data->valid[count / 16] &= ~(1 << (count % 16));
-      else validcount++;
+      if (type == RT11_SINGLE)
+        break;
     }
 
     data->filesystems = validcount;
@@ -1642,15 +1754,46 @@ static int rt11Mount(
             dsseg = le16toh(data->buf[RT11_DH_NEXT]);
           } while (dsseg != 0);
 
-          if (!quiet)
-            printf("%s%o:\n"
-                   "  Total blocks: %5d, Free blocks: %5d\n"
+          if (!quiet) {
+            char vers[4], *version = NULL;
+
+            if (rt11ReadBlock(mount, i, RT11_HOME, NULL) == 0)
+              return 0;
+
+            /*
+             * Special handling of volumes created by non-RT-11 systenms
+             * (e.g. VMS Exchange).
+             */
+            if (strncmp((char *)&data->buf[RT11_HB_SYSID], RT11_VMSSYSID, strlen(RT11_VMSSYSID)) == 0) {
+              r50Asc(le16toh(data->buf[RT11_HB_SYSVER]), vers);
+              version = vers;
+            } else {
+              switch (le16toh(data->buf[RT11_HB_SYSVER])) {
+                case RT11_SYSVER_V3A:
+                  version = "V3A";
+                  break;
+
+                case RT11_SYSVER_V04:
+                  version = "V04";
+                  break;
+
+                case RT11_SYSVER_V05:
+                  version = "V05";
+                  break;
+              }
+            }
+
+            printf("%s%o:\n", mount->name, i);
+            if (version != NULL)
+              printf("  Version: %s,        System ID: %12s\n",
+                     version, (char *)&data->buf[RT11_HB_SYSID]);
+            printf("  Total blocks: %5d, Free blocks: %5d\n"
                    "  Directory segments: %2d (Highest %d)\n"
                    "  Extra bytes/directory entry: %d\n",
-                   mount->name, i, data->maxblk[i] + 1, freeblks,
-                   le16toh(data->buf[RT11_DH_COUNT]),
-                   highest,
+                   data->maxblk[i] + 1, freeblks,
+                   le16toh(data->buf[RT11_DH_COUNT]), highest,
                    le16toh(data->buf[RT11_DH_EXTRA]));
+          }
           validcount--;
         }
       return 1;
@@ -1767,7 +1910,7 @@ static int rt11Newfs(
 
   data->buf[RT11_HB_PCS] = htole16(1);
   data->buf[RT11_HB_FIRST] = htole16(RT11_DSSTART);
-  data->buf[RT11_HB_SYSVER] = htole16(ascR50(RT11_SYSVER));
+  data->buf[RT11_HB_SYSVER] = htole16(RT11_SYSVER_V05);
   strncpy((char *)&data->buf[RT11_HB_VOLID], RT11_VOLID, strlen(RT11_VOLID));
   strncpy((char *)&data->buf[RT11_HB_OWNER], RT11_OWNER, strlen(RT11_OWNER));
   strncpy((char *)&data->buf[RT11_HB_SYSID], RT11_SYSID, strlen(RT11_SYSID));

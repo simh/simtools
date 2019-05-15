@@ -87,12 +87,14 @@ Full command syntax:
 
  1. mount
 
-   mount [-dr] dev[:] container type
+   mount [-dfr] dev[:] container type
 
    Make the specified container file available to fsio for I/O.
 
    -d           Generate debug output if fsio is built with the DEBUG symbol
                 defined
+   -f           Force the mount to happen even if we are unable to completely
+                validate the container file format
    -r           If present, the file system is only available for read access
 
    dev[:]       User supplied name to be used for accessing files within the

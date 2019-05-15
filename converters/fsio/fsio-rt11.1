@@ -1,4 +1,4 @@
-.TH FSIO-RT11 1 "December 28,2018" "FFS I/O - RT-11"
+.TH FSIO-RT11 1 "May 15,2019" "FFS I/O - RT-11"
 .SH NAME
 fsio-rt11 \- Foreign File System I/O - RT-11
 .br
@@ -6,6 +6,26 @@ fsio-rt11 \- Foreign File System I/O - RT-11
 \fBfsio\fP allows access to RT-11 file systems using the file system type
 "\fIrt11\fP"
 .br
+.SH RT-11 VERSIONS
+There were 5 major versions of RT-11 released. Versions 1 and 2 did not use
+the home block (block 1) to indicate that the on-disk file structure was RT-11
+format. The remaining 3 versions wrote a signature on the home block
+including the file system version in use. In order to access a version 1 or
+version 2 container file, the \fI"-f"\fP switch must be used on the
+\fI"mount"\fP command to force \fBfsio\fP
+to bypass the home block checks. While \fBfsio\fP will use a set of
+heuristics to verify the integrity of the RT-11 file structure it is possible
+that an invalid file structure will satisfy the checks and cause \fBfsio\fP to
+fail. Do not use the \fI"-f"\fP switch other than to mount version 1 or
+version 2 file systems.
+
+.br
+The VMS exchange utility may be used to initialize an RT-11 volume but writes
+it's own unique signature in the home block. \fBfsio\fP is able to correctly
+handle this signature.
+.SH LOGICAL DISKS
+\fBfsio\fP can be used to access an RT-11 logical disk if the file has been
+copied to the host file system.
 .SH WILDCARD CHARACTERS
 The wildcard character \fI'%'\fP may be used to match a single character in a
 filename or type. The wildcard character \fI'*'\fP may be used to match
@@ -18,12 +38,14 @@ partition which can be accessed via the DU device (rq in SIMH). If the
 \fI"-t type"\fP switch is present, a smaller container file will be created
 depending on the type of device specified:
 .br
+.RS
 .TP
 \fIrl02\fP    \- RL02 image (10MB, 20480 blocks)
 .br
 .TP
 \fIrx20\fP    \- RX20 image (512KB, 1024 blocks)
 .br
+.RE
 .SH COPY OPERATION
 When copying in ASCII mode, \fBfsio\fP will normally write ^Z (octal 032) to
 indicate the end-of-file. Some utilities, such as FLX on RSX-11, cannot

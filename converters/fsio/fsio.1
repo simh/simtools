@@ -1,4 +1,4 @@
-.TH FSIO 1 "December 25,2018" "Foreign File System I/O"
+.TH FSIO 1 "May 15,2019" "Foreign File System I/O"
 .SH NAME
 fsio \- Foreign File System I/O
 .SH SYNOPSIS
@@ -76,7 +76,7 @@ The following commands are only accepted by file systems which are on magtape de
 .br
 .SH COMMANDS
 .TP
-.B "\fImount\fP [-drx] dev[:] file type"
+.B "\fImount\fP [-dfrx] dev[:] file type"
 Make the container file available to fsio.
 .br
 .RS
@@ -88,6 +88,8 @@ Make the container file available to fsio.
 .B "          override stdout"
 .br
 .B "          Only available if built with DEBUG enabled"
+.br
+.B "\fI\-f\fP      \- bypass home block validation (RT-11 only)"
 .br
 .B "\fI\-r\fP      \- mount file system read-only"
 .br

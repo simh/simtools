@@ -14,10 +14,6 @@ typically RT-11.
 Note: all of these examples assume that we are running on a Linux or Unix-like
 operating system (in my case Raspbian on a Raspberry Pi).
 
-WARNING: fsio is alpha-level code. Make sure you make a back-up copy of any
-important file system before mounting it read/write.
-
-
 Native File System Support
 --------------------------
 

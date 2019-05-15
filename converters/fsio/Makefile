@@ -1,5 +1,5 @@
-#CFLAGS=-O2 -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
-CFLAGS=-g -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
+CFLAGS=-O2 -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
+#CFLAGS=-g -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
 DEFINES=-DDEBUG
 BIN=/usr/local/bin
 MAN=/usr/local/man/man1

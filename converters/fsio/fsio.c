@@ -310,9 +310,9 @@ struct command {
   cmd_t         func;                   /* Command execution function */
 } cmdTable[] = {
 #ifdef DEBUG
-  { "mount", OPTIONS("drx"), 3, 3, 0, doMount },
+  { "mount", OPTIONS("dfrx"), 3, 3, 0, doMount },
 #else
-  { "mount", OPTIONS("rx"), 3, 3, 0, doMount },
+  { "mount", OPTIONS("frx"), 3, 3, 0, doMount },
 #endif
   { "umount", NULL, 1, 1, 0, doUmount },
   { "newfs", OPTIONS("t:"), 2, 2, 0, doNewfs },

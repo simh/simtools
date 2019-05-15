@@ -167,10 +167,18 @@
 #define RT11_DSSTART    6               /* Start of directory segs */
 #define RT11_BLOCKSIZE  512             /* Size of a data block on disk */
 
-#define RT11_SYSVER     "V05"
+#define RT11_SYSVER_V3A 36521
+#define RT11_SYSVER_V04 36434
+#define RT11_SYSVER_V05 36435
+
+#define RT11_NOPART     0               /* Not a valid partition */
+#define RT11_SINGLE     1               /* Single partition per disk */
+#define RT11_MULTI      2               /* Multiple partitions per disk */
+
 #define RT11_VOLID      "RT11A       "
 #define RT11_OWNER      "            "
 #define RT11_SYSID      "DECRT11A    "
+#define RT11_VMSSYSID   "DECVMSEXCHNG"  /* VMS exchange created volume */
 
 /*
  * Partition sizes. The last block os a maximum sized partition is unused.
@@ -178,7 +186,7 @@
  * 1 data block! Is this reasonable?
  */
 #define RT11_MAXPARTSZ  0200000         /* Max partition size */
-#define RT11_MINPARTSZ  0000011         /* Min partition size */
+#define RT11_MINPARTSZ  0000010         /* Min partition size */
 
 #define RT11_RL02SZ     20480           /* Size of an RL02 drive */
 #define RT11_RX20SZ     1024            /* Size of an RX20 floppy drive */
@@ -282,6 +290,7 @@ struct RT11data {
   uint16_t              filesystems;    /* Max # of filesystems */
   uint16_t              valid[16];      /* Valid partitions */
   uint16_t              maxblk[256];    /* Max block address */
+  uint16_t              first[256];     /* First directory block */
   uint16_t              buf[512];       /* Disk buffer - enough for a */
                                         /*   directory segment */
 };
