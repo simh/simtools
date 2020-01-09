@@ -55,13 +55,13 @@ enum openMode           { M_RD, M_WR };
 #define le32toh(x)      OSSwapLittleToHostInt32(x)
 #elif defined(__linux__)
 #include <endian.h>
-#elif defined(__FreeBSD__) || defined(__NetBSD__)
+#elif defined(__NetBSD__)
 #include <sys/endian.h>
 
 #define le16toh(x)      letoh16(x)
 
 #define le32toh(x)      letoh32(x)
-#elif defined(__OpenBSD__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/endian.h>
 #endif
 
