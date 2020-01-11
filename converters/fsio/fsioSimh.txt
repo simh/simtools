@@ -274,14 +274,44 @@ before you have any network running.
 
 TOPS-10
 -------
+The RTFLX utility is available on TOPS-10 reading/writing files on an RX20
+drive (combination of RX02 drive and controller) attached to a DECsystem-2020
+(KS10). In order to access the RX20, a new system generation must be
+performed. There is a help file on Tops-10 for RTFLX but no other
+documentation.
 
-Use the RTFLX utility to copy the file over to the TOPS-10 file system. When
-creating the SIMH file using the "newfs" command use the "-t rx20" switch to
-create a floppy image. The RX20 is a double density floppy and is only
-available on KS10 systems.
+        .
+        Simulation stopped, PC: 000001 (SOJG 6,1)
+        sim> att ry0 xfer.dsk
+        RY: buffering file in memory
+        sim> c
 
-There is a help file on Tops-10 for RTFLX but no other documentation. The
-default TOPS-10 monitor does not include support for the RX20 so a new
-system generation will be required.
+        .assign rxa0: rt:
+        RXA000 assigned
+        .r rtflx
 
-I do not currently have a functioning TOPS-10 system to test this on.
+
+        RTFLX>dir
+
+        FILE    TXT    1  11-Jun-87
+
+        Total of 1 block in 1 file
+        973 blocks free on RT:
+
+        RTFLX>copy rt:file.txt
+        FILE.TXT=RT:FILE.TXT
+
+        RTFLX>exit
+
+        .dir *.txt
+
+
+        FILE    TXT     1  <057>   11-Jun-87    DSKB:   [1,2]
+
+        .deassign rxa0:
+        .
+
+If you use the RTFLX "ZERO" command to initialize an RT-11 file system it
+will create an RT-11 V2 format file system and you will need to use the "-f"
+switch to force fsio to see the file system.
+

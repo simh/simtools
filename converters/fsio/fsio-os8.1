@@ -1,0 +1,80 @@
+.TH FSIO-OS8 1 "Sep 218,2019" "FFS I/O - OS/8"
+.SH NAME
+fsio-os8 \- Foreign File System I/O - OS/8
+.br
+.SH DESCRIPTION
+\fBfsio\fP allows access to OS/8 file systems using the file system type
+"\fIos8\fP"
+.br
+.SH OS/8 PHYSICAL DISKS
+OS/8 uses a file system block size of 256 words and OS/8 devices are limited
+to 4095 blocks. Blocks 0 through 6 are reserved so the largest possible file
+is 4088 blocks long (1046528 words). Larger devices, for example the RK05,
+place multiple file systems on each physical device.
+
+.br
+OS/8 does not write any type of signature on the device and each device type
+has it's own partitioning scheme so the \fImount\fP command must use the
+"\fI-f type\fP switch so that \fBfsio\fP can determine the file system
+layout. \fBfsio\fP uses a set of heuristics to verify the integrity of
+the OS/8 file system(s) but it is quite possible for a random disk to pass
+these tests and later crash \fBfsio\fP.
+.SH MOUNT OPERATION
+\fImount\fP requires the "\fI-f type\fP" switch so that it can determine the
+type of the underlying disk (See NEWFS OPERATION below for details).
+.SH NEWFS OPERATION
+\fInewfs\fP creates an RK05 disk image with 2 file systems. If the
+"\fI-f type\fP" switch is present a different container file will be created
+depending on the type of the device specified:
+.br
+.RS
+.TP
+\fIrk05\fP    \- RK05 image (2 file systems, 3248 blocks each)
+.br
+.TP
+\fIrx01\fP    \- RX01 image (single file system, 494 blocks)
+.br
+.TP
+\fIrx02\fP    \- RX02 image (single file system, 988 blocks)
+.br
+.RE
+
+Note that in order to use RX02 media the OS/8 system must have the device
+extensions kit installed.
+.br
+
+The "\fI-e extra\fP" switch, where "extra" is a number in the range 0 - 63,
+may be used to create file systems with "extra" additional information words
+available to each directory entry. By default, \fInewfs\fP will create file
+systems with 1 additional information word which will be used to hold the
+file creation date. If you do not want any additional information words
+use "\fI-e 0\fP".
+.br
+.SH SET OPERATION
+The following \fIset\fP commands are supported:
+.br
+.TP
+.B "\fIyear\fP n"
+.br
+
+All subsequent OS/8 file creations will include a creation date (if the file
+system was created with at least 1 additional information word). The date used
+will be the month and day of the month for today with the year "n" (where "n"
+is in the range 0 - 7).
+.br
+.TP
+.B "\fIyear\fP none"
+.br
+
+All subsequent OS/8 file creations will include a zero creation date (if the
+file system was created with at least 1 additional information word). This is
+the default state after mount.
+.br
+.SH SEE ALSO
+.BR fsio (1)
+.BR fsio-dos11 (1)
+.BR fsio-dosmt (1)
+.BR fsio-rt11 (1)
+.SH AUTHOR
+John Forecast, <john@forecast.name>
+.br

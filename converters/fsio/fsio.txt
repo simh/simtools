@@ -87,7 +87,7 @@ Full command syntax:
 
  1. mount
 
-   mount [-dfr] dev[:] container type
+   mount [-dfr] [-t type] dev[:] container type
 
    Make the specified container file available to fsio for I/O.
 
@@ -96,6 +96,10 @@ Full command syntax:
    -f           Force the mount to happen even if we are unable to completely
                 validate the container file format
    -r           If present, the file system is only available for read access
+
+   -t type      Specify the type of the container file. This is only required
+                for OS/8 file systems where type should be one of "rx01",
+                "rx02" or "rk05".
 
    dev[:]       User supplied name to be used for accessing files within the
                 container file. Files within the container are named by using
@@ -133,6 +137,7 @@ Full command syntax:
         dos11   RK05 image (2.5MB, 4800 blocks)
         rt11    MSCP image (32MB, 65535 blocks)
         dosmt   An empty file suitable for use with any magtape controller
+        os8     An OS/8 file system
 
    -t type      Use a different size for the container file. The size used
                 will be file system dependent.
@@ -141,6 +146,12 @@ Full command syntax:
 
           rl02  RL02 image (10MB, 20480 blocks)
           rx20  RX20 image (512KB, 1024 blocks)
+
+       For os8, the following disk types are valid:
+
+          rk05  RK05 image (3248 blocks)
+          rx01  RX01 image (2002 sectors of 128 bytes each)
+          rx02  RX02 imgae (2002 sectors of 256 bytes each)
 
    container    The name of the file to create
 

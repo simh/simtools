@@ -1,4 +1,4 @@
-.TH FSIO-RT11 1 "May 15,2019" "FFS I/O - RT-11"
+.TH FSIO-RT11 1 "Jun 25,2019" "FFS I/O - RT-11"
 .SH NAME
 fsio-rt11 \- Foreign File System I/O - RT-11
 .br
@@ -23,6 +23,15 @@ version 2 file systems.
 The VMS exchange utility may be used to initialize an RT-11 volume but writes
 it's own unique signature in the home block. \fBfsio\fP is able to correctly
 handle this signature.
+.br
+.SH RT-11 PHYSICAL DISKS
+RT-11 uses a file system block size of 512 bytes and most disk type either
+have a block size of 512 bytes or use 2 contiguous blocks or 256 bytes each.
+Floppy diskettes, RX01 and RX02 drives, use small sectors size and for
+performance reason, adjacent logical sectors are interleaved within the same
+track. When mounting a floppy diskette, the \fI"-f type"\fP must be used so
+that \fIfsio\fP can determine the interleaving used. In this case "type"
+should be either "rx01" or "rx02".
 .SH LOGICAL DISKS
 \fBfsio\fP can be used to access an RT-11 logical disk if the file has been
 copied to the host file system.
@@ -43,9 +52,18 @@ depending on the type of device specified:
 \fIrl02\fP    \- RL02 image (10MB, 20480 blocks)
 .br
 .TP
-\fIrx20\fP    \- RX20 image (512KB, 1024 blocks)
+\fIrx01\fP    \- RX01 floopy image (256KB, 2002 sectors of 128 bytes)
+.br
+.TP
+\fIrx02\fP    \- RX02 floopy image (512KB, 2002 sectors of 256 bytes)
 .br
 .RE
+
+The "\fI-e extra\fP" switch, where "extra" is a number in the range 0 - 63,
+may be used to create file systems with "extra" additional bytes available to
+each directory entry. \fIfsio\fP will silently round up the value to make it
+an even number required by RT-11. By default, \fInewfs\fP will create file
+systems with no additional bytes for each directory entry.
 .SH COPY OPERATION
 When copying in ASCII mode, \fBfsio\fP will normally write ^Z (octal 032) to
 indicate the end-of-file. Some utilities, such as FLX on RSX-11, cannot
@@ -56,9 +74,10 @@ NULLs up to the next block boundary if this occurs.
 .SH SET OPERATION
 No \fIset\fP commands are currently supported.
 .SH SEE ALSO
-.BR fsio (1),
+.BR fsio (1)
 .BR fsio-dos11 (1)
 .BR fsio-dosmt (1)
+.BR fsio-os8 (1)
 .SH AUTHOR
 John Forecast, <john@forecast.name>
 .br

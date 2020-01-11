@@ -1666,12 +1666,12 @@ static void dos11Umount(
  *
  * Returns:
  *
- *      Size of the container file in blocks of default file system size
+ *      Default size of the container file in bytes (RK05).
  *
  --*/
 static size_t dos11Size(void)
 {
-  return DISKSIZE_RK05;
+  return DISKSIZE_RK05 * BLOCKSIZE_RK11;
 }
 
 /*++
@@ -1707,7 +1707,7 @@ static int dos11Newfs(
 
   memset(data, 0, sizeof(*data));
 
-  data->blocks = size;
+  data->blocks = size / BLOCKSIZE_RK11;
   data->bitmaps = 5;
   data->bmblk[0] = MAP_BLOCK;
   data->bmblk[1] = MAP_BLOCK + 1;

@@ -45,8 +45,9 @@ static struct DiskSize {
   char          *name;                  /* Disk name */
   size_t        size;                   /* Disk size */
 } rt11DiskSize[] = {
-  { "rl02", RT11_RL02SZ },
-  { "rx20", RT11_RX20SZ },
+  { "rl02", RT11_RL02SZ * RT11_BLOCKSIZE },
+  { "rx01", RT11_RX0xSZ * RT11_RX01SS },
+  { "rx02", RT11_RX0xSZ * RT11_RX02SS },
   { NULL, 0 }
 };
 
@@ -338,6 +339,39 @@ int rt11MatchRegex(
 }
 
 /*++
+ *      M a p L o g T o P h y s
+ *
+ *  Map a logical sector address to a physical sector address for an RX01/RX02
+ *  drive.
+ *
+ * Inputs:
+ *
+ *      sectno          - logical sector number
+ *
+ * Outputs:
+ *
+ *      None
+ *
+ * Returns:
+ *
+ *      Physical sector number
+ *
+ --*/
+unsigned int MapLogToPhys(
+  unsigned int sectno
+)
+{
+  unsigned int i, track, sector;
+
+  track = sectno / RT11_RX0xNSECT;
+  i = (sectno % RT11_RX0xNSECT) << 1;
+  if (i >= RT11_RX0xNSECT)
+    i++;
+  sector = (i + (6 * track)) % RT11_RX0xNSECT;
+  return sector + (track * RT11_RX0xNSECT);
+}
+
+/*++
  *      r t 1 1 R e a d B l o c k
  *
  *  Read a block from an RT-11 file system.
@@ -367,10 +401,10 @@ int rt11ReadBlock(
 )
 {
   struct RT11data *data = &mount->rt11data;
-  void *buffer = buf == NULL ? data->buf : buf;
+  char *buffer = buf == NULL ? data->buf : buf;
   int status = 0;
 
-  if (PARTITIONVALID(data, unit)) {
+  if (RT11_PARTITIONVALID(data, unit)) {
     if (block > data->maxblk[unit]) {
       ERROR("Attempt to read block (%u) outside file system \"%s%o:\"\n",
             block, mount->name, unit);
@@ -383,7 +417,25 @@ int rt11ReadBlock(
               mount->name, unit, block);
 #endif
 
-    status = FSioReadBlock(mount, (unit << 16) | block, buffer);
+    if (data->sectorsz != 0) {
+      /*
+       * The sectors making up the disk are sector-interleaved. The algorithm
+       * below is for RX01/RX02 interleave. Note that all such devices are
+       * small enough that there can only be a single file system present.
+       */
+      unsigned int count = RT11_BLOCKSIZE / data->sectorsz;
+      unsigned int sectno = block * count;
+
+      do {
+        unsigned int sector = MapLogToPhys(sectno);
+
+        status = FSioReadSector(mount, sector, data->sectorsz, buffer);
+
+        count--;
+        buffer += data->sectorsz;
+        sectno++;
+      } while ((count != 0) && (status != 0));
+    } else status = FSioReadBlock(mount, (unit << 16) | block, buffer);
 
     if (status == 0)
       ERROR("I/O error on \"%s%o:\"\n", mount->name, unit);
@@ -422,10 +474,10 @@ int rt11WriteBlock(
 )
 {
   struct RT11data *data = &mount->rt11data;
-  void *buffer = buf == NULL ? data->buf : buf;
+  char *buffer = buf == NULL ? data->buf : buf;
   int status = 0;
 
-  if (PARTITIONVALID(data, unit)) {
+  if (RT11_PARTITIONVALID(data, unit)) {
     if (block > data->maxblk[unit]) {
       ERROR("Attempt to write block (%u) outside file system \"%s%o:\"\n",
             block, mount->name, unit);
@@ -438,7 +490,25 @@ int rt11WriteBlock(
               mount->name, unit, block);
 #endif
 
-    status = FSioWriteBlock(mount, (unit << 16) | block, buffer);
+    if (data->sectorsz != 0) {
+      /*
+       * The sectors making up the disk are sector-interleaved. The algorithm
+       * below is for RX01/RX02 interleave. Note that all such devices are
+       * small enough that there can only be a single file system present.
+       */
+      unsigned int count = RT11_BLOCKSIZE / data->sectorsz;
+      unsigned int sectno = block * count;
+
+      do {
+        unsigned int sector = MapLogToPhys(sectno);
+
+        status = FSioWriteSector(mount, sector, data->sectorsz, buffer);
+
+        count--;
+        buffer += data->sectorsz;
+        sectno++;
+      } while ((count != 0) && (status != 0));
+    } else status = FSioWriteBlock(mount, (unit << 16) | block, buffer);
 
     if (status == 0)
       ERROR("I/O error on \"%s%o:\"\n", mount->name, unit);
@@ -450,7 +520,8 @@ int rt11WriteBlock(
 /*++
  *      r t 1 1 R e a d D i r S e g m e n t
  *
- *  Read a directory segment (2 disk blocks) into the mount specific buffer.
+ *  Read a directory segment (2 file system blocks) into the mount specific
+ *  buffer.
  *
  * Inputs:
  *
@@ -460,7 +531,7 @@ int rt11WriteBlock(
  *
  * Outputs:
  *
- *      The directory segment will be read into the mount specific  buffer.
+ *      The directory segment will be read into the mount specific buffer.
  *
  * Returns:
  *
@@ -680,7 +751,7 @@ static int rt11BestFit(
  *      r t 1 1 M e r g e E m p t y R e g i o n s
  *
  *  Following a delete operation, check if we can merge empty regions
- *  together anc compact the directory segment. In the worst case there
+ *  together and compact the directory segment. In the worst case there
  *  can be 3 directory entries involved; <UNUSED>, <File>, <UNUSED>. If
  *  <File> is deleted we need to collapse all three <UNUSED> entries to one.
  *  The directory segment is currently in the mount point specific buffer.
@@ -1131,7 +1202,7 @@ int rt11LookupFile(
 {
   struct RT11data *data = &mount->rt11data;
 
-  if (PARTITIONVALID(data, unit)) {
+  if (RT11_PARTITIONVALID(data, unit)) {
     uint16_t entrysz, position, dsseg = 1;
 
     do {
@@ -1684,6 +1755,26 @@ static int rt11Mount(
   struct RT11data *data = &mount->rt11data;
   struct stat stat;
 
+  data->sectorsz = 0;
+
+  /*
+   * Check for device type override.
+   */
+  if (SWISSET('t')) {
+    if (strcmp("rx01", SWGETVAL('t')) == 0) {
+      mount->skip = RT11_RX0xNSECT * RT11_RX01SS;
+      data->sectorsz = RT11_RX01SS;
+    }
+    if (strcmp("rx02", SWGETVAL('t')) == 0) {
+      mount->skip = RT11_RX0xNSECT * RT11_RX02SS;
+      data->sectorsz = RT11_RX02SS;
+    }
+
+    if (data->sectorsz == 0)
+      fprintf(stderr,
+              "mount: Ignoring unknown disk type \"%s\"\n", SWGETVAL('t'));
+  }
+
   memset(&data->valid, 0, sizeof(data->valid));
 
   if (fstat(fileno(mount->container), &stat) == 0) {
@@ -1727,7 +1818,7 @@ static int rt11Mount(
                mount->name, validcount, validcount == 1 ? "" : "s");
 
       for (i = 0; (i < 256) && (validcount != 0); i++)
-        if (PARTITIONVALID(data, i)) {
+        if (RT11_PARTITIONVALID(data, i)) {
           uint16_t entrysz, freeblks = 0, dsseg = 1;
           uint16_t highest = 0;
 
@@ -1756,6 +1847,10 @@ static int rt11Mount(
 
           if (!quiet) {
             char vers[4], *version = NULL;
+            uint16_t cnt, extra;
+
+            cnt = le16toh(data->buf[RT11_DH_COUNT]);
+            extra = le16toh(data->buf[RT11_DH_EXTRA]);
 
             if (rt11ReadBlock(mount, i, RT11_HOME, NULL) == 0)
               return 0;
@@ -1788,11 +1883,11 @@ static int rt11Mount(
               printf("  Version: %s,        System ID: %12s\n",
                      version, (char *)&data->buf[RT11_HB_SYSID]);
             printf("  Total blocks: %5d, Free blocks: %5d\n"
-                   "  Directory segments: %2d (Highest %d)\n"
+                   "  Directory segments: %2d (Highest in use: %d)\n"
                    "  Extra bytes/directory entry: %d\n",
-                   data->maxblk[i] + 1, freeblks,
-                   le16toh(data->buf[RT11_DH_COUNT]), highest,
-                   le16toh(data->buf[RT11_DH_EXTRA]));
+                   data->maxblk[i] + 1, freeblks, cnt, highest, extra);
+            if (data->sectorsz != 0)
+              printf("  Sector size: %d\n", data->sectorsz);
           }
           validcount--;
         }
@@ -1829,7 +1924,7 @@ static void rt11Umount(
 /*++
  *      r t 1 1 S i z e
  *
- *  Return the size of and RT-11 container file.
+ *  Return the size of an RT-11 container file.
  *
  * Inputs:
  *
@@ -1846,7 +1941,7 @@ static void rt11Umount(
  --*/
 static size_t rt11Size(void)
 {
-  size_t size = RT11_MAXPARTSZ - 1;
+  size_t size = (RT11_MAXPARTSZ - 1) * RT11_BLOCKSIZE;
 
   if (SWISSET('t')) {
     int i = 0;
@@ -1859,7 +1954,7 @@ static size_t rt11Size(void)
       }
       i++;
     }
-    if (size == (RT11_MAXPARTSZ - 1))
+    if (size == ((RT11_MAXPARTSZ - 1) * RT11_BLOCKSIZE))
       fprintf(stderr,
               "newfs: Invalid device type \"%s\", using default\n", type);
   }
@@ -1893,7 +1988,43 @@ static int rt11Newfs(
 {
   struct RT11data *data = &mount->rt11data;
   int i;
-  uint16_t checksum = 0;
+  uint16_t checksum = 0, extra = 0;;
+
+  /*
+   * Check for device type override.
+   */
+  if (SWISSET('t')) {
+    if (strcmp("rx01", SWGETVAL('t')) == 0) {
+      mount->skip = RT11_RX0xNSECT * RT11_RX01SS;
+      data->sectorsz = RT11_RX01SS;
+    }
+    if (strcmp("rx02", SWGETVAL('t')) == 0) {
+      mount->skip = RT11_RX0xNSECT * RT11_RX02SS;
+      data->sectorsz = RT11_RX02SS;
+    }
+  }
+
+  /*
+   * Check for extra bytes on each directory entry, rounded up to nearest
+   * even value.
+   */
+  if (SWISSET('e')) {
+    char *endptr;
+
+    extra = strtoul(SWGETVAL('e'), &endptr, 10);
+    extra = (extra + 1) & ~1;
+
+    if ((extra > 63) || (*endptr != '\0')) {
+      fprintf(stderr, "newfs: bad -e switch value \"%s\" - ignored\n",
+              SWGETVAL('e'));
+      extra = 0;
+    }
+  }
+
+  /*
+   * Remove possible first track
+   */
+  size = ((size * RT11_BLOCKSIZE) - mount->skip) / RT11_BLOCKSIZE;
 
   /*
    * Mark partition 0 as valid
@@ -1901,6 +2032,7 @@ static int rt11Newfs(
   memset(data->valid, 0, sizeof(data->valid));
   data->valid[0] = 1;
   data->maxblk[0] = size;
+  data->first[0] = RT11_DSSTART;
   data->filesystems = 1;
 
   /*
@@ -1931,6 +2063,7 @@ static int rt11Newfs(
 
     data->buf[RT11_DH_COUNT] = htole16(RT11_DS_MAX);
     data->buf[RT11_DH_HIGHEST] = htole16(1);
+    data->buf[RT11_DH_EXTRA] = htole16(extra);
     data->buf[RT11_DH_START] = htole16(RT11_DSSTART + (2 * RT11_DS_MAX));
 
     if (i == 1) {
@@ -1977,7 +2110,7 @@ static void rt11Info(
   struct RT11data *data = &mount->rt11data;
 
   if (present) {
-    if (PARTITIONVALID(data, unit))
+    if (RT11_PARTITIONVALID(data, unit))
       info(mount, unit);
   } else {
     uint16_t i, count = data->filesystems;
@@ -1986,7 +2119,7 @@ static void rt11Info(
      * Display information about all valid partitions
      */
     for (i = 0; (i < 256) && (count != 0); i++)
-      if (PARTITIONVALID(data, i)) {
+      if (RT11_PARTITIONVALID(data, i)) {
         info(mount, i);
         count--;
       }
@@ -2027,7 +2160,7 @@ static void rt11Dir(
     return;
   }
 
-  if (PARTITIONVALID(data, unit)) {
+  if (RT11_PARTITIONVALID(data, unit)) {
     uint16_t entrysz, dsseg = 1;
     regex_t reg;
 
@@ -2404,7 +2537,7 @@ static size_t rt11ReadFile(
  *      # of bytes of data written, 0 means EOF or error
  *
  --*/
-size_t rt11WriteFile(
+static size_t rt11WriteFile(
   void *filep,
   void *buf,
   size_t buflen

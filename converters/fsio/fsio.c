@@ -32,7 +32,7 @@
  */
 
 /*
- * Foreign file system interface (12/26/2018)
+ * Foreign file system interface (9/18/2019)
  *
  * Each foreign file system is described by a struct FSdef which is linked
  * into a master list of supported file systems in FSioInit(). Each entry
@@ -84,7 +84,9 @@
  *      This routine is called when processing a "mount" command. The container
  *      file is open, and this routine should verify that it contains a valid
  *      file system. This routine may print out information about the file
- *      system. Return 1 if the file system is valid, 0 otherwise.
+ *      system. Return 1 if the file system is valid, 0 if the file system is
+ *      invalid and -1 if the file system is invalid and an erroir message
+ *      has already been printed.
  *
  *  void (*umount)(struct mountedFS *mount);
  *
@@ -95,9 +97,8 @@
  *
  *  size_t (*size)(void)
  *
- *      Return the number of "blocksz" size blocks used for the container file.
- *      The command line switch (-t type) may be used to determine the
- *      required size.
+ *      Return the number of byte used for the container file. The command
+ *      line switch (-t type) may be used to override the default size.
  *
  *  int (*newfs)(struct mountedFS *mount, size_t size);
  *
@@ -151,9 +152,9 @@
  *
  *  off_t (*fileSize)(void *filep);
  *
- *      Returns the size of a file currently open for reading. If it is
- *      not possible to determine the actual file size, return 0. In all
- *      other cases, the returned value may over-estimate, but not
+ *      Returns the size, in bytes,  of a file currently open for reading.
+ *      If it is not possible to determine the actual file size, return 0.
+ *      In all other cases, the returned value may over-estimate, but not
  *      under-estimate the size of the file. For example, linked files
  *      on DOS-11 will overestimate the size by 2 bytes/block.
  *
@@ -310,12 +311,12 @@ struct command {
   cmd_t         func;                   /* Command execution function */
 } cmdTable[] = {
 #ifdef DEBUG
-  { "mount", OPTIONS("dfrx"), 3, 3, 0, doMount },
+  { "mount", OPTIONS("dfrt:x"), 3, 3, 0, doMount },
 #else
-  { "mount", OPTIONS("frx"), 3, 3, 0, doMount },
+  { "mount", OPTIONS("frt:x"), 3, 3, 0, doMount },
 #endif
   { "umount", NULL, 1, 1, 0, doUmount },
-  { "newfs", OPTIONS("t:"), 2, 2, 0, doNewfs },
+  { "newfs", OPTIONS("e:t:"), 2, 2, 0, doNewfs },
   { "set", NULL, 2, MAX_CMDLEN, 0, doSet },
   { "info", NULL, 1, 1, 0, doInfo },
   { "dir", OPTIONS("fn"), 1, 1, 0, doDir },
@@ -364,6 +365,7 @@ extern struct FSdef localFS;
 extern struct FSdef dos11FS;
 extern struct FSdef rt11FS;
 extern struct FSdef dosmtFS;
+extern struct FSdef os8FS;
 
 #define MAX(a, b)       (((a) > (b)) ? (a) : (b))
 #define MIN(a, b)       (((a) < (b)) ? (a) : (b))
@@ -418,6 +420,9 @@ static void FSioInit(void)
 
   dosmtFS.next = fileSystems;
   fileSystems = &dosmtFS;
+
+  os8FS.next = fileSystems;
+  fileSystems = &os8FS;
 }
 
 /*++
@@ -746,6 +751,7 @@ static void doMount(void)
 {
   struct FSdef *filesys;
   FILE *container;
+  int status;
   char *mode = SWISSET('r') ? "r" : "r+";
 
   if (checkDev(words[0]) != 0) { 
@@ -761,6 +767,8 @@ static void doMount(void)
           struct mountedFS *mount;
 
           if ((mount = malloc(sizeof(struct mountedFS))) != NULL) {
+            memset(mount, 0, sizeof(struct mountedFS));
+
             strcpy(mount->name, words[0]);
             mount->filesys = filesys;
             mount->blocksz = filesys->blocksz;
@@ -781,19 +789,21 @@ static void doMount(void)
             }
 #endif
             mount->container = container;
+            mount->skip = 0;
 
             /*
              * Verify that the container holds a valid file system
              */
-            if ((*filesys->mount)(mount) != 0) {
+            if ((status = (*filesys->mount)(mount)) > 0) {
               mount->next = mounts;
               mounts = mount;
               return;
             }
             free(mount);
-            fprintf(stderr,
-                    "mount: \"%s\" does not contain a valid file system\n",
-                    words[1]);
+            if (status == 0)
+              fprintf(stderr,
+                      "mount: \"%s\" does not contain a valid file system\n",
+                      words[1]);
           } else fprintf(stderr, "mount: out of memory\n");
           fclose(container);
         } else fprintf(stderr, "mount: failed to open \"%s\"\n", words[1]);
@@ -892,7 +902,9 @@ static void doNewfs(void)
       size = (*filesys->size)();
 
     if ((mount.container = fopen(words[0], "w+")) != NULL) {
-      off_t offset = filesys->blocksz * (size - 1);
+      off_t offset = size - 1;
+
+      mount.skip = 0;
 
       /*
        * If an empty file is valid, we are all done
@@ -900,8 +912,8 @@ static void doNewfs(void)
       if ((filesys->flags & FS_EMPTYFILE) != 0)
         return;
 
-      if ((fseeko(mount.container, offset, SEEK_SET) == 0) &&
-          (fwrite(&ch, 1, filesys->blocksz, mount.container) == filesys->blocksz)) {
+      if ((fseeko(mount.container, offset + mount.skip, SEEK_SET) == 0) &&
+          (fwrite(&ch, 1, 1, mount.container) == 1)) {
         mount.filesys = filesys;
         mount.blocksz = filesys->blocksz;
 
@@ -1263,8 +1275,8 @@ static void doType(void)
        * Close the file
        */
       (*mount->filesys->closeFile)(file);
-    }
-  } else fprintf(stderr, "dump: \"%s\" no such file\n", fname);
+    } else fprintf(stderr, "type: \"%s\" no such file\n", fname);
+  }
 }
 
 /*++
@@ -1415,10 +1427,12 @@ static void doHelp(void)
     "A common command format is used:\n\n"
     "  verb [switches] arg1 arg2 ...\n\n"
     "The following commands are supported:\n\n"
-    "  mount [-r] dev[:] container fstype\n\n"
+    "  mount [-r] [-t type] dev[:] container fstype\n\n"
     "The file system container file is made available to fsio (via the dev\n"
     "specifier). fstype specifies the type of the container file system.\n"
-    "If -r is specified, the file system will be read-only.\n\n"
+    "If -r is specified, the file system will be read-only.\n"
+    "In some cases (e.g. OS/8) fsio is unable to determine the type of the\n"
+    "underlying disk so it must be specified using \"-t type\"\n\n"
     "  umount dev[:]\n\n"
     "Remove all knowledge of the container file from fsio.\n\n"
     "  newfs [-t type] container fstype\n\n"
@@ -1942,7 +1956,7 @@ int FSioReadBlock(
 {
   off_t offset = block * mount->blocksz;
 
-  if (fseeko(mount->container, offset, SEEK_SET) == 0)
+  if (fseeko(mount->container, offset + mount->skip, SEEK_SET) == 0)
     return fread(buf, mount->blocksz, 1, mount->container);
 
   return 0;
@@ -1976,8 +1990,87 @@ int FSioWriteBlock(
 {
   off_t offset = block * mount->blocksz;
 
-  if (fseeko(mount->container, offset, SEEK_SET) == 0)
+  if (fseeko(mount->container, offset + mount->skip, SEEK_SET) == 0)
     return fwrite(buf, mount->blocksz, 1, mount->container);
+
+  return 0;
+}
+
+/*++
+ *      F S i o R e a d S e c t o r
+ *
+ *  Read a sector of a specified size from the container. The caller is
+ *  responsible for making sure that the buffer has sufficient space for
+ *  the sector. This routine is used when file system blocks are constructed
+ *  from a number of sectors which are interleaved on the physical disk (e.g.
+ *  RX02 floppies).
+ *
+ * Inputs:
+ *
+ *      mount           - pointer to a mounted file system descriptor
+ *      sector          - logical sector # in the range 0 - N
+ *      size            - size of each sector (in bytes)
+ *      buf             - pointer to the buffer to receive the data
+ *
+ * Outputs:
+ *
+ *      The buffer will be overwritten by the contents of the sector from
+ *      the container file system
+ *
+ * Returns:
+ *
+ *      1 if read was successful, 0 otherwise
+ *
+ --*/
+int FSioReadSector(
+  struct mountedFS *mount,
+  unsigned int sector,
+  unsigned int size,
+  void *buf
+)
+{
+  off_t offset = sector * size;
+
+  if (fseeko(mount->container, offset + mount->skip, SEEK_SET) == 0)
+    return fread(buf, size, 1, mount->container);
+
+  return 0;
+}
+
+/*++
+ *      F S i o W r i t e S e c t o r
+ *
+ *  Write a sector of a specified size to the container. This routine is used
+ *  when file system blocks are constructed from a number of sectors which are
+ *  interleaved on the physical disk (e.g. RX02 floppies).
+ *
+ * Inputs:
+ *
+ *      mount           - pointer to a mounted file system descriptor
+ *      sector          - logical sector # in the range 0 - N
+ *      size            - size of each sector (in bytes)
+ *      buf             - pointer to the buffer to receive the data
+ *
+ * Outputs:
+ *
+ *      None
+ *
+ * Returns:
+ *
+ *      1 if read was successful, 0 otherwise
+ *
+ --*/
+int FSioWriteSector(
+  struct mountedFS *mount,
+  unsigned int sector,
+  unsigned int size,
+  void *buf
+)
+{
+  off_t offset = sector * size;
+
+  if (fseeko(mount->container, offset + mount->skip, SEEK_SET) == 0)
+    return fwrite(buf, size, 1, mount->container);
 
   return 0;
 }

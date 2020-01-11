@@ -1,0 +1,35 @@
+Changes Since Alpha Release:
+
+1. mount: Fix memory leak when file system verification fails
+
+2. dos11: Fix hang when parsing wildcard programmer number
+
+3. Migrate to using GNU readline library for command line editing etc
+
+4. local: Fix buffering so that local "type" command works
+
+5. Add DOS-11 magtape support using file system type "dosmt"
+
+6. newfs: Remove -a switch. Replace with "-t type" switch to allow more
+   flexibility. The equivalent of "-a" is now "-t rl02".
+
+12-Jun-19
+
+- Added support for sector interleave on RX01/RX02 drives
+
+  - Now supports creating RX01-sized container files
+  - Now works with RTFLX on TOPS-10 with RX02-sized container files
+    (documentation updated)
+
+25-Jun-19
+
+- Added support for OS/8 file systems on RX01, RX02 and RK05 drives using
+  file system type "os8"
+
+- Added support for creating RT-11 file systems with additional space
+  allocated to each directory entry
+
+9-Jan-20
+
+- Merged change from tvrusso to fix compilation on FreeBSD
+

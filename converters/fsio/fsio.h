@@ -40,6 +40,7 @@ enum openMode           { M_RD, M_WR };
 #include "dos11.h"
 #include "rt11.h"
 #include "dosmt.h"
+#include "os8.h"
 
 /*
  * All of the supported file systems are natively little endian so we only
@@ -150,17 +151,22 @@ struct mountedFS {
                                         /* Bits after 0x0080 reserved for */
                                         /* file system use */
   FILE                  *container;     /* Container file access */
+  off_t                 skip;           /* Data to skip in container file */
   union {
     struct DOS11data    _dos11;
     struct RT11data     _rt11;
     struct DOSMTdata    _dosmt;
+    struct OS8data      _os8;
   }                     FSdata;
 #define dos11data       FSdata._dos11
 #define rt11data        FSdata._rt11
 #define dosmtdata       FSdata._dosmt
+#define os8data         FSdata._os8
 };
 
 extern int FSioReadBlock(struct mountedFS *, unsigned int, void *);
 extern int FSioWriteBlock(struct mountedFS *, unsigned int, void *);
+extern int FSioReadSector(struct mountedFS *, unsigned int, unsigned int, void *);
+extern int FSioWriteSector(struct mountedFS *, unsigned int, unsigned int, void *);
 
 #endif

@@ -1,4 +1,4 @@
-.TH FSIO 1 "May 15,2019" "Foreign File System I/O"
+.TH FSIO 1 "Sep 17,2019" "Foreign File System I/O"
 .SH NAME
 fsio \- Foreign File System I/O
 .SH SYNOPSIS
@@ -76,7 +76,7 @@ The following commands are only accepted by file systems which are on magtape de
 .br
 .SH COMMANDS
 .TP
-.B "\fImount\fP [-dfrx] dev[:] file type"
+.B "\fImount\fP [-dfrx] [-t type] dev[:] file type"
 Make the container file available to fsio.
 .br
 .RS
@@ -92,6 +92,8 @@ Make the container file available to fsio.
 .B "\fI\-f\fP      \- bypass home block validation (RT-11 only)"
 .br
 .B "\fI\-r\fP      \- mount file system read-only"
+.br
+.B "\fI\-t type\fP \- specify optional disk type"
 .br
 .B "\fI\-x\fP      \- dosmt will use extended filenames when writing"
 .br
@@ -113,12 +115,14 @@ Remove knowledge of the container file from fsio.
 .RE
 .RE
 .TP
-.B "\fInewfs\fP [-t type] file type"
+.B "\fInewfs\fP [-t type] [-e count] file type"
 Create an new container with an empty file system.
 .br
 .RS
 .RS
 .B "\fI\-t type\fP \- use alternate, file-system dependent size"
+.br
+.B "\fI\-e n\fP    \- Specify extra space for directory entries (RT11, OS/8)"
 .br
 .B "\fIfile\fP    \- name of the container file"
 .br
@@ -327,10 +331,13 @@ This function depends on the value of blks:
 .br
 .B "\fIdosmt\fP   \- container file in DOS-11 magtape format"
 .br
+.B "\fIos8\fP     \- OS/8 on RX01, RX01 or RK05"
+.br
 .SH SEE ALSO
 .BR fsio-dos11 (1),
 .BR fsio-rt11 (1)
 .BR fsio-dosmt (1)
+.BR fsio-os8 (1)
 .SH AUTHOR
 John Forecast, <john@forecast.name>
 .br

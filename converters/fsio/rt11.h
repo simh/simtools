@@ -166,6 +166,9 @@
 #define RT11_HOME       1               /* Home block is always 1 */
 #define RT11_DSSTART    6               /* Start of directory segs */
 #define RT11_BLOCKSIZE  512             /* Size of a data block on disk */
+#define RT11_RX01SS     128             /* Sector size of RX01 floppy */
+#define RT11_RX02SS     256             /* Sector size of RX02 floppy */
+#define RT11_RX0xNSECT  26              /* Sectors/track on RX01/RX02 */
 
 #define RT11_SYSVER_V3A 36521
 #define RT11_SYSVER_V04 36434
@@ -181,15 +184,15 @@
 #define RT11_VMSSYSID   "DECVMSEXCHNG"  /* VMS exchange created volume */
 
 /*
- * Partition sizes. The last block os a maximum sized partition is unused.
- * The minimum size is based on a file system having 1 directory segment and
- * 1 data block! Is this reasonable?
+ * Partition sizes. The last block of a maximum sized partition (32MB) is
+ * unused. The minimum size is based on a file system having 1 directory
+ * segment and 1 data block! Is this reasonable?
  */
 #define RT11_MAXPARTSZ  0200000         /* Max partition size */
 #define RT11_MINPARTSZ  0000010         /* Min partition size */
 
-#define RT11_RL02SZ     20480           /* Size of an RL02 drive */
-#define RT11_RX20SZ     1024            /* Size of an RX20 floppy drive */
+#define RT11_RL02SZ     20480           /* Blocks on an RL02 drive */
+#define RT11_RX0xSZ     2002            /* Sectors on an RX01/RX02 */
 
 #define RT11_HB_BBLOCK  0000            /* Bad block replacement tbl */
 #define RT11_HB_RESTORE 0102            /* INIT/RESTORE data area */
@@ -287,6 +290,8 @@ struct rt11OpenFile {
  */
 struct RT11data {
   unsigned int          blocks;         /* Size of container */
+  unsigned int          sectorsz;       /* Interleave sector size */
+                                        /* 0 if no interleave */
   uint16_t              filesystems;    /* Max # of filesystems */
   uint16_t              valid[16];      /* Valid partitions */
   uint16_t              maxblk[256];    /* Max block address */
@@ -294,6 +299,6 @@ struct RT11data {
   uint16_t              buf[512];       /* Disk buffer - enough for a */
                                         /*   directory segment */
 };
-#define PARTITIONVALID(d, u) ((d->valid[u / 16] & (1 << (u % 16))) != 0)
+#define RT11_PARTITIONVALID(d, u) ((d->valid[u / 16] & (1 << (u % 16))) != 0)
 
 #endif
