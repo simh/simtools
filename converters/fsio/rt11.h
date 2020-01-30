@@ -191,6 +191,8 @@
 #define RT11_MAXPARTSZ  0200000         /* Max partition size */
 #define RT11_MINPARTSZ  0000010         /* Min partition size */
 
+#define RT11_RK05SZ     4800            /* Blocks on an RK05 drive */
+#define RT11_RL01SZ     10240           /* Blocks on an RL01 drive */
 #define RT11_RL02SZ     20480           /* Blocks on an RL02 drive */
 #define RT11_RX0xSZ     2002            /* Sectors on an RX01/RX02 */
 

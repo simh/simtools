@@ -1023,11 +1023,10 @@ static int os8CheckDirectory(
 )
 {
   struct OS8data *data = &mount->os8data;
-  uint16_t i, entrysz, entries, extra, off = OS8_DH_SIZE;
+  uint16_t i, entrysz, entries, off = OS8_DH_SIZE;
 
   entrysz = OS8_DI_SIZE + (-os8SXT(le16toh(data->buf[OS8_DH_EXTRA])));
   entries = os8Neg(le16toh(data->buf[OS8_DH_ENTRIES]));
-  extra = os8Neg(le16toh(data->buf[OS8_DH_EXTRA]));
 
   for (i = 0; i < entries; i++)
     if (os8Word(le16toh(data->buf[off + OS8_DI_FNAME1])) != 0)
@@ -1116,11 +1115,11 @@ static int os8FindSpace(
                 }
           }
           off += OS8_ED_SIZE;
-          } else {
-            blks = os8Neg(le16toh(data->buf[off + extra + OS8_DI_LENGTH]));
-            off += entrysz;
-          }
-          startblk += blks;
+        } else {
+          blks = os8Neg(le16toh(data->buf[off + extra + OS8_DI_LENGTH]));
+          off += entrysz;
+        }
+        startblk += blks;
       }
 
       dirblk = os8Word(le16toh(data->buf[OS8_DH_NEXT]));
@@ -2991,7 +2990,7 @@ static size_t os8WriteFile(
 struct FSdef os8FS = {
   NULL,
   "os8",
-  "os8              PDP-8 OS/8 file system\n",
+  "os8              PDP-8 OS/8 file system (RX01, RX02 or RK05 disks)\n",
   FS_UNITVALID,
   OS8_BLOCKSIZE * sizeof(uint16_t),
   os8Mount,

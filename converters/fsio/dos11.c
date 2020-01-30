@@ -40,45 +40,8 @@
 
 #include "fsio.h"
 
-/*
- * Tables for the bitmap allocator
- */
-uint16_t bits[16] = {
-  0000001, 0000002, 0000004, 0000010, 0000020, 0000040, 0000100, 0000200,
-  0000400, 0001000, 0002000, 0004000, 0010000, 0020000, 0040000, 0100000
-};
-
-uint16_t lowbits[16] = {
-  0000001, 0000003, 0000007, 0000017, 0000037, 0000077, 0000177, 0000377,
-  0000777, 0001777, 0003777, 0007777, 0017777, 0037777, 0077777, 0177777
-};
-
-uint16_t highbits[16] = {
-  0100000, 0140000, 0160000, 0170000, 0174000, 0176000, 0177000, 0177400,
-  0177600, 0177700, 0177740, 0177760, 0177770, 0177774, 0177776, 0177777
-};
-
-/*
- * Table of # of zeroes in each bye value.
- */
-uint8_t zeroes[256] = {
-  8,  7,  7,  6,  7,  6,  6,  5,  7,  6,  6,  5,  6,  5,  5,  4,
-  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
-  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
-  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
-  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
-  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
-  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
-  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
-  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
-  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
-  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
-  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
-  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
-  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
-  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
-  4,  3,  3,  2,  3,  2,  2,  1,  3,  2,  2,  1,  2,  1,  1,  0,
-};
+extern uint16_t bits[], lowbits[], highbits[];
+extern uint8_t zeroes[];
 
 /*
  * Table of "set" commands
@@ -1277,10 +1240,11 @@ int dos11ReadBlock(
   void *buf
 )
 {
-  void *buffer = buf == NULL ? mount->dos11data.buf : buf;
+  struct DOS11data *data = &mount->dos11data;
+  void *buffer = buf == NULL ? data->buf : buf;
   int status;
 
-  if (block >= mount->dos11data.blocks) {
+  if (block >= data->blocks) {
     ERROR("Attempt to read block (%u) outside file system \"%s\"\n",
           block, mount->name);
     return 0;
@@ -1309,7 +1273,7 @@ int dos11ReadBlock(
  *
  *      mount           - pointer to a mounted file system descriptor
  *      block           - logical block # in the range 0 - N
- *      buf             - buffer to receive data, if NULL use the mount
+ *      buf             - buffer to containing data, if NULL use the mount
  *                        point specific buffer
  *
  * Outputs:
@@ -1327,10 +1291,11 @@ int dos11WriteBlock(
   void *buf
 )
 {
-  void *buffer = buf == NULL ? mount->dos11data.buf : buf;
+  struct DOS11data *data = &mount->dos11data;
+  void *buffer = buf == NULL ? data->buf : buf;
   int status;
 
-  if (block >= mount->dos11data.blocks) {
+  if (block >= data->blocks) {
     ERROR("Attempt to write block (%u) outside file system \"%s\"\n",
           block, mount->name);
     return 0;
@@ -2142,10 +2107,11 @@ static void *dos11OpenFileR(
   char *fname
 )
 {
+  struct DOS11data *data = &mount->dos11data;
   struct dos11OpenFile *file;
   struct dos11FileSpec spec;
-  uint8_t user = mount->dos11data.user;
-  uint8_t group = mount->dos11data.group;
+  uint8_t user = data->user;
+  uint8_t group = data->group;
 
   if (dos11ParseFilespec(fname, &spec, user, group, DOS11_M_NONE) == 0) {
     fprintf(stderr, "Failed to parse filename \"%s\"\n", fname);
@@ -2200,11 +2166,12 @@ static void *dos11OpenFileW(
   off_t size
 )
 {
+  struct DOS11data *data = &mount->dos11data;
   struct dos11OpenFile *file;
   struct dos11FileSpec spec;
   unsigned long contig = (size + mount->blocksz - 1) / mount->blocksz;
-  uint8_t user = mount->dos11data.user;
-  uint8_t group = mount->dos11data.group;
+  uint8_t user = data->user;
+  uint8_t group = data->group;
 
   if (SWISSET('c') && (contig == 0)) {
       fprintf(stderr,"DOS-11 contiguous files must be at least 1 block\n");

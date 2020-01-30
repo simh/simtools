@@ -45,6 +45,8 @@ static struct DiskSize {
   char          *name;                  /* Disk name */
   size_t        size;                   /* Disk size */
 } rt11DiskSize[] = {
+  { "rk05", RT11_RK05SZ * RT11_BLOCKSIZE },
+  { "rl01", RT11_RL01SZ * RT11_BLOCKSIZE },
   { "rl02", RT11_RL02SZ * RT11_BLOCKSIZE },
   { "rx01", RT11_RX0xSZ * RT11_RX01SS },
   { "rx02", RT11_RX0xSZ * RT11_RX02SS },
@@ -1483,7 +1485,7 @@ static int partitionType(
  *
  *      mount           - pointer to a mounted file system descriptor
  *      unit            - partition number
- *      blocks          - return the actual size of the partition here
+ *      maxblk          - return maximum block # of the partition here
  *      first           - return first directory segment block # here
  *
  * Outputs:
@@ -1502,7 +1504,7 @@ static int partitionType(
 static int validate(
   struct mountedFS *mount,
   uint8_t unit,
-  uint16_t *blocks,
+  uint16_t *maxblk,
   uint16_t *first
 )
 {
@@ -1561,6 +1563,8 @@ static int validate(
            ((RT11_DS_SIZE - off) >= entrysz)) {
       uint16_t status = le16toh(data->buf[off + RT11_DI_STATUS]);
 
+      position += le16toh(data->buf[off + RT11_DI_LENGTH]);
+
       if ((status & RT11_E_MPTY) != 0)
         break;
 
@@ -1570,8 +1574,6 @@ static int validate(
        */
       if (((position + le16toh(data->buf[off + RT11_DI_LENGTH])) & 0xFFFF) < position)
         return RT11_NOPART;
-
-      position += le16toh(data->buf[off + RT11_DI_LENGTH]);
 
       off += entrysz;
     }
@@ -1584,7 +1586,7 @@ static int validate(
       return RT11_NOPART;
    } while (dsseg != 0);
 
-  *blocks = highest;
+  *maxblk = highest - 1;
   return type;
 }
 
@@ -1936,7 +1938,7 @@ static void rt11Umount(
  *
  * Returns:
  *
- *      Size of the container file in blocks of default file system size
+ *      Size of the container file in bytes.
  *
  --*/
 static size_t rt11Size(void)
@@ -1970,7 +1972,7 @@ static size_t rt11Size(void)
  *
  *      mount           - pointer to a mounted file system descriptor
  *                        (not in the mounted file system list)
- *      size            - the size (in blocks) of the file system
+ *      size            - the size (in bytes) of the file system
  *
  * Outputs:
  *
@@ -2024,7 +2026,8 @@ static int rt11Newfs(
   /*
    * Remove possible first track
    */
-  size = ((size * RT11_BLOCKSIZE) - mount->skip) / RT11_BLOCKSIZE;
+  size = (size - mount->skip) / RT11_BLOCKSIZE;
+  //  size = ((size * RT11_BLOCKSIZE) - mount->skip) / RT11_BLOCKSIZE;
 
   /*
    * Mark partition 0 as valid
@@ -2038,14 +2041,15 @@ static int rt11Newfs(
   /*
    * Build and write the Home Block.
    */
-  memset(data->buf, 0, RT11_BLOCKSIZE);
+  memset(&data->buf[0], 0, RT11_BLOCKSIZE);
 
   data->buf[RT11_HB_PCS] = htole16(1);
   data->buf[RT11_HB_FIRST] = htole16(RT11_DSSTART);
   data->buf[RT11_HB_SYSVER] = htole16(RT11_SYSVER_V05);
-  strncpy((char *)&data->buf[RT11_HB_VOLID], RT11_VOLID, strlen(RT11_VOLID));
-  strncpy((char *)&data->buf[RT11_HB_OWNER], RT11_OWNER, strlen(RT11_OWNER));
-  strncpy((char *)&data->buf[RT11_HB_SYSID], RT11_SYSID, strlen(RT11_SYSID));
+
+  memcpy((char *)&data->buf[RT11_HB_VOLID], RT11_VOLID, strlen(RT11_VOLID));
+  memcpy((char *)&data->buf[RT11_HB_OWNER], RT11_OWNER, strlen(RT11_OWNER));
+  memcpy((char *)&data->buf[RT11_HB_SYSID], RT11_SYSID, strlen(RT11_SYSID));
 
   for (i = 0; i < 255; i++)
     checksum += le16toh(data->buf[i]);

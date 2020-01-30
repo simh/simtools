@@ -356,6 +356,46 @@ struct mountedFS *mounts;
 
 struct FSdef *fileSystems = NULL;
 
+/*
+ * Tables for use with bitmap allocators
+ */
+uint16_t bits[16] = {
+  0000001, 0000002, 0000004, 0000010, 0000020, 0000040, 0000100, 0000200,
+  0000400, 0001000, 0002000, 0004000, 0010000, 0020000, 0040000, 0100000
+};
+
+uint16_t lowbits[16] = {
+  0000001, 0000003, 0000007, 0000017, 0000037, 0000077, 0000177, 0000377,
+  0000777, 0001777, 0003777, 0007777, 0017777, 0037777, 0077777, 0177777
+};
+
+uint16_t highbits[16] = {
+  0100000, 0140000, 0160000, 0170000, 0174000, 0176000, 0177000, 0177400,
+  0177600, 0177700, 0177740, 0177760, 0177770, 0177774, 0177776, 0177777
+};
+
+/*
+ * Table of # of zeroes in each byte value.
+ */
+uint8_t zeroes[256] = {
+  8,  7,  7,  6,  7,  6,  6,  5,  7,  6,  6,  5,  6,  5,  5,  4,
+  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
+  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
+  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
+  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
+  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
+  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
+  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
+  7,  6,  6,  5,  6,  5,  5,  4,  6,  5,  5,  4,  5,  4,  4,  3,
+  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
+  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
+  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
+  6,  5,  5,  4,  5,  4,  4,  3,  5,  4,  4,  3,  4,  3,  3,  2,
+  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
+  5,  4,  4,  3,  4,  3,  3,  2,  4,  3,  3,  2,  3,  2,  2,  1,
+  4,  3,  3,  2,  3,  2,  2,  1,  3,  2,  2,  1,  2,  1,  1,  0,
+};
+
 void FSioCommands(FILE *);
 static void FSioExecute(char *);
 
@@ -1927,6 +1967,77 @@ void FSioCommands(
 }
 
 /*++
+ *      F S i o R e a d B l o b
+ *
+ *  Read an arbitrary sized blob of binary data from the container file. The
+ *  caller is responsible for making sure that the buffer has sufficient
+ *  space for the blob.
+ *
+ * Inputs:
+ *
+ *      mount           - pointer to a mounted file system descriptor
+ *      offset          - offset in the container file to start the read
+ *      size            - size of the data to read (in bytes)
+ *      buf             - pointer to the buffer to receive the data
+ *
+ * Outputs:
+ *
+ *      The buffer will be overwrittn by the contents of the blob from the
+ *      container file system
+ *
+ * Returns:
+ *
+ *      1 if read was successful, 0 otherwise
+ *
+ --*/
+int FSioReadBlob(
+  struct mountedFS *mount,
+  off_t offset,
+  unsigned int size,
+  void *buf
+)
+{
+  if (fseeko(mount->container, offset, SEEK_SET) == 0)
+    return fread(buf, size, 1, mount->container);
+
+  return 0;
+}
+
+/*++
+ *      F S i o W r i t e B l o b
+ *
+ *  Write an arbitrary sized blob of binary to from the container file.
+ *
+ * Inputs:
+ *
+ *      mount           - pointer to a mounted file system descriptor
+ *      offset          - offset in the container file to start the write
+ *      size            - size of the data to write (in bytes)
+ *      buf             - pointer to the buffer with the data
+ *
+ * Outputs:
+ *
+ *      None
+ *
+ * Returns:
+ *
+ *      1 if write was successful, 0 otherwise
+ *
+ --*/
+int FSioWriteBlob(
+  struct mountedFS *mount,
+  off_t offset,
+  unsigned int size,
+  void *buf
+)
+{
+  if (fseeko(mount->container, offset, SEEK_SET) == 0)
+    return fwrite(buf, size, 1, mount->container);
+
+  return 0;
+}
+
+/*++
  *      F S i o R e a d B l o c k
  *
  *  Read a specified block from the container file. The caller is responsible
@@ -2049,7 +2160,7 @@ int FSioReadSector(
  *      mount           - pointer to a mounted file system descriptor
  *      sector          - logical sector # in the range 0 - N
  *      size            - size of each sector (in bytes)
- *      buf             - pointer to the buffer to receive the data
+ *      buf             - pointer to the buffer with the data
  *
  * Outputs:
  *
@@ -2057,7 +2168,7 @@ int FSioReadSector(
  *
  * Returns:
  *
- *      1 if read was successful, 0 otherwise
+ *      1 if write was successful, 0 otherwise
  *
  --*/
 int FSioWriteSector(

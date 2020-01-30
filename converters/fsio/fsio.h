@@ -164,6 +164,8 @@ struct mountedFS {
 #define os8data         FSdata._os8
 };
 
+extern int FSioReadBlob(struct mountedFS *, off_t, unsigned int, void *);
+extern int FSioWriteBlob(struct mountedFS *, off_t, unsigned int, void *);
 extern int FSioReadBlock(struct mountedFS *, unsigned int, void *);
 extern int FSioWriteBlock(struct mountedFS *, unsigned int, void *);
 extern int FSioReadSector(struct mountedFS *, unsigned int, unsigned int, void *);
