@@ -1,6 +1,5 @@
 language: c
-dist: trusty
-install: false
+dist: bionic
 os:
     - linux
     - osx
