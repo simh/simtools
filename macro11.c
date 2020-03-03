@@ -55,7 +55,6 @@ DAMAGE.
 
 #define stricmp strcasecmp
 
-
 /* enable_tf is called by command argument parsing to enable and
    disable named options. */
 
@@ -344,6 +343,10 @@ int main(
                 list_pass_0++;
             } else if (!stricmp(cp, "yd")) {
                 enabl_debug++;
+            } else if (!stricmp(cp, "rt11")) {
+                rt11 = 1;
+            } else if (!stricmp(cp, "rsx")) {
+                rt11 = 0;
             } else {
                 fprintf(stderr, "Unknown option %s\n", argv[arg]);
                 print_help();

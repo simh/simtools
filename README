@@ -150,6 +150,11 @@ Options:
                     This also works for extracting an object library
                     (.OLB) file.
 
+    -rsx            Tells macro11 to generate rsx style object files.
+                    This is the default.
+
+    -rt11           Tells macro11 to generate rt11 style object files.
+
     Various options starting with -y enable extensions:
 
     -ysl <num>      Allow longer symbols up to the given length.
