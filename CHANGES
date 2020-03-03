@@ -9,6 +9,8 @@
           sure how it is supposed to work.
         - Added 2.11BSD/m11 as test files. To make this reasonable, a
           few small features they use have been recognized and ignored.
+        - Add -rsx and -rt11 to switch object file format
+          (from Kevin Handy)
 
 09.11.2015: Rhialto
         version 0.4:

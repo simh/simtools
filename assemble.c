@@ -774,7 +774,7 @@ static int assemble(
                     opcp = skipwhite(opcp);
                     cp = opcp + 3;     /* Point cp at the "DF" or
                                           "NDF" part */
-                    /* Falls into... */
+                    /* FALLS THROUGH */
                 case P_IIF:
                 case P_IF:
                     {

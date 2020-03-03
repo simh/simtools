@@ -226,7 +226,7 @@ void implicit_gbl(
     case EX_AND:
     case EX_OR:
         implicit_gbl(value->data.child.right);
-        /* falls into... */
+        /* FALLS THROUGH */
     case EX_COM:
     case EX_NEG:
         implicit_gbl(value->data.child.left);
