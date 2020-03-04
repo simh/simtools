@@ -687,6 +687,8 @@ int main(
     FILE           *fp;
     int             arg;
     int             rt11 = 0;
+    char            *infile = 0;
+    char            *outfile = 0;
 
     for (arg = 1; arg < argc; arg++) {
         if (*argv[arg] == '-') {
@@ -702,20 +704,34 @@ int main(
                 exit(EXIT_FAILURE);
             }
         }
+        else if (infile == 0) {
+            infile = argv[arg];
+        }
+        else if (outfile == 0) {
+            outfile = argv[arg];
+        }
+        else {
+            fprintf(stderr, "Extra paraeter %s\n", argv[arg]);
+            exit(EXIT_FAILURE);
+        }
     }
 
-    if (argc < 2) {
+    if (infile == 0) {
         fprintf(stderr, "Usage: dumpobj input.obj [ output.obj ]\n");
         exit(1);
     }
 
-    fp = fopen(argv[1], "rb");
-    if (fp == NULL)
+    fp = fopen(infile, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "Unable to open %s\n", infile);
         return EXIT_FAILURE;
-    if (argc > 2 && argv[2]) {
-        bin = fopen(argv[2], "wb");
-        if (bin == NULL)
+    }
+    if (outfile != 0) {
+        bin = fopen(outfile, "wb");
+        if (bin == NULL) {
+            fprintf(stderr, "Unable to open %s\n", outfile);
             return EXIT_FAILURE;
+        }
     }
 
     char           *cp;
