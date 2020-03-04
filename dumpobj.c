@@ -717,7 +717,7 @@ int main(
     }
 
     if (infile == 0) {
-        fprintf(stderr, "Usage: dumpobj input.obj [ output.obj ]\n");
+        fprintf(stderr, "Usage: [ -rt11 ] [ -rsx ] dumpobj input.obj [ output.obj ]\n");
         exit(1);
     }
 
