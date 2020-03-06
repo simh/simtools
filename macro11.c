@@ -53,8 +53,6 @@ DAMAGE.
 #include "object.h"
 #include "symbols.h"
 
-#define stricmp strcasecmp
-
 /* enable_tf is called by command argument parsing to enable and
    disable named options. */
 
@@ -228,11 +226,11 @@ int main(
             char           *cp;
 
             cp = argv[arg] + 1;
-            if (!stricmp(cp, "h")) {
+            if (!strcasecmp(cp, "h")) {
                 print_help();
-            } else if (!stricmp(cp, "v")) {
+            } else if (!strcasecmp(cp, "v")) {
                 print_version(stderr);
-            } else if (!stricmp(cp, "e")) {
+            } else if (!strcasecmp(cp, "e")) {
                 /* Followed by options to enable */
                 /* Since /SHOW and /ENABL option names don't overlap,
                    I consolidate. */
@@ -241,14 +239,14 @@ int main(
                 }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 1);
-            } else if (!stricmp(cp, "d")) {
+            } else if (!strcasecmp(cp, "d")) {
                 /* Followed by an option to disable */
                 if(arg >= argc-1 || !isalpha((unsigned char)*argv[arg+1])) {
                     usage("-d must be followed by an option to disable\n");
                 }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 0);
-            } else if (!stricmp(cp, "m")) {
+            } else if (!strcasecmp(cp, "m")) {
                 /* Macro library */
                 /* This option gives the name of an RT-11 compatible
                    macro library from which .MCALLed macros can be
@@ -264,7 +262,7 @@ int main(
                     exit(EXIT_FAILURE);
                 }
                 nr_mlbs++;
-            } else if (!stricmp(cp, "p")) {
+            } else if (!strcasecmp(cp, "p")) {
                 /* P for search path */
                 /* The -p option gives the name of a directory in
                    which .MCALLed macros may be found.  */  {
@@ -276,7 +274,7 @@ int main(
                     append_env("MCALL", argv[arg+1]);
                     arg++;
                 }
-            } else if (!stricmp(cp, "I")) {
+            } else if (!strcasecmp(cp, "I")) {
                 /* I for include path */
                 /* The -I option gives the name of a directory in
                    which .included files may be found.  */  {
@@ -288,14 +286,14 @@ int main(
 
                     arg++;
                 }
-            } else if (!stricmp(cp, "o")) {
+            } else if (!strcasecmp(cp, "o")) {
                 /* The -o option gives the object file name (.OBJ) */
                 if(arg >= argc-1 || *argv[arg+1] == '-') {
                     usage("-o must be followed by the object file name\n");
                 }
                 ++arg;
                 objname = argv[arg];
-            } else if (!stricmp(cp, "l")) {
+            } else if (!strcasecmp(cp, "l")) {
                 /* The option -l gives the listing file name (.LST) */
                 /* -l - enables listing to stdout. */
                 if(arg >= argc-1 ||
@@ -307,7 +305,7 @@ int main(
                     lstfile = stdout;
                 else
                     lstfile = fopen(lstname, "w");
-            } else if (!stricmp(cp, "x")) {
+            } else if (!strcasecmp(cp, "x")) {
                 /* The -x option invokes macro11 to expand the
                    contents of the registered macro libraries (see -m)
                    into individual .MAC files in the current
@@ -321,7 +319,7 @@ int main(
                 for (m = 0; m < nr_mlbs; m++)
                     mlb_extract(mlbs[m]);
                 return EXIT_SUCCESS;
-            } else if (!stricmp(cp, "ysl")) {
+            } else if (!strcasecmp(cp, "ysl")) {
                 /* set symbol_len */
                 if (arg >= argc-1) {
                     usage("-s must be followed by a number\n");
@@ -335,17 +333,17 @@ int main(
                     }
                     symbol_len = sl;
                 }
-            } else if (!stricmp(cp, "yus")) {
+            } else if (!strcasecmp(cp, "yus")) {
                 /* allow underscores */
                 symbol_allow_underscores = 1;
-            } else if (!stricmp(cp, "yl1")) {
+            } else if (!strcasecmp(cp, "yl1")) {
                 /* list the first pass, in addition to the second */
                 list_pass_0++;
-            } else if (!stricmp(cp, "yd")) {
+            } else if (!strcasecmp(cp, "yd")) {
                 enabl_debug++;
-            } else if (!stricmp(cp, "rt11")) {
+            } else if (!strcasecmp(cp, "rt11")) {
                 rt11 = 1;
-            } else if (!stricmp(cp, "rsx")) {
+            } else if (!strcasecmp(cp, "rsx")) {
                 rt11 = 0;
             } else {
                 fprintf(stderr, "Unknown option %s\n", argv[arg]);
