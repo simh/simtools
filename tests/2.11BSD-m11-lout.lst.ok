@@ -722,7 +722,7 @@
       43        000204                  srclen	=	204		;*********************
       44        000060                  octlen	=	 60		;*********************
       45                                
-      46        066306                  mx.on	=lc.md!lc.mc!lc.ld!lc.toc!lc.sym!lc.cnd!lc.bin!lc.loc!lc.seq
+      46        066307                  mx.on	=lc.md!lc.mc!lc.ld!lc.toc!lc.sym!lc.cnd!lc.bin!lc.loc!lc.seq
       47                                
       48                                
       49                                
@@ -875,7 +875,7 @@
      159 000344 020110                  	cmp	r1,(r0)
      160 000346 001421                  	beq	2$
      161 000350 010110                  	mov	r1,(r0)
-     162 000352 032767  000002  000432' 	bit	#lc.seq,lcmask
+     162 000352 032767  000001  000432' 	bit	#lc.seq,lcmask
      163 000360 001014                  	bne	2$
      164 000362 010204                  	mov	r2,r4
      165 000364                         	call	dnc
@@ -1686,17 +1686,16 @@
      575        000000                  lctbas	=	.
      576 000000                         	genlct	seq
        1        000001                  lc.seq=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000000                  	.rept	<.-lctbas>/2
        3                                lc.seq=	lc.seq+lc.seq
        4                                	.endm
-       1        000002                  lc.seq=	lc.seq+lc.seq
        5 000000 073631                  	.rad50	/seq/
        6                                	.if nb	<>
        7                                	lcinit=	lcinit+lc.seq
        8                                	.endc
      577 000002                         	genlct	loc
        1        000001                  lc.loc=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000001                  	.rept	<.-lctbas>/2
        3                                lc.loc=	lc.loc+lc.loc
        4                                	.endm
        1        000002                  lc.loc=	lc.loc+lc.loc
@@ -1706,7 +1705,7 @@
        8                                	.endc
      578 000004                         	genlct	bin
        1        000001                  lc.bin=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000002                  	.rept	<.-lctbas>/2
        3                                lc.bin=	lc.bin+lc.bin
        4                                	.endm
        1        000002                  lc.bin=	lc.bin+lc.bin
@@ -1717,7 +1716,7 @@
        8                                	.endc
      579 000006                         	genlct	src
        1        000001                  lc.src=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000003                  	.rept	<.-lctbas>/2
        3                                lc.src=	lc.src+lc.src
        4                                	.endm
        1        000002                  lc.src=	lc.src+lc.src
@@ -1729,7 +1728,7 @@
        8                                	.endc
      580 000010                         	genlct	com
        1        000001                  lc.com=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000004                  	.rept	<.-lctbas>/2
        3                                lc.com=	lc.com+lc.com
        4                                	.endm
        1        000002                  lc.com=	lc.com+lc.com
@@ -1742,7 +1741,7 @@
        8                                	.endc
      581 000012                         	genlct	bex
        1        000001                  lc.bex=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000005                  	.rept	<.-lctbas>/2
        3                                lc.bex=	lc.bex+lc.bex
        4                                	.endm
        1        000002                  lc.bex=	lc.bex+lc.bex
@@ -1756,7 +1755,7 @@
        8                                	.endc
      582 000014                         	genlct	md
        1        000001                  lc.md=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000006                  	.rept	<.-lctbas>/2
        3                                lc.md=	lc.md+lc.md
        4                                	.endm
        1        000002                  lc.md=	lc.md+lc.md
@@ -1771,7 +1770,7 @@
        8                                	.endc
      583 000016                         	genlct	mc
        1        000001                  lc.mc=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000007                  	.rept	<.-lctbas>/2
        3                                lc.mc=	lc.mc+lc.mc
        4                                	.endm
        1        000002                  lc.mc=	lc.mc+lc.mc
@@ -1787,7 +1786,7 @@
        8                                	.endc
      584 000020                         	genlct	me ,1
        1        000001                  lc.me=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000010                  	.rept	<.-lctbas>/2
        3                                lc.me=	lc.me+lc.me
        4                                	.endm
        1        000002                  lc.me=	lc.me+lc.me
@@ -1804,7 +1803,7 @@
        8                                	.endc
      585 000022                         	genlct	meb,1
        1        000001                  lc.meb=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000011                  	.rept	<.-lctbas>/2
        3                                lc.meb=	lc.meb+lc.meb
        4                                	.endm
        1        000002                  lc.meb=	lc.meb+lc.meb
@@ -1822,7 +1821,7 @@
        8                                	.endc
      586 000024                         	genlct	cnd
        1        000001                  lc.cnd=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000012                  	.rept	<.-lctbas>/2
        3                                lc.cnd=	lc.cnd+lc.cnd
        4                                	.endm
        1        000002                  lc.cnd=	lc.cnd+lc.cnd
@@ -1841,7 +1840,7 @@
        8                                	.endc
      587 000026                         	genlct	ld ,1
        1        000001                  lc.ld=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000013                  	.rept	<.-lctbas>/2
        3                                lc.ld=	lc.ld+lc.ld
        4                                	.endm
        1        000002                  lc.ld=	lc.ld+lc.ld
@@ -1861,7 +1860,7 @@
        8                                	.endc
      588 000030                         	genlct	ttm,1
        1        000001                  lc.ttm=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000014                  	.rept	<.-lctbas>/2
        3                                lc.ttm=	lc.ttm+lc.ttm
        4                                	.endm
        1        000002                  lc.ttm=	lc.ttm+lc.ttm
@@ -1882,7 +1881,7 @@
        8                                	.endc
      589 000032                         	genlct	toc
        1        000001                  lc.toc=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000015                  	.rept	<.-lctbas>/2
        3                                lc.toc=	lc.toc+lc.toc
        4                                	.endm
        1        000002                  lc.toc=	lc.toc+lc.toc
@@ -1904,7 +1903,7 @@
        8                                	.endc
      590 000034                         	genlct	sym
        1        000001                  lc.sym=	1
-       2                                	.rept	<.-lctbas>/2
+       2        000016                  	.rept	<.-lctbas>/2
        3                                lc.sym=	lc.sym+lc.sym
        4                                	.endm
        1        000002                  lc.sym=	lc.sym+lc.sym
@@ -1927,7 +1926,7 @@
        8                                	.endc
      591 000036                         	genlct	<   >		;null
        1        000001                  lc.   =	1
-       2                                	.rept	<.-lctbas>/2
+       2        000017                  	.rept	<.-lctbas>/2
        3                                lc.   =	lc.   +lc.   
        4                                	.endm
        1        000002                  lc.   =	lc.   +lc.   
@@ -1991,10 +1990,10 @@
       15 000014                         	xitsec
        1 000014                         	entsec	.text
        1 002424                         	.psect	.text	con
-     596        061446                  flsbts=	lc.seq!lc.loc!lc.bin!lc.bex!lc.me!lc.meb!lc.toc!lc.sym
+     596        061447                  flsbts=	lc.seq!lc.loc!lc.bin!lc.bex!lc.me!lc.meb!lc.toc!lc.sym
      597                                profl:
-     598 002424 012767  061446  000436' 	mov	#flsbts,lcmcsi
-     599 002432 012767  061446  000432' 	mov	#flsbts,lcmask
+     598 002424 012767  061447  000436' 	mov	#flsbts,lcmcsi
+     599 002432 012767  061447  000432' 	mov	#flsbts,lcmask
      600 002440                         	return
        1 002440 000207                  	rts	pc
      601                                
@@ -2444,7 +2443,7 @@
        1 003746 004767  000000G         	jsr	pc,savreg
      897 003752 005767  000000G         	tst	mx.flg
      898 003756 001465                  	beq	1$
-     899 003760 012767  066306  000432' 	mov	#mx.on,lcmask
+     899 003760 012767  066307  000432' 	mov	#mx.on,lcmask
      900 003766 005767  000000'         	tst	errbts
      901 003772 001407                  	beq	3$
      902 003774                         	putl	#mxstar
@@ -2556,7 +2555,7 @@ $TIMDF  =000007           6$3      000512R  L   002 ED.LC   =****** G         LC
 1$10     001464R  L   002 80$1     000160R  L   002 ENDL19   000540R      002 LC.MD   =000100 G         PAGNUM  =****** G         
 1$14     002170R  L   002 9$1      000272R  L   002 ENDL20   000564R      002 LC.ME   =000400 G         PASS    =****** G         
 1$23     003442R  L   002 9$21     003354R  L   002 ENDL30   000616R      002 LC.MEB  =001000           PATTRS  =000050           
-1$25     003672R  L   002 9$22     003416R  L   002 ENDL50   000326R      002 LC.SEQ  =000002           PCROLL  =****** G         
+1$25     003672R  L   002 9$22     003416R  L   002 ENDL50   000326R      002 LC.SEQ  =000001           PCROLL  =****** G         
 1$26     004132R  L   002 9$5      000764R  L   002 ENDLIN   000000RG     002 LC.SRC  =000010           PDPV45  =000000           
 1$27     004204R  L   002 9$6      001074R  L   002 ENDP2A   003060R      002 LC.SYM  =040000           PF0      000014R      010 
 1$3      000374R  L   002 9$7      001222R  L   002 ENDP2B   003164R      002 LC.TOC  =020000           PF1      000020R      010 
@@ -2606,10 +2605,10 @@ $TIMDF  =000007           6$3      000512R  L   002 ED.LC   =****** G         LC
 31$4     000646R  L   002 CR      =000015           FFCNT   =****** G         MULR50  =****** G         SYMROL  =****** G         
 32$20    003230R  L   002 CRFREF  =****** G         FILELN  =****** G         MX.2     000056RG     006 SYMTXT   000075R      003 
 32768$0  000066R  L   002 CRLF     000120R      003 FLAGS   =****** G         MX.FLG  =****** G         TAB     =000011           
-32768$12 002116R  L   002 CT.ALP  =000040           FLSBTS  =061446           MX.GEN   000000RG     006 TITLE    001224RG     002 
+32768$12 002116R  L   002 CT.ALP  =000040           FLSBTS  =061447           MX.GEN   000000RG     006 TITLE    001224RG     002 
 32768$14 002400R  L   002 CT.COM  =000001           FT.ID   =000001           MX.MX    003746R      002 TITLE1   001312R      002 
 32768$15 000000R  L   011 CT.EOL  =000000           FT.UNX  =000001           MX.NUM   000050RG     006 TMPCNT  =100000           
-32768$16 000004R  L   011 CT.LC   =000100           GETCHR  =****** G         MX.ON   =066306           TOCTXT   000041R      003 
+32768$16 000004R  L   011 CT.LC   =000100           GETCHR  =****** G         MX.ON   =066307           TOCTXT   000041R      003 
 32768$17 000010R  L   011 CT.NUM  =000020           GETLIN  =****** G         MX.PUT   003720R      002 TSTARG  =****** G         
 32768$8  001302R  L   002 CT.PC   =000271           GETNB   =****** G         MX.PXX   000036R      006 TSTERR   000766R      002 
 32769$11 002014R  L   002 CT.PCX  =000010           GETR50  =****** G         MX.SYM   000037RG     006 TSTR50  =****** G         
