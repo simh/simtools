@@ -906,7 +906,7 @@
      154 000600 126167  000005  000000G 	cmpb	5(r1),objsec
      155 000606 001407                  	beq	2$
      156 000610 052716  000020          1$:	bis	#cc.nam,(sp)
-     157                                	.rept	4
+     157        000004                  	.rept	4
      158                                	movb	(r1)+,(r2)+
      159                                	.endm
        1 000614 112122                  	movb	(r1)+,(r2)+
@@ -1644,7 +1644,7 @@
      527 003006                         	call	crfref		;cref into proper roll
        1 003006 004767  000000G         	jsr	pc,crfref
      528 003012 012701  000000G         	mov	#symbol,r1
-     529                                	.rept	4		;move into code buffer
+     529        000004                  	.rept	4		;move into code buffer
      530                                	movb	(r1)+,(r2)+
      531                                	.endm
        1 003016 112122                  	movb	(r1)+,(r2)+

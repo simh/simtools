@@ -2086,7 +2086,7 @@
      694 004202 116767  000000' 000000G 	movb	silly,mode
      695 004210 116767  000000C 000000G 	movb	<^pl rolsiz>+1+secrol,sector
      696 004216 012703  000000G         1$:	mov	#clcnam,r3
-     697                                	.rept	5
+     697        000005                  	.rept	5
      698                                	mov	-(r3),-(sp)
      699                                	.endr
        1 004222 014346                  	mov	-(r3),-(sp)

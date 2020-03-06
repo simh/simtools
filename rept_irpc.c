@@ -38,13 +38,14 @@ char           *rept_stream_gets(
     char           *cp;
 
     for (;;) {
+        if (rstr->count <= 0)
+            return NULL;
+
         if ((cp = buffer_stream_gets(str)) != NULL)
             return cp;
 
-        if (--rstr->count <= 0)
-            return NULL;
-
         buffer_stream_rewind(str);
+        rstr->count--;
     }
 }
 
@@ -83,6 +84,8 @@ STREAM         *expand_rept(
         free_tree(value);
         return NULL;
     }
+
+    list_value(stack->top, value->data.lit);
 
     gb = new_buffer();
 

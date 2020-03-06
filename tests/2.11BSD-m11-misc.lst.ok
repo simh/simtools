@@ -1152,7 +1152,7 @@
        1 001006 000207                  	rts	pc
      291                                
      292                                
-     293                                	.rept	20		;generate xmit sequence
+     293        000020                  	.rept	20		;generate xmit sequence
      294                                	mov	(r1)+,(r2)+	
      295                                	.endm
        1 001010 012122                  	mov	(r1)+,(r2)+	

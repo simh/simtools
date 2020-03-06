@@ -1121,19 +1121,18 @@
      114        000005                  sector:	.blkb	1		;symbol/expression type
      115        000006                  value:	.blkw	1		;expression value
      116        000010                  rellvl:	.blkw	1
-     117                                	.rept	maxxmt-<<.-symbol>/2>	;end of grouped data
+     117        000000                  	.rept	maxxmt-<<.-symbol>/2>	;end of grouped data
      118                                	.blkw
      119                                	.endm
-       1        000012                  	.blkw
      120                                
-     121        000014                  clcnam:	.blkw	2		;current location counter symbol
-     122        000020                  clcfgs:	.blkb	1
-     123        000021                  clcsec:	.blkb	1
-     124        000022                  clcloc:	.blkw	1
-     125        000024                  clcmax:	.blkw	1
+     121        000012                  clcnam:	.blkw	2		;current location counter symbol
+     122        000016                  clcfgs:	.blkb	1
+     123        000017                  clcsec:	.blkb	1
+     124        000020                  clcloc:	.blkw	1
+     125        000022                  clcmax:	.blkw	1
      126                                
-     127 000026                         	xitsec			;return to normal
-       1 000026                         	entsec	.text
+     127 000024                         	xitsec			;return to normal
+       1 000024                         	entsec	.text
        1 000000                         	.psect	.text	con
      127                                
      128                                prop1:				;process pass 1
@@ -1288,11 +1287,11 @@ $TIMDF=000007           CH.MUL=000052           ENDFLG=****** G         LET.R =0
 9$3    000260R  L   002 CH.SUB=000055           ERRBTS=****** G         MDFFLG=000004           SECROL=000012 G         
 AATTRS=000130           CH.UAR=000136           EXMFLG 000000RG     010 MK.SYM=000001           SECTOR 000005RG     009 
 B.IDF =000001           CH.XCL=000047           FF    =000014           MODE   000004RG     009 SETMAX=****** G         
-BKSIZ  000002RG     008 CLCFGS 000020RG     009 FLAGS  000004RG     009 NEXT  =****** G         SETNB =****** G         
-BPMB  =000020           CLCLOC 000022RG     009 FT.ID =000001           OBJCHN=****** G         SETXPR=****** G         
-BSSFLG=000004           CLCMAX 000024RG     009 FT.UNX=000001           OPENO =****** G         SHRFLG=000001           
-CATTRS=000170           CLCNAM 000014RG     009 GETLIN=****** G         OVRFLG=000020           SPACE =000040           
-CH.ADD=000053           CLCSEC 000021RG     009 GLBFLG=000100           PASS   000000RG     008 STMNT =****** G         
+BKSIZ  000002RG     008 CLCFGS 000016RG     009 FLAGS  000004RG     009 NEXT  =****** G         SETNB =****** G         
+BPMB  =000020           CLCLOC 000020RG     009 FT.ID =000001           OBJCHN=****** G         SETXPR=****** G         
+BSSFLG=000004           CLCMAX 000022RG     009 FT.UNX=000001           OPENO =****** G         SHRFLG=000001           
+CATTRS=000170           CLCNAM 000012RG     009 GETLIN=****** G         OVRFLG=000020           SPACE =000040           
+CH.ADD=000053           CLCSEC 000017RG     009 GLBFLG=000100           PASS   000000RG     008 STMNT =****** G         
 CH.AND=000046           CNDROL=000020 G         INSERT=****** G         PATTRS=000050           SWTROL=000022 G         
 CH.BSL=000134           CODROL=000014 G         INSFLG=000002           PDPV45=000000           SYMBOL 000000RG     009 
 CH.COL=000072           CPOPJ =****** G         LBLFLG=000002           PROP1  000000RG     002 SYMROL=000002 G         
@@ -1319,7 +1318,7 @@ DPURE   000020    005   (RW,I,LCL,REL,CON,NOSAV)
 MIXED   000000    006   (RW,I,LCL,REL,CON,NOSAV)
 ERRMES  000000    007   (RW,I,LCL,REL,CON,NOSAV)
 IMPURE  000006    008   (RW,I,LCL,REL,CON,NOSAV)
-IMPPAS  000026    009   (RW,I,LCL,REL,CON,NOSAV)
+IMPPAS  000024    009   (RW,I,LCL,REL,CON,NOSAV)
 IMPLIN  000002    010   (RW,I,LCL,REL,CON,NOSAV)
 SWTSEC  000000    011   (RW,I,LCL,REL,CON,NOSAV)
 CNDSEC  000000    012   (RW,I,LCL,REL,CON,NOSAV)
