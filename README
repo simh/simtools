@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
 modified 2009 by Joerg Hoppe,
-modified 2015-2017 by Olaf 'Rhialto' Seibert.
+modified 2015-2017,2020 by Olaf 'Rhialto' Seibert.
 
 Files:
     macro11.c       Command line parsing and driving the passes.
