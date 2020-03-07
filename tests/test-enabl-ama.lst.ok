@@ -1,0 +1,24 @@
+       1                                ;;;;
+       2                                ;
+       3                                ; Test that .ENABL AMA  doesn't survive to the next pass.
+       4                                ; The default at the start of each pass is set by the command line
+       5                                ; option -d AMA or -e AMA. It is disabled by default.
+       6                                
+       7 000000                         	.psect	foo,i,rw
+       8 000000 000000                  y:	.word	0
+       9 000002 005067  177772          	clr	y	; should be pc-relative, no relocation
+      10                                
+      11                                	.enabl ama	; after this, Y would be @#Y
+      11                                
+
+
+Symbol table
+
+.      ******R      002 Y      000000R      002 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+FOO     000006    002   (RW,I,LCL,REL,CON,NOSAV)

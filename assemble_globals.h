@@ -35,9 +35,11 @@ extern int      last_locsym;    /* The last local symbol number generated */
 
 extern int      enabl_debug;    /* Whether assembler debugging is enabled */
 
+extern int      opt_enabl_ama; 	/* May be changed by command line */
+
 extern int      enabl_ama;      /* When set, chooses absolute (037) versus
                                    PC-relative */
-/* (067) addressing mode */
+                                /* (067) addressing mode */
 extern int      enabl_lsb;      /* When set, stops non-local symbol
                                    definitions from delimiting local
                                    symbol sections. */

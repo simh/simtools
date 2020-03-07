@@ -11,6 +11,7 @@ TESTS="test-asciz \
     test-blkb \
     test-bsl-mac-arg \
     test-complex-reloc \
+    test-enabl-ama \
     test-enabl-lcm \
     test-endm \
     test-if \

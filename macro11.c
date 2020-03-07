@@ -61,9 +61,9 @@ static void enable_tf(
     int tf)
 {
     if (strcmp(opt, "AMA") == 0)
-        enabl_ama = tf;
+        opt_enabl_ama = tf;
     else if (strcmp(opt, "GBL") == 0)
-        enabl_gbl = tf;
+        enabl_gbl = tf;		/* Unused in pass 2 */
     else if (strcmp(opt, "ME") == 0)
         list_me = tf;
     else if (strcmp(opt, "BEX") == 0)
@@ -199,6 +199,7 @@ void prepare_pass(int this_pass, STACK *stack, int nr_files, char **fnames)
     suppressed = 0;
     enabl_lc = 1;
     enabl_lcm = 0;
+    enabl_ama = opt_enabl_ama;
 }
 
 int main(
