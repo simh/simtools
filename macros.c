@@ -250,7 +250,7 @@ MACRO          *defmacro(
 
         gb = new_buffer();
 
-        if (!(called & CALLED_NOLIST) && !list_md) {
+        if ((called & CALLED_NOLIST) && !list_md) {
             list_level--;
             levelmod = 1;
         }
