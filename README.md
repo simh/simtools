@@ -37,11 +37,6 @@ DESCRIPTION
     console load commands, and loadable absolute binary program images (.BIN)
     files.
 
-    Currently the program is limited to a single object input file that can be
-    output in the selected format. Multiple .psect/.asect ops are supported,
-    as well as all local (non-global) relocation directory entries. Multiple
-    object files are (not yet) supported.
-
 OPTIONS
     The following options are available:
 
@@ -128,6 +123,8 @@ EXAMPLES
 
       obj2bin.pl --verbose --binary --out memtest.bin memtest.obj
 
+      obj2bin.pl --verbose --binary --out prftst.bin prftst.obj mac/printf.obj
+
 AUTHOR
     Don North - donorth <ak6dn _at_ mindspring _dot_ com>
 
@@ -140,7 +137,6 @@ HISTORY
       2016-01-20 v1.3 donorth - Initial support for linking multiple PSECTs.
       2016-01-22 v1.4 donorth - Added objfile/outfile/logfile switches vs stdio.
       2016-01-28 v1.5 donorth - Added RLD processing, especially complex.
-      2017-04-01 v2.0 donorth - Started to add capability to process multiple
-                                input object files ... still a work in progress.
+      2017-04-01 v2.0 donorth - Added capability to process multiple input object files.
 				Renamed from obj2hex.pl to obj2bin.pl
 ```
