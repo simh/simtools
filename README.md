@@ -131,12 +131,13 @@ AUTHOR
 HISTORY
     Modification history:
 
-      2005-05-05 v1.0 donorth - Initial version.
-      2016-01-15 v1.1 donorth - Added RLD(IR) processing, moved sub's to end.
-      2016-01-18 v1.2 donorth - Added GSD processing, improved debug output.
-      2016-01-20 v1.3 donorth - Initial support for linking multiple PSECTs.
-      2016-01-22 v1.4 donorth - Added objfile/outfile/logfile switches vs stdio.
-      2016-01-28 v1.5 donorth - Added RLD processing, especially complex.
-      2017-04-01 v2.0 donorth - Added capability to process multiple input object files.
-				Renamed from obj2hex.pl to obj2bin.pl
+      2005-05-05 v1.0  donorth - Initial version.
+      2016-01-15 v1.1  donorth - Added RLD(IR) processing, moved sub's to end.
+      2016-01-18 v1.2  donorth - Added GSD processing, improved debug output.
+      2016-01-20 v1.3  donorth - Initial support for linking multiple PSECTs.
+      2016-01-22 v1.4  donorth - Added objfile/outfile/logfile switches vs stdio.
+      2016-01-28 v1.5  donorth - Added RLD processing, especially complex.
+      2017-04-01 v1.9  donorth - Renamed from obj2hex.pl to obj2bin.pl
+      2017-05-04 v1.95 donorth - Updated capability to read multiple input .obj files.
+      2020-03-06 v2.0  donorth - Updated help documentation and README.md file.
 ```
