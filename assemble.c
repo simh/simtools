@@ -274,10 +274,9 @@ static int assemble(
             switch (op->section->type) {
             case SECTION_PSEUDO:
                 switch (op->value) {
-                case P_ENDR:
-                case P_ENDM:
-                case P_SBTTL:
+                case P_PAGE:
                 case P_PRINT:
+                case P_SBTTL:
                     return 1;          /* Accepted, ignored.  (An obvious
                                           need: get assembly listing
                                           controls working fully. ) */
@@ -955,6 +954,14 @@ static int assemble(
 
                     pop_cond(last_cond - 1);
                     return 1;
+
+                case P_ENDM:
+                    report(stack->top, "No macro definition block active\n");
+                    return 0;
+
+                case P_ENDR:
+                    report(stack->top, "No repeat block active\n");
+                    return 0;
 
                 case P_EVEN:
                     cp = skipwhite(cp);

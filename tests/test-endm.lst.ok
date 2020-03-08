@@ -53,7 +53,14 @@ test-endm.mac:37->M5:3: ***ERROR .ENDM 'NOTM5' does not match .MACRO 'M5'
       40                                    .macro      M6
 test-endm.mac:41: ***ERROR .ENDM 'NOTM6' does not match .MACRO 'M6'
       41                                    .endm       notM6   ; wrong
-      41                                
+      42                                
+test-endm.mac:43: ***ERROR No macro definition block active
+      43                                    .endm               ; end without macro
+test-endm.mac:44: ***ERROR No repeat block active
+      44                                    .endr               ; end without repetition
+test-endm.mac:45: ***ERROR No conditional block active
+      45                                    .endc               ; end without condition
+      45                                
 
 
 Symbol table

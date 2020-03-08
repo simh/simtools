@@ -23,6 +23,7 @@
 test-rept.mac:20: ***ERROR .REPT value must be constant
       20                                                .rept   undefd
       21 000014 005200                                  inc     r0
+test-rept.mac:22: ***ERROR No repeat block active
       22                                                .endr
       22                                
 

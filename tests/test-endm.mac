@@ -39,3 +39,7 @@
 
     .macro      M6
     .endm       notM6   ; wrong
+
+    .endm               ; end without macro
+    .endr               ; end without repetition
+    .endc               ; end without condition
