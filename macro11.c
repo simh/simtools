@@ -145,6 +145,8 @@ static void print_help(
     printf("    libraries (see -m) into individual .MAC files in the current\n");
     printf("    directory.  No assembly of input is done.\n");
     printf("    This must be the last command line option!\n");
+    printf("-rsx Generate RSX style object files (default).\n");
+    printf("-rt11 Generate RT11 style object files.\n");
     printf("-ysl Syntax extension: change length of symbols from \n");
     printf("     default = %d to larger values, max %d.\n", SYMMAX_DEFAULT, SYMMAX_MAX);
     printf("-yus Syntax extension: allow underscore \"_\" in symbols.\n");
