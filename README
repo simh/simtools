@@ -173,3 +173,11 @@ Options:
 You may define the MCALL and INCLUDE environment variable prior to
 invoking macro11, as a path to directories containing macros or files to
 be included, respectively.
+
+=======================================================================
+
+Included in subdirectory obj2bin is a Perl script from Don North,
+copied from https://github.com/AK6DN/obj2bin. The copied version may
+get out of date; when in doubt check the original.
+
+=======================================================================
