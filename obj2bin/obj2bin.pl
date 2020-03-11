@@ -47,6 +47,8 @@ S<[--boot]>
 S<[--console]>
 S<[--binary]>
 S<[--ascii]>
+S<[--rt11]>
+S<[--rsx11]>
 S<[--bytes=N]>
 S<[--nocrc]>
 S<[--logfile=LOGFILE]>
@@ -62,6 +64,8 @@ binary program images (.BIN) files.
 
 Multiple .psect/.asect ops are supported, as well as all local
 (non-global) relocation directory entries.
+
+Supports either RT-11 or RSX-11 format object files.
 
 =head1 OPTIONS
 
@@ -91,6 +95,12 @@ an M9312 boot prom (512x4 geometry, only low half used).
 Generate a hex PROM file image suitable for programming into
 an M9312 console/diagnostic prom (1024x4 geometry).
 
+=item B<--ascii>
+
+Generate a a sequence of 'L addr' / 'D data' commands for downloading
+a program via a terminal emulator thru the M9312 user command interface.
+Suitable only for really small test programs.
+
 =item B<--binary>
 
 Generate binary format load records of the program image (paper
@@ -98,14 +108,19 @@ tape format) for loading into SIMH or compatible simulators.
 These files can also be copied onto XXDP filesystems to generate
 runnable program images (used to write custom diaqnostics).
 
-=item B<--ascii>
+Binary format is the default if no other option is specified.
+If more than one option is specified the last one takes effect.
 
-Generate a a sequence of 'L addr' / 'D data' commands for downloading
-a program via a terminal emulator thru the M9312 user command interface.
-Suitable only for really small test programs.
+=item B<--rt11>
 
-Exactly ONE of B<--boot>, B<--console>, B<--binary>, or B<--ascii>
-must be specified.
+Read input object files in RT-11 format.
+
+=item B<--rsx11>
+
+Read input object files in RSX-11 format.
+
+RSX-11 object file format is the default if no other option is specified.
+If more than one option is specified the last one takes effect.
 
 =item B<--bytes=N>
 
@@ -139,9 +154,9 @@ C<Aborted due to command line errors> -- bad option or missing file(s)
 
 C<Can't open input file '$file'> -- bad filename or unreadable file
 
-C<Error: Improper object file format (1)> -- valid record must start with 0x01
+C<Error: Improper object file format (1)> -- valid RT-11 record must start with 0x01
 
-C<Error: Improper object file format (2)> -- second byte must be 0x00
+C<Error: Improper object file format (2)> -- second RT-11 byte must be 0x00
 
 C<Error: Improper object file format (3)> -- third byte is low byte of record length
 
@@ -149,7 +164,7 @@ C<Error: Improper object file format (4)> -- fourth byte is high byte of record 
 
 C<Error: Improper object file format (5)> -- bytes five thru end-1 are data bytes
 
-C<Error: Improper object file format (6)> -- last byte is checksum
+C<Error: Improper object file format (6)> -- last RT-11 byte is checksum
 
 C<Error: Bad checksum exp=0x%02X rcv=0x%02X> -- compare rcv'ed checksum vs exp'ed checksum
 
@@ -161,9 +176,9 @@ Some examples of common usage:
 
   obj2bin.pl --verbose --boot --out 23-751A9.hex 23-751A9.obj
 
-  obj2bin.pl --verbose --binary --out memtest.bin memtest.obj
+  obj2bin.pl --verbose --binary --rt11 --out memtest.bin memtest.obj
 
-  obj2bin.pl --verbose --binary --out prftst.bin prftst.obj mac/printf.obj
+  obj2bin.pl --verbose --binary --rsx11 --out prftst.bin prftst.obj mac/printf.obj
 
 =head1 AUTHOR
 
@@ -182,6 +197,7 @@ Modification history:
   2017-04-01 v1.9  donorth - Renamed from obj2hex.pl to obj2bin.pl
   2017-05-04 v1.95 donorth - Updated capability to read multiple input .obj files.
   2020-03-06 v2.0  donorth - Updated help documentation and README.md file.
+  2020-03-10 v2.1  donorth - Broke down and added RSX-11 input format option.
 
 =cut
 
@@ -202,7 +218,7 @@ BEGIN { unshift(@INC, $FindBin::Bin);
 # external local modules
 
 # generic defaults
-my $VERSION = 'v2.0'; # version of code
+my $VERSION = 'v2.1'; # version of code
 my $HELP = 0; # set to 1 for man page output
 my $DEBUG = 0; # set to 1 for debug messages
 my $VERBOSE = 0; # set to 1 for verbose messages
@@ -215,7 +231,8 @@ my %excaddr; # words to be skipped in rom crc calc
 my $rombase; # base address of rom image
 my $romsize; # number of rom addresses
 my $romfill; # rom fill pattern
-my $romtype = 'NONE'; # default rom type
+my $romtype = 'BINA'; # default rom type is BINARY
+my $objtype = 'RSX11'; # default object file format is RSX11
 my $bytesper = -1; # bytes per block in output file
 my $nocrc = 0; # output CRC16 as last word unless set
 my $outfile = undef; # output filename
@@ -229,6 +246,8 @@ my $NOERROR = GetOptions( "help"        => \$HELP,
 			  "console"     => sub { $romtype = 'DIAG'; },
 			  "binary"      => sub { $romtype = 'BINA'; },
 			  "ascii"       => sub { $romtype = 'ASC9'; },
+			  "rt11"        => sub { $objtype = 'RT11'; },
+			  "rsx11"       => sub { $objtype = 'RSX11'; },
 			  "bytes=i"     => \$bytesper,
 			  "nocrc"       => \$nocrc,
 			  "outfile=s"   => \$outfile,
@@ -264,11 +283,13 @@ unless ($NOERROR
        --help                  output manpage and exit
        --debug                 enable debug mode
        --verbose               verbose status reporting
-       --boot                  M9312 boot prom
-       --console               M9312 console/diagnostic prom
-       --binary                binary program load image
-       --ascii                 ascii m9312 program load image
-       --bytes=N               bytes per block on output
+       --boot                  M9312 boot prom .hex
+       --console               M9312 console/diagnostic prom .hex
+       --binary                binary program load image .bin [default]
+       --ascii                 ascii m9312 program load image .txt
+       --rt11                  read .obj files in RT11 format
+       --rsx11                 read .obj files in RSX11 format [default]
+       --bytes=N               bytes per block on output hex format
        --nocrc                 inhibit output of CRC-16 in hex format
        --logfile=LOGFILE       logging message file
        --outfile=OUTFILE       output .hex/.txt/.bin file
@@ -627,53 +648,99 @@ sub read_rec ($) {
     my @dat = ();
     my @suf = ();
 
-    # Object file format consists of blocks, optionally preceded, separated, and
-    # followed by zeroes.  Each block consists of:
-    #
-    #   001		---
-    #   000		 |
-    #   lo(length)	 |
-    #   hi(length)	 > 'length' bytes
-    #   databyte1	 |
-    #   :		 |
-    #   databyteN	---
-    #   checksum
-    #
+    if ($objtype eq 'RT11') {
 
-    # skip over strings of 0x00; exit OK if hit EOF
-    do { return () unless $cnt = read($fh, $buf, 1); } while (ord($buf) == 0);
+	# RT-11 object file format consists of blocks, optionally preceded, separated, and
+	# followed by zeroes.  Each block consists of:
+	#
+	#   001		---
+	#   000		 |
+	#   lo(length)	 |
+	#   hi(length)	 > 'length' bytes
+	#   databyte1	 |
+	#   :		 |
+	#   databyteN	---
+	#   checksum
+	#
 
-    # valid record starts with (1)
-    $err = 1 unless $cnt == 1 && ord($buf) == 1;
-    push(@pre, ord($buf));
+	# skip over strings of 0x00; exit OK if hit EOF
+	do { return () unless $cnt = read($fh, $buf, 1); } while (ord($buf) == 0);
 
-    # second byte must be (0)
-    $cnt = read($fh, $buf, 1);
-    $err = 2 unless $cnt == 1 && ord($buf) == 0;
-    push(@pre, ord($buf));
+	# valid record starts with (1)
+	$err = 1 unless $cnt == 1 && ord($buf) == 1;
+	push(@pre, ord($buf));
 
-    # third byte is low byte of record length
-    $cnt = read($fh, $buf, 1);
-    $err = 3 unless $cnt == 1;
-    $len = ord($buf);
-    push(@pre, ord($buf));
+	# second byte must be (0)
+	$cnt = read($fh, $buf, 1);
+	$err = 2 unless $cnt == 1 && ord($buf) == 0;
+	push(@pre, ord($buf));
 
-    # fourth byte is high byte of record length
-    $cnt = read($fh, $buf, 1);
-    $err = 4 unless $cnt == 1;
-    $len += ord($buf)<<8;
-    push(@pre, ord($buf));
+	# third byte is low byte of record length
+	$cnt = read($fh, $buf, 1);
+	$err = 3 unless $cnt == 1;
+	$len = ord($buf);
+	push(@pre, ord($buf));
 
-    # bytes five thru end-1 are data bytes
-    $cnt = read($fh, $buf, $len-4);
-    $err = 5 unless $cnt == $len-4 && $len >= 4;
-    @dat = unpack("C*", $buf);
+	# fourth byte is high byte of record length
+	$cnt = read($fh, $buf, 1);
+	$err = 4 unless $cnt == 1;
+	$len += ord($buf)<<8;
+	push(@pre, ord($buf));
 
-    # last byte is checksum
-    $cnt = read($fh, $buf, 1);
-    $err = 6 unless $cnt == 1;
-    my $rcv = ord($buf);
-    push(@suf, ord($buf));
+	# bytes five thru end-1 are data bytes
+	$cnt = read($fh, $buf, $len-4);
+	$err = 5 unless $cnt == $len-4 && $len >= 4;
+	@dat = unpack("C*", $buf);
+
+	# last byte is checksum
+	$cnt = read($fh, $buf, 1);
+	$err = 6 unless $cnt == 1;
+	my $rcv = ord($buf);
+	push(@suf, ord($buf));
+
+	# compare rcv'ed checksum vs exp'ed checksum
+	my $exp = &chksum(0x01, $len>>0, $len>>8, @dat);
+	warn sprintf("Warning: Bad checksum exp=0x%02X rcv=0x%02X", $exp, $rcv) unless $exp == $rcv;
+
+    } elsif ($objtype eq 'RSX11') {
+
+	# RSX-11 object file format consists of blocks of data in the following format.
+	# Each block consists of:
+	#
+	#   lo(length)
+	#   hi(length)
+	#   databyte1	---
+	#     :          |
+	#     :          > 'length' bytes
+	#     :          |
+	#   databyteN	---
+	#   zeroFill    present if length is ODD; else not present
+	#
+
+	# first byte is low byte of record length
+	$cnt = read($fh, $buf, 1);
+	# but exit OK if hit EOF
+	return () if $cnt == 0;
+	$err = 10 unless $cnt == 1;
+	$len = ord($buf);
+	push(@pre, ord($buf));
+
+	# second byte is high byte of record length
+	$cnt = read($fh, $buf, 1);
+	$err = 11 unless $cnt == 1;
+	$len += ord($buf)<<8;
+	push(@pre, ord($buf));
+
+	# bytes three thru end are data bytes
+	$cnt = read($fh, $buf, $len);
+	$err = 12 unless $cnt == $len && $len >= 0;
+	@dat = unpack("C*", $buf);
+
+	# optional pad byte if length is odd
+	$cnt = ($len & 1) ? read($fh, $buf, 1) : 2;
+	$err = 13 unless $cnt == 1 && ord($buf) == 0 || $cnt == 2;
+
+    }
 
     # output the record if debugging
     if ($DEBUG >= 2) {
@@ -691,11 +758,7 @@ sub read_rec ($) {
     }
 
     # check we have a well formatted record
-    warn sprintf("Warning: invalid object file record format (%d)", $err) if $err;
-
-    # compare rcv'ed checksum vs exp'ed checksum
-    my $exp = &chksum(0x01, $len>>0, $len>>8, @dat);
-    warn sprintf("Warning: Bad checksum exp=0x%02X rcv=0x%02X", $exp, $rcv) unless $exp == $rcv;
+    warn sprintf("Warning: invalid %s object file record format (%d)", $objtype, $err) if $err;
 
     # all is well, return the record
     return @dat;
@@ -820,7 +883,7 @@ sub parse_rec ($$$) {
 	printf $LOG "..ENDGSD\n\n" if $DEBUG;
 
 	$program{END}{ADDRESS} = 0;
-	foreach my $nam (sort({$psect{$a}{START} == $psect{$b}{START} ? $psect{$a}{LENGTH} <=> $psect{$b}{LENGTH} : $psect{$a}{START} <=> $psect{$b}{START}} keys(%psect))) {
+	foreach my $nam (sort({$psect{$a}{START} == $psect{$b}{START} ? $psect{$a}{NUMBER} <=> $psect{$b}{NUMBER} : $psect{$a}{START} <=> $psect{$b}{START}} keys(%psect))) {
 	    my $start = $psect{$nam}{START};
 	    my $length = $psect{$nam}{LENGTH};
 	    my $end = $length ? $start + $length - 1 : $start;
