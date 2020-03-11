@@ -49,6 +49,10 @@ DAMAGE.
 
 #define NPSECTS 256
 
+#ifndef DEFAULT_OBJECTFORMAT_RT11
+#define DEFAULT_OBJECTFORMAT_RT11       0
+#endif
+
 int             psectid = 0;
 char           *psects[NPSECTS];
 FILE           *bin = NULL;
@@ -686,7 +690,7 @@ int main(
     int             len;
     FILE           *fp;
     int             arg;
-    int             rt11 = 0;
+    int             rt11 = DEFAULT_OBJECTFORMAT_RT11;
     char            *infile = 0;
     char            *outfile = 0;
 

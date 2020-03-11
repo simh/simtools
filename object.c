@@ -47,7 +47,11 @@ DAMAGE.
 #include "rad50.h"
 #include "object.h"
 
-int rt11 = 0;
+#ifndef DEFAULT_OBJECTFORMAT_RT11
+#define DEFAULT_OBJECTFORMAT_RT11       0
+#endif
+
+int rt11 = DEFAULT_OBJECTFORMAT_RT11;
 
 /*
   writerec writes "formatted binary records."
