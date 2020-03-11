@@ -231,6 +231,7 @@ MLB            *mlb_rsx_open(
     } else if (WORD(buff) != 01001) {  /* Is this really a macro library? */
         /* fprintf(stderr, "error: first word not correct value\n"); */
         mlb_rsx_close(mlb);            /* Nope. */
+        free(buff);
         return NULL;
     }
 
