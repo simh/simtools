@@ -1,6 +1,7 @@
-??.??.201?: Rhialto
+25.04.2020: Rhialto
         version 0.5:
-        - Fixed bug with checking addressing mode for JSR.
+        - Fixed bug with checking addressing mode for JSR and bugs
+          with .REPT 0, unneeded relocation on pc-relative mode.
         - Very simple .LIST and .NLIST implementation.
         - Add ^pl and ^ph expressions from 2.11BSD's m11.
         - Object-ified macro libraries with an eye to support the .sml
@@ -9,8 +10,8 @@
           sure how it is supposed to work.
         - Added 2.11BSD/m11 as test files. To make this reasonable, a
           few small features they use have been recognized and ignored.
-        - Add -rsx and -rt11 to switch object file format
-          (from Kevin Handy)
+        - Add -rsx and -rt11 to switch object file format (from Kevin Handy)
+        - Add obj2bin from https://github.com/AK6DN/obj2bin.git
 
 09.11.2015: Rhialto
         version 0.4:
