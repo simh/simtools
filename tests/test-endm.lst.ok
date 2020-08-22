@@ -60,15 +60,40 @@ test-endm.mac:44: ***ERROR No repeat block active
       44                                    .endr               ; end without repetition
 test-endm.mac:45: ***ERROR No conditional block active
       45                                    .endc               ; end without condition
-      45                                
+      46                                
+      47                                    ; Test that a macro that is defined inside another macro isn't already
+      48                                    ; defined while defining the outer macro.
+      49                                    ; This is a bit tricky: macros are kept between passes, so just
+      50                                    ; testing M3 before M2 (like above) won't work.
+      51                                
+      52                                    .macro      M7
+      53                                     .word      7
+      54                                     .if        p2
+      55                                      .macro    M8      ; only defined in pass 2
+      56                                       .word    8.
+      57                                      .endm     M8      ; ok
+      58                                     .endc
+      59                                    .endm       M7      ; ok
+      60                                
+      61 000012 000000G                     M8                  ; not defined yet; will be taken as implied .word.
+      62 000014                             M7                  ; defines M8.
+       1 000014 000007                       .word      7
+       2                                     .if        p2
+       3                                      .macro    M8      ; only defined in pass 2
+       4                                       .word    8.
+       5                                      .endm     M8      ; ok
+       6                                     .endc
+      63 000016                             M8                  ; which can now be used.
+       1 000016 000010                         .word    8.
+      63                                
 
 
 Symbol table
 
-.      ******R      001 
+.      ******R      001 M8    =****** GX        
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000012    001   (RW,I,LCL,REL,CON,NOSAV)
+        000020    001   (RW,I,LCL,REL,CON,NOSAV)
