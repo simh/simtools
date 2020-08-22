@@ -5,7 +5,7 @@
 
 WARNS ?= -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
 OBJFORMAT = -DDEFAULT_OBJECTFORMAT_RT11=0
-CFLAGS ?= -O -ggdb -std=gnu99 $(WARNS) $(OBJFORMAT)
+CFLAGS ?= -O2 -ggdb -std=gnu99 $(WARNS) $(OBJFORMAT)
 
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\
