@@ -14,6 +14,7 @@ start:  jmp     label           ; rel(pc)       jumps to label
         jmp     @#label         ; @(pc)+        jumps to label
 
         jmp     r1              ; must fail
+        jmp     (r0)            ; must succeed (failed before a24e3ba3)
         jmp     (r2)
         jmp     (r1)+
         jmp     @(r1)+

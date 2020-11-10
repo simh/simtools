@@ -8,75 +8,76 @@
        8                                ; but XOR Rx,Ry is allowed whereas JSR Rx,Ry is not.
        9                                ;
       10                                
-      11 000000 000167  000150          start:  jmp     label           ; rel(pc)       jumps to label
-      12 000004 000177  000144                  jmp     @label          ; @rel(pc)      does something else!
-      13 000010 000127  000154'                 jmp     #label          ; (pc)+         does something else!
-      14 000014 000137  000154'                 jmp     @#label         ; @(pc)+        jumps to label
+      11 000000 000167  000152          start:  jmp     label           ; rel(pc)       jumps to label
+      12 000004 000177  000146                  jmp     @label          ; @rel(pc)      does something else!
+      13 000010 000127  000156'                 jmp     #label          ; (pc)+         does something else!
+      14 000014 000137  000156'                 jmp     @#label         ; @(pc)+        jumps to label
       15                                
 test-jmp.mac:16: ***ERROR JMP Rn is illegal
       16 000020 000101                          jmp     r1              ; must fail
-      17 000022 000112                          jmp     (r2)
-      18 000024 000121                          jmp     (r1)+
-      19 000026 000131                          jmp     @(r1)+
-      20 000030 000141                          jmp     -(r1)
-      21 000032 000151                          jmp     @-(r1)
-      22 000034 000161  001234                  jmp     1234(r1)
-      23 000040 000171  001234                  jmp     @1234(r1)
-      24                                
-      25 000044 004067  000104          secnd:  jsr     r0,label        ; rel(pc)       jumps to label
-      26 000050 004077  000100                  jsr     r0,@label       ; @rel(pc)      does something else!
-      27 000054 004027  000154'                 jsr     r0,#label       ; (pc)+         does something else!
-      28 000060 004037  000154'                 jsr     r0,@#label      ; @(pc)+        jumps to label
-      29                                
-test-jmp.mac:30: ***ERROR JSR Rn,Rm is illegal
-      30 000064 004201                          jsr     r2,r1           ; must fail
-      31 000066 004312                          jsr     r3,(r2)
-      32 000070 004421                          jsr     r4,(r1)+
-      33 000072 004531                          jsr     r5,@(r1)+
-      34 000074 004241                          jsr     r2,-(r1)
-      35 000076 004351                          jsr     r3,@-(r1)
-      36 000100 004461  001234                  jsr     r4,1234(r1)
-      37 000104 004571  001234                  jsr     r5,@1234(r1)
-      38                                
-      39 000110 074067  000040          third:  xor     r0,label        ; rel(pc)
-      40 000114 074077  000034                  xor     r0,@label       ; @rel(pc)
-      41 000120 074027  000154'                 xor     r0,#label       ; (pc)+
-      42 000124 074037  000154'                 xor     r0,@#label      ; @(pc)+
-      43                                
-      44 000130 074201                          xor     r2,r1           ; must succeed
-      45 000132 074312                          xor     r3,(r2)         ; must succeed
-      46 000134 074421                          xor     r4,(r1)+        ; must succeed
-      47 000136 074531                          xor     r5,@(r1)+       ; must succeed
-      48 000140 074241                          xor     r2,-(r1)        ; must succeed
-      49 000142 074351                          xor     r3,@-(r1)       ; must succeed
-      50 000144 074461  001234                  xor     r4,1234(r1)     ; must succeed
-      51 000150 074571  001234                  xor     r5,@1234(r1)    ; must succeed
-      52                                
-test-jmp.mac:53: ***ERROR Illegal addressing mode
-      53                                        xor     (r2),r1         ; must fail
+      17 000022 000110                          jmp     (r0)            ; must succeed (failed before a24e3ba3)
+      18 000024 000112                          jmp     (r2)
+      19 000026 000121                          jmp     (r1)+
+      20 000030 000131                          jmp     @(r1)+
+      21 000032 000141                          jmp     -(r1)
+      22 000034 000151                          jmp     @-(r1)
+      23 000036 000161  001234                  jmp     1234(r1)
+      24 000042 000171  001234                  jmp     @1234(r1)
+      25                                
+      26 000046 004067  000104          secnd:  jsr     r0,label        ; rel(pc)       jumps to label
+      27 000052 004077  000100                  jsr     r0,@label       ; @rel(pc)      does something else!
+      28 000056 004027  000156'                 jsr     r0,#label       ; (pc)+         does something else!
+      29 000062 004037  000156'                 jsr     r0,@#label      ; @(pc)+        jumps to label
+      30                                
+test-jmp.mac:31: ***ERROR JSR Rn,Rm is illegal
+      31 000066 004201                          jsr     r2,r1           ; must fail
+      32 000070 004312                          jsr     r3,(r2)
+      33 000072 004421                          jsr     r4,(r1)+
+      34 000074 004531                          jsr     r5,@(r1)+
+      35 000076 004241                          jsr     r2,-(r1)
+      36 000100 004351                          jsr     r3,@-(r1)
+      37 000102 004461  001234                  jsr     r4,1234(r1)
+      38 000106 004571  001234                  jsr     r5,@1234(r1)
+      39                                
+      40 000112 074067  000040          third:  xor     r0,label        ; rel(pc)
+      41 000116 074077  000034                  xor     r0,@label       ; @rel(pc)
+      42 000122 074027  000156'                 xor     r0,#label       ; (pc)+
+      43 000126 074037  000156'                 xor     r0,@#label      ; @(pc)+
+      44                                
+      45 000132 074201                          xor     r2,r1           ; must succeed
+      46 000134 074312                          xor     r3,(r2)         ; must succeed
+      47 000136 074421                          xor     r4,(r1)+        ; must succeed
+      48 000140 074531                          xor     r5,@(r1)+       ; must succeed
+      49 000142 074241                          xor     r2,-(r1)        ; must succeed
+      50 000144 074351                          xor     r3,@-(r1)       ; must succeed
+      51 000146 074461  001234                  xor     r4,1234(r1)     ; must succeed
+      52 000152 074571  001234                  xor     r5,@1234(r1)    ; must succeed
+      53                                
 test-jmp.mac:54: ***ERROR Illegal addressing mode
-      54                                        xor     (r2)+,r1        ; must fail
+      54                                        xor     (r2),r1         ; must fail
 test-jmp.mac:55: ***ERROR Illegal addressing mode
-      55                                        xor     @(r2)+,r1       ; must fail
+      55                                        xor     (r2)+,r1        ; must fail
 test-jmp.mac:56: ***ERROR Illegal addressing mode
-      56                                        xor     -(r2),r1        ; must fail
+      56                                        xor     @(r2)+,r1       ; must fail
 test-jmp.mac:57: ***ERROR Illegal addressing mode
-      57                                        xor     @-(r2),r1       ; must fail
+      57                                        xor     -(r2),r1        ; must fail
 test-jmp.mac:58: ***ERROR Illegal addressing mode
-      58                                        xor     1234(r2),r1     ; must fail
+      58                                        xor     @-(r2),r1       ; must fail
 test-jmp.mac:59: ***ERROR Illegal addressing mode
-      59                                        xor     @1234(r2),r1    ; must fail
-      60                                
-      61 000154 000207                  label:  rts     pc
+      59                                        xor     1234(r2),r1     ; must fail
+test-jmp.mac:60: ***ERROR Illegal addressing mode
+      60                                        xor     @1234(r2),r1    ; must fail
       61                                
+      62 000156 000207                  label:  rts     pc
+      62                                
 
 
 Symbol table
 
-.      ******R      001 LABEL  000154R      001 SECND  000044R      001 START  000000R      001 THIRD  000110R      001 
+.      ******R      001 LABEL  000156R      001 SECND  000046R      001 START  000000R      001 THIRD  000112R      001 
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000156    001   (RW,I,LCL,REL,CON,NOSAV)
+        000160    001   (RW,I,LCL,REL,CON,NOSAV)
