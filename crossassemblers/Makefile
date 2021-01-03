@@ -5,7 +5,7 @@ BIN=/usr/local/bin
 INSTALL=install
 CC=gcc
 
-SUBDIRS=hpasm macro1 macro7 macro8x
+SUBDIRS=hpasm macro1 macro11 macro7 macro8x
 
 .PHONY: all clean install uninstall
 

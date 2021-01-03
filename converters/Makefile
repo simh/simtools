@@ -5,8 +5,9 @@ BIN=/usr/local/bin
 INSTALL=install
 CC=gcc
 
-SUBDIRS=asc cosy decsys dtos8cvt gt7cvt hpconvert indent littcvt m8376 mksimtape mt2tpc mtcvt23 \
-	mtcvtfix mtcvtodd noff sfmtcvt strrem strsub tar2mt tp512cvt tpc2mt
+SUBDIRS=asc cosy decsys dtos8cvt fsio gt7cvt hpconvert indent littcvt m8376 \
+	mksimtape mt2tpc mtcvt23 mtcvtfix mtcvtodd noff sfmtcvt strrem strsub \
+	tar2mt tp512cvt tpc2mt
 
 .PHONY: all clean install uninstall
 
