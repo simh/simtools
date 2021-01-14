@@ -44,7 +44,7 @@ if (argc < 2) {
     fprintf (stderr, "blocksize defaults to 8192\n");
     exit (0);
     }
-if ((argc >= 3) && ((strcmp("-b", argv[1])) || (strcmp("--blocksize", argv[1])))) {
+if ((argc >= 3) && ((strcmp("-b", argv[1]) == 0) || (strcmp("--blocksize", argv[1]) == 0))) {
     if (atoi (argv[2]) <= 0) {
         fprintf (stderr, "Invalid blocksize: %s\n", argv[2]);
         exit (0);
