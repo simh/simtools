@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 #include <ctype.h>
 
 #include "parse.h"                     /* my own definitions */
@@ -318,6 +319,38 @@ int get_mode(
     return TRUE;
 }
 
+/*
+ * We need 56 bits of mantissa.
+ *
+ * Try to detect if it is needed, possible and useful to use
+ * long double instead of double, when parsing floating point numbers.
+ */
+
+#if DBL_MANT_DIG >= 56
+/* plain double seems big enough */
+# define USE_LONG_DOUBLE        0
+/* long double exists and seems big enough */
+#elif LDBL_MANT_DIG >= 56
+# define USE_LONG_DOUBLE        1
+#elif defined(LDBL_MANT_DIG)
+/* long double exists but is probably still too small */
+# define USE_LONG_DOUBLE        1
+#else
+/* long double does not exist and plain double is too small */
+# define USE_LONG_DOUBLE        0
+#endif
+
+#if USE_LONG_DOUBLE
+# define DOUBLE                 long double
+# define SCANF_FMT              "%Lf"
+# define FREXP                  frexpl
+#else
+# define DOUBLE                 double
+# define SCANF_FMT              "%lf"
+# define FREXP                  frexp
+#endif
+
+
 /* Parse PDP-11 64-bit floating point format. */
 /* Give a pointer to "size" words to receive the result. */
 /* Note: there are probably degenerate cases that store incorrect
@@ -334,8 +367,8 @@ int parse_float(
     int size,
     unsigned *flt)
 {
-    double          d;          /* value */
-    double          frac;       /* fractional value */
+    DOUBLE          d;          /* value */
+    DOUBLE          frac;       /* fractional value */
     ulong64         ufrac;      /* fraction converted to 49 bit
                                    unsigned integer */
     int             i;          /* Number of fields converted by sscanf */
@@ -344,7 +377,7 @@ int parse_float(
     unsigned        uexp;       /* Unsigned excess-128 exponent */
     unsigned        sign = 0;   /* Sign mask */
 
-    i = sscanf(cp, "%lf%n", &d, &n);
+    i = sscanf(cp, SCANF_FMT "%n", &d, &n);
     if (i == 0)
         return 0;                      /* Wasn't able to convert */
 
@@ -359,7 +392,7 @@ int parse_float(
         return 1;                      /* Good job. */
     }
 
-    frac = frexp(d, &sexp);            /* Separate into exponent and mantissa */
+    frac = FREXP(d, &sexp);            /* Separate into exponent and mantissa */
     if (sexp < -127 || sexp > 127)
         return 0;                      /* Exponent out of range. */
 
