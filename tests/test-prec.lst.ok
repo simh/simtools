@@ -45,7 +45,7 @@
       45 000100 070204                  	.word	^r<R D>		; bracketed strings are an extension
       46 000102 070250                  	.word	^r<RA >		; bracketed strings are an extension
       47 000104 157614                  	.word	^R50.		; 157614 there is no whitespace in between.
-      48 000106 040140                  	.word	^f 1.5		; 040140
+      48 000106 040300                  	.word	^f 1.5		; 040300
       49                                
       50                                ;;;;;
       51                                ;

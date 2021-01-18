@@ -353,31 +353,56 @@ int parse_float(
         *endp = cp;
 
     if (d == 0.0) {
-        flt[0] = flt[1] = flt[2] = flt[3] = 0;  /* All-bits-zero equals zero */
+        for (i = 0; i < size; i++) {
+            flt[i] = 0; /* All-bits-zero equals zero */
+        }
         return 1;                      /* Good job. */
     }
 
     frac = frexp(d, &sexp);            /* Separate into exponent and mantissa */
-    if (sexp < -128 || sexp > 127)
+    if (sexp < -127 || sexp > 127)
         return 0;                      /* Exponent out of range. */
 
     uexp = sexp + 128;                  /* Make excess-128 mode */
     uexp &= 0xff;                       /* express in 8 bits */
 
+    /*
+     * frexp guarantees its fractional return value is
+     *   abs(frac) >= 0.5    and  abs(frac) < 1.0
+     * Another way to think of this is that:
+     *   abs(frac) >= 2**-1  and  abs(frac) < 2**0
+     */
+
     if (frac < 0) {
-        sign = 0100000;                /* Negative sign */
+        sign = (1 << 15);              /* Negative sign */
         frac = -frac;                  /* fix the mantissa */
     }
 
-    /* The following big literal is 2 to the 49th power: */
+    /*
+     * For the PDP-11 floating point representation the
+     *  fractional part is 7 bits (for 16-bit floating point
+     *  literals), 23 bits (for 32-bit floating point values),
+     *  or 55 bits (for 64-bit floating point values).
+     * However the bit immediately above the MSB is always 1
+     *  because the value is normalized.  So it's actually
+     *  8 bits, 24 bits, or 56 bits.
+     * We multiply the fractional part of our value by
+     *  2**56 to fully expose all of those bits (including
+     *  the MSB which is 1).
+     */
+
+
+    /* The following big literal is 2 to the 56th power: */
     ufrac = (ulong64) (frac * 72057594037927936.0);     /* Align fraction bits */
 
-    /* Round from FLT4 to FLT2 */
-    if (size < 4) {
-        ufrac += 0x80000000;           /* Round to nearest 32-bit
-                                          representation */
+    /* ufrac is now >= 2**55 and < 2**56 */
 
-        if (ufrac > 0x200000000000) {  /* Overflow? */
+    /* Round from FLT4 to FLT2 or single-word float */
+    if (size < 4) {
+        /* Round to nearest 8- or 24- bit approximation */
+        ufrac += (1UL << (56 - (8 + 16*(size-1)) - 1));
+
+        if ((ufrac >> 56) > 0) {  /* Overflow? */
             ufrac >>= 1;               /* Normalize */
             uexp--;
         }
