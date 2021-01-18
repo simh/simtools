@@ -397,12 +397,22 @@ int parse_float(
 
     /* ufrac is now >= 2**55 and < 2**56 */
 
-    /* Round from FLT4 to FLT2 or single-word float */
+    /* Round from FLT4 to FLT2 or single-word float.
+     *
+     * +--+--------+-------+
+     * |15|14     7|6     0|
+     * +--+--------+-------+
+     * | S|EEEEEEEE|MMMMMMM|
+     * +--+--------+-------+
+     *  Sign (1 bit)
+     *     Exponent (8 bits)
+     *              Mantissa (7 bits)
+     */
     if (size < 4) {
         /* Round to nearest 8- or 24- bit approximation */
         ufrac += (1UL << (56 - (8 + 16*(size-1)) - 1));
 
-        if ((ufrac >> 56) > 0) {  /* Overflow? */
+        if ((ufrac >> 56) > 0) {       /* Overflow? */
             ufrac >>= 1;               /* Normalize */
             uexp--;
         }
