@@ -319,6 +319,23 @@ int get_mode(
     return TRUE;
 }
 
+#if DEBUG
+void
+printflt(unsigned *flt, int size)
+{
+    printf("%06o: ",        flt[0]);
+    printf("sign:  %d ",   (flt[0] & 0x8000) >> 15);
+    printf("uexp:  %x ",   (flt[0] & 0x7F80) >>  7);
+    printf("ufrac: %02x",   flt[0] & 0x007F);
+
+    for (int i = 1; i < size; i++) {
+	printf(" %04x", flt[i]);
+    }
+
+    printf("\n");
+}
+#endif
+
 /*
  * We need 56 bits of mantissa.
  *
@@ -443,11 +460,22 @@ int parse_float(
      */
     if (size < 4) {
         /* Round to nearest 8- or 24- bit approximation */
-        ufrac += (1UL << (56 - (8 + 16*(size-1)) - 1));
+        /*
+         * Round to nearest 8- or 24- bit approximation.
+         * Method: if the msb of the bits that are chopped off is set, add 1 to
+         * the lsb of the remaining bits (one more leftward).
+         * Simplification: adding 1 to that msb will carry into the lsb. And if
+         * that msb is unset, then that will not carry. So we can always do that
+         * addition.
+         * As long as we really don't look at those chopped off bits any more.
+         */
+        int bits_chopped_off = 16 * (4 - size);
+        ulong64 msb_chopped_off = 1ULL << (bits_chopped_off - 1);
+        ufrac += msb_chopped_off;
 
         if ((ufrac >> 56) > 0) {       /* Overflow? */
             ufrac >>= 1;               /* Normalize */
-            uexp--;
+            uexp++;
         }
     }
 
