@@ -1,6 +1,7 @@
 #define PARSE__C
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <float.h>
@@ -386,7 +387,7 @@ int parse_float(
 {
     DOUBLE          d;          /* value */
     DOUBLE          frac;       /* fractional value */
-    ulong64         ufrac;      /* fraction converted to 49 bit
+    uint64_t        ufrac;      /* fraction converted to 49 bit
                                    unsigned integer */
     int             i;          /* Number of fields converted by sscanf */
     int             n;          /* Number of characters converted by sscanf */
@@ -443,7 +444,7 @@ int parse_float(
 
 
     /* The following big literal is 2 to the 56th power: */
-    ufrac = (ulong64) (frac * 72057594037927936.0);     /* Align fraction bits */
+    ufrac = (uint64_t) (frac * 72057594037927936.0);     /* Align fraction bits */
 
     /* ufrac is now >= 2**55 and < 2**56 */
 
@@ -470,7 +471,7 @@ int parse_float(
          * As long as we really don't look at those chopped off bits any more.
          */
         int bits_chopped_off = 16 * (4 - size);
-        ulong64 msb_chopped_off = 1ULL << (bits_chopped_off - 1);
+        uint64_t msb_chopped_off = 1ULL << (bits_chopped_off - 1);
         ufrac += msb_chopped_off;
 
         if ((ufrac >> 56) > 0) {       /* Overflow? */
