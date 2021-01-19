@@ -318,7 +318,9 @@ int get_mode(
     return TRUE;
 }
 
-#if DEBUG
+#define DEBUG_FLOAT     0
+#if DEBUG_FLOAT
+
 void
 printflt(unsigned *flt, int size)
 {
@@ -328,11 +330,15 @@ printflt(unsigned *flt, int size)
     printf("ufrac: %02x",   flt[0] & 0x007F);
 
     for (int i = 1; i < size; i++) {
-	printf(" %04x", flt[i]);
+        printf(" %04x", flt[i]);
     }
 
     printf("\n");
 }
+
+#define DF(x)   printf x
+#else
+#define DF(x)
 #endif
 
 /*
@@ -392,10 +398,13 @@ int parse_float(
     int             sexp;       /* Signed exponent */
     unsigned        uexp;       /* Unsigned excess-128 exponent */
     unsigned        sign = 0;   /* Sign mask */
+    unsigned        round = 0;  /* Rounding bit */
 
     i = sscanf(cp, SCANF_FMT "%n", &d, &n);
     if (i == 0)
         return 0;                      /* Wasn't able to convert */
+    DF(("LDBL_MANT_DIG: %d\n", LDBL_MANT_DIG));
+    DF(("%Lf input: %s", d, cp));
 
     cp += n;
     if (endp)
@@ -409,11 +418,13 @@ int parse_float(
     }
 
     frac = FREXP(d, &sexp);            /* Separate into exponent and mantissa */
+    DF(("frac: %Lf %La sexp: %d\n", frac, frac, sexp));
     if (sexp < -127 || sexp > 127)
         return 0;                      /* Exponent out of range. */
 
     uexp = sexp + 128;                  /* Make excess-128 mode */
     uexp &= 0xff;                       /* express in 8 bits */
+    DF(("uexp: %02x\n", uexp));
 
     /*
      * frexp guarantees its fractional return value is
@@ -435,34 +446,41 @@ int parse_float(
      * However the bit immediately above the MSB is always 1
      *  because the value is normalized.  So it's actually
      *  8 bits, 24 bits, or 56 bits.
-     * We multiply the fractional part of our value by
+     * We effectively multiply the fractional part of our value by
      *  2**56 to fully expose all of those bits (including
      *  the MSB which is 1).
+     * However as an intermediate step, we really multiply by
+     *  2**57, so we get one lsb for possible later rounding
+     *  purposes. After that, we divide by 2 again.
      */
 
-
-    /* The following big literal is 2 to the 56th power: */
-    ufrac = (uint64_t) (frac * 72057594037927936.0);     /* Align fraction bits */
+    /* The following big literal is 2 to the 57th power: */
+    ufrac = (uint64_t) (frac * 144115188075855872.0); /* Align fraction bits */
+    round = ufrac & 1;
+    ufrac >>= 1;
+    DF(("ufrac: %016lx  round: %d\n", ufrac, round));
+    DF(("56   : %016lx\n", (1UL<<56) - 1));
 
     /* ufrac is now >= 2**55 and < 2**56 */
 
     /* Round from FLT4 to FLT2 or single-word float.
      *
-     * +--+--------+-------+
-     * |15|14     7|6     0|
-     * +--+--------+-------+
-     * | S|EEEEEEEE|MMMMMMM|
-     * +--+--------+-------+
+     * +--+--------+-------+ +--------+--------+
+     * |15|14     7|6     0| |15      |       0|
+     * +--+--------+-------+ +--------+--------+
+     * | S|EEEEEEEE|MMMMMMM| |MMMMMMMM|MMMMMMMM| ...maybe 2 more words...
+     * +--+--------+-------+ +--------+--------+
      *  Sign (1 bit)
      *     Exponent (8 bits)
      *              Mantissa (7 bits)
      */
     if (size < 4) {
-        /* Round to nearest 8- or 24- bit approximation */
         /*
          * Round to nearest 8- or 24- bit approximation.
+         *
          * Method: if the msb of the bits that are chopped off is set, add 1 to
          * the lsb of the remaining bits (one more leftward).
+         *
          * Simplification: adding 1 to that msb will carry into the lsb. And if
          * that msb is unset, then that will not carry. So we can always do that
          * addition.
@@ -470,12 +488,23 @@ int parse_float(
          */
         int bits_chopped_off = 16 * (4 - size);
         uint64_t msb_chopped_off = 1ULL << (bits_chopped_off - 1);
+        DF(("msb_chopped_off = %16lx\n", msb_chopped_off));
         ufrac += msb_chopped_off;
+        DF(("ufrac: %016lx after rounding\n", ufrac));
 
         if ((ufrac >> 56) > 0) {       /* Overflow? */
             ufrac >>= 1;               /* Normalize */
             uexp++;
+            DF(("ufrac: %016lx  uexp: %02x\n", ufrac, uexp));
         }
+    } else {
+        /*
+         * Round to 56-bit approximation.
+         *
+         * The method is the same as above, with 'round' as the msb of the
+         * chopped off bits.
+         */
+        ufrac += round;
     }
 
     flt[0] = (unsigned) (sign | (uexp << 7) | ((ufrac >> 48) & 0x7F));

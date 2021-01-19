@@ -1,7 +1,9 @@
 ;;;;;
 ;
-; Test floating point numbers
-
+; Test floating point numbers.
+;
+; The values in the comments are the reference values from MACRO V05.05.
+;
         .word   ^F 1.0          ; 040200
         .word   ^F-1.0          ; 140200
         .word   -^F 1.0         ; 137600
@@ -17,16 +19,57 @@
         .flt2   1.5             ; 040300 000000
         .flt4   1.5             ; 040300 000000 000000 000000
 
+        .word   ^F 3.1415926535897932384626433  ; 040511
+        .flt2   3.1415926535897932384626433     ; 040511 007733
+        .flt4   3.1415926535897932384626433     ; 040511 007732 121041 064302
+
+        ; Test some large numbers at the edge of the exactly representable
+        ; integers.
+        ; 1 << 56       just barely fits: it uses 57 bits but the lsb is 0 so
+        ;               when it is cut off, we don't notice.
+        ; 1 << 56 + 1 R the lsb are 01 and is cut off.
+        ; 1 << 56 + 2   the lsb are 10 and the missing 0 goes unnoticed.
+
+        ; 1 << 56 - 1   consists of 56 1 bits. This value and all smaller ints
+        ; 1 << 56 - 2   get represented exactly.
+
+        ; Going up, to rounding steps of 4:
+        ;
+        ; 1 << 57
+        ; 1 << 57 + 4   next higher available representation
+        ; 1 << 57 + 8   next higher available representation
+
+                                      ; 1 << 56 - 3
+        .flt4   72057594037927933     ; 056177 177777 177777 177775
+                                      ; 1 << 56 - 2
+        .flt4   72057594037927934     ; 056177 177777 177777 177776
+
+                                      ; 1 << 56 - 1
         .word   ^F 72057594037927935  ; 056200 (rounded!)
         .flt2   72057594037927935     ; 056200 000000 (rounded!)
-        .flt4   72057594037927935     ; 056177 177777 177777 177777 (exact!)
+        .flt4   72057594037927935     ; 056177 177777 177777 177777
 
+                                      ; 1 << 56
         .word   ^F 72057594037927936  ; 056200
         .flt2   72057594037927936     ; 056200 000000
         .flt4   72057594037927936     ; 056200 000000 000000 000000
 
-        .flt4   72057594037927937     ; 056200 000000 000000 000001
+        .flt4   72057594037927938     ; 1 << 56 + 2
+                                      ; 056200 000000 000000 000001
 
-        .flt4   144115188075855873    ; 1 << 57 +1
-                                      ; 056400 000000 000000 000000 (rounded!)
+        .flt4   144115188075855872    ; 1 << 57
+                                      ; 056400 000000 000000 000000
+        .flt4   144115188075855873    ; 1 << 57 + 1
+                                      ; 056400 000000 000000 000000 (inexact)
+        .flt4   144115188075855874    ; 1 << 57 + 2
+                                      ; 056400 000000 000000 000001 (inexact)
+        .flt4   144115188075855875    ; 1 << 57 + 3
+                                      ; 056400 000000 000000 000001 (inexact)
+        .flt4   144115188075855876    ; 1 << 57 + 4
+                                      ; 056400 000000 000000 000001 (exact!)
+        .flt4   144115188075855880    ; 1 << 57 + 8
+                                      ; 056400 000000 000000 000002 (exact!)
+
+        ; This one triggers rounding up (round == 1)
+        .flt4   6.66666         ; 040725 052507 055061 122276
 
