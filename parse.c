@@ -1,5 +1,3 @@
-#define PARSE__C
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -374,7 +372,7 @@ printflt(unsigned *flt, int size)
 /* Note: there are probably degenerate cases that store incorrect
    results.  For example, I think rounding up a FLT2 might cause
    exponent overflow.  Sorry. */
-/* Note also that the full 49 bits of precision probably aren't
+/* Note also that the full 56 bits of precision probably aren't always
    available on the source platform, given the widespread application
    of IEEE floating point formats, so expect some differences.  Sorry
    again. */
@@ -387,7 +385,7 @@ int parse_float(
 {
     DOUBLE          d;          /* value */
     DOUBLE          frac;       /* fractional value */
-    uint64_t        ufrac;      /* fraction converted to 49 bit
+    uint64_t        ufrac;      /* fraction converted to 56 bit
                                    unsigned integer */
     int             i;          /* Number of fields converted by sscanf */
     int             n;          /* Number of characters converted by sscanf */
