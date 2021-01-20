@@ -616,8 +616,14 @@ static int assemble(
                                 macstr = new_buffer_stream(macbuf, label);
                                 buffer_free(macbuf);
                             } else {
-                                strncpy(macfile, label, sizeof(macfile));
-                                strncat(macfile, ".MAC", sizeof(macfile) - strlen(macfile) - 1);
+                                char *bufend = &macfile[sizeof(macfile)],
+                                     *end;
+                                end = stpncpy(macfile, label, sizeof(macfile) - 5);
+                                if (end >= bufend - 5) {
+                                    report(stack->top, ".MCALL: name too long: '%s'\n", label);
+                                    return 0;
+                                }
+                                stpncpy(end, ".MAC", bufend - end);
                                 my_searchenv(macfile, "MCALL", hitfile, sizeof(hitfile));
                                 if (hitfile[0])
                                     macstr = new_file_stream(hitfile);
