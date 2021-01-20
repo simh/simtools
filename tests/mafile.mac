@@ -1,0 +1,7 @@
+;;;;;
+;
+; This macro is found automatically by .MCALL MAFILE
+;
+        .macro  mafile
+        .asciz  /This macro definition comes from a file./
+        .endm

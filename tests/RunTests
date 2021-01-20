@@ -22,6 +22,7 @@ TESTS="test-asciz \
     test-listing \
     test-locals \
     test-macro-comma \
+    test-mcall-file \
     test-prec \
     test-psect \
     test-rad50 \
