@@ -491,12 +491,6 @@ int parse_float(
         DF(("msb_chopped_off = %16lx\n", msb_chopped_off));
         ufrac += msb_chopped_off;
         DF(("ufrac: %016lx after rounding\n", ufrac));
-
-        if ((ufrac >> 56) > 0) {       /* Overflow? */
-            ufrac >>= 1;               /* Normalize */
-            uexp++;
-            DF(("ufrac: %016lx  uexp: %02x\n", ufrac, uexp));
-        }
     } else {
         /*
          * Round to 56-bit approximation.
@@ -505,6 +499,12 @@ int parse_float(
          * chopped off bits.
          */
         ufrac += round;
+    }
+
+    if ((ufrac >> 56) > 0) {       /* Overflow? */
+        ufrac >>= 1;               /* Normalize */
+        uexp++;
+        DF(("ufrac: %016lx  uexp: %02x\n", ufrac, uexp));
     }
 
     flt[0] = (unsigned) (sign | (uexp << 7) | ((ufrac >> 48) & 0x7F));
