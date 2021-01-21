@@ -393,12 +393,13 @@ int parse_float(
     DOUBLE          frac;       /* fractional value */
     uint64_t        ufrac;      /* fraction converted to 56 bit
                                    unsigned integer */
+    uint64_t        onehalf;    /* one half of the smallest bit
+                                   (used for rounding) */
     int             i;          /* Number of fields converted by sscanf */
     int             n;          /* Number of characters converted by sscanf */
     int             sexp;       /* Signed exponent */
     unsigned        uexp;       /* Unsigned excess-128 exponent */
     unsigned        sign = 0;   /* Sign mask */
-    unsigned        round = 0;  /* Rounding bit */
 
     i = sscanf(cp, SCANF_FMT "%n", &d, &n);
     if (i == 0)
@@ -456,14 +457,27 @@ int parse_float(
 
     /* The following big literal is 2 to the 57th power: */
     ufrac = (uint64_t) (frac * 144115188075855872.0); /* Align fraction bits */
-    round = ufrac & 1;
-    ufrac >>= 1;
-    DF(("ufrac: %016lx  round: %d\n", ufrac, round));
-    DF(("56   : %016lx\n", (1UL<<56) - 1));
+    DF(("ufrac: %016lx\n", ufrac));
+    DF(("56   : %016lx\n", (1UL<<57) - 2));
 
-    /* ufrac is now >= 2**55 and < 2**56 */
+    /*
+     * ufrac is now >= 2**56 and < 2**57.
+     *  This means it's normalized: bit [56] is 1
+     *  and all higher bits are 0.
+     */
 
-    /* Round from FLT4 to FLT2 or single-word float.
+    /* Round from 57-bits to 56, 24, or 8.
+     * We do this by:
+     * + first adding a value equal to one half of the
+     *   least significant bit (the value 'onehalf')
+     * + (possibly) dealing with any carrying that
+     *   causes the value to no longer be normalized
+     *   (with bit [56] = 1 and all higher bits = 0)
+     * + shifting right by 1 bit (which throws away
+     *   the 0 bit).  Note this step could be rolled
+     *   into the next step.
+     * + taking the remaining highest order 8,
+     *   24, or 56 bits.
      *
      * +--+--------+-------+ +--------+--------+
      * |15|14     7|6     0| |15      |       0|
@@ -474,40 +488,17 @@ int parse_float(
      *     Exponent (8 bits)
      *              Mantissa (7 bits)
      */
-    uint64_t unrounded_ufrac = ufrac;
 
-    if (size < 4) {
-        /*
-         * Round to nearest 8- or 24- bit approximation.
-         *
-         * Method: if the msb of the bits that are chopped off is set, add 1 to
-         * the lsb of the remaining bits (one more leftward).
-         *
-         * Simplification: adding 1 to that msb will carry into the lsb. And if
-         * that msb is unset, then that will not carry. So we can always do that
-         * addition.
-         * As long as we really don't look at those chopped off bits any more.
-         */
-        int bits_chopped_off = 16 * (4 - size);
-        uint64_t msb_chopped_off = 1ULL << (bits_chopped_off - 1);
-        DF(("msb_chopped_off = %16lx\n", msb_chopped_off));
-        ufrac += msb_chopped_off;
-        DF(("ufrac: %016lx after rounding\n", ufrac));
-    } else {
-        /*
-         * Round to 56-bit approximation.
-         *
-         * The method is the same as above, with 'round' as the msb of the
-         * chopped off bits.
-         */
-        ufrac += round;
-    }
+    onehalf = 1ULL << (16 * (4-size));
+    ufrac += onehalf;
+    DF(("onehalf=%016lx, ufrac+onehalf: %016lx\n", onehalf, ufrac));
 
-    if ((ufrac >> 56) > 0) {       /* Overflow? */
+    /* Did it roll up to a value 2**56? */
+    if ((ufrac >> 57) > 0) {           /* Overflow? */
         if (uexp < 0xFF) {
-            ufrac >>= 1;           /* Normalize */
+            ufrac >>= 1;               /* Normalize */
             uexp++;
-            DF(("ufrac: %016lx  uexp: %02x\n", ufrac, uexp));
+            DF(("ufrac: %016lx  uexp: %02x (normalized)\n", ufrac, uexp));
         } else {
             /*
              * If rounding and then normalisation would cause the exponent to
@@ -516,10 +507,12 @@ int parse_float(
              * values may be a bit complicated, and so rare, that it is more
              * readable to just undo it here.
              */
-            ufrac = unrounded_ufrac;
-            DF(("don't round: exponent overflow", ufrac, uexp));
+            ufrac -= onehalf;
+            DF(("don't round: exponent overflow"));
         }
     }
+
+    ufrac >>= 1;                       /* Go from 57 bits to 56 */
 
     flt[0] = (unsigned) (sign | (uexp << 7) | ((ufrac >> 48) & 0x7F));
     if (size > 1) {
