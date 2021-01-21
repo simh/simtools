@@ -474,6 +474,8 @@ int parse_float(
      *     Exponent (8 bits)
      *              Mantissa (7 bits)
      */
+    uint64_t unrounded_ufrac = ufrac;
+
     if (size < 4) {
         /*
          * Round to nearest 8- or 24- bit approximation.
@@ -502,9 +504,21 @@ int parse_float(
     }
 
     if ((ufrac >> 56) > 0) {       /* Overflow? */
-        ufrac >>= 1;               /* Normalize */
-        uexp++;
-        DF(("ufrac: %016lx  uexp: %02x\n", ufrac, uexp));
+        if (uexp < 0xFF) {
+            ufrac >>= 1;           /* Normalize */
+            uexp++;
+            DF(("ufrac: %016lx  uexp: %02x\n", ufrac, uexp));
+        } else {
+            /*
+             * If rounding and then normalisation would cause the exponent to
+             * overflow, just don't round: the cure is worse than the disease.
+             * We could detect ahead of time but the conditions for all size
+             * values may be a bit complicated, and so rare, that it is more
+             * readable to just undo it here.
+             */
+            ufrac = unrounded_ufrac;
+            DF(("don't round: exponent overflow", ufrac, uexp));
+        }
     }
 
     flt[0] = (unsigned) (sign | (uexp << 7) | ((ufrac >> 48) & 0x7F));
