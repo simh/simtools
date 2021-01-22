@@ -279,10 +279,10 @@ enum operand_codes { OC_MASK = 0xff00,
     /* FADD, FSUB, FMUL, FDIV, RTS */
     OC_SOB = 0x0800,
     /* SOB */
-    OC_1FIS = 0x0900,
-    /* FIS (reg, gen) */
-    OC_2FIS = 0x0a00,
-    /* FIS (gen, reg) */
+    OC_FPPGENAC = 0x0900,
+    /* FPP (gen, floating ac 0-3) */
+    OC_FPPACGEN = 0x0a00,
+    /* FPP (floating ac 0-3, gen) */
     OC__LAST = 0xff00
 };
 

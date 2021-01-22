@@ -1605,7 +1605,7 @@ static int assemble(
                         }
                         return 1;
 
-                    case OC_1FIS:
+                    case OC_FPPGENAC:
                         /* One one gen and one reg 0-3 */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
@@ -1645,7 +1645,7 @@ static int assemble(
                         }
                         return 1;
 
-                    case OC_2FIS:
+                    case OC_FPPACGEN:
                         /* One reg 0-3 and one gen */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
