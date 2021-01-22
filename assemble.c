@@ -1628,11 +1628,16 @@ static int assemble(
                             cp = value->cp;
 
                             reg = get_register(value);
-                            if (reg == NO_REG || reg > 4) {
-                                report(stack->top, "Invalid destination register\n");
+                            if (reg == NO_REG || reg > 3) {
+                                report(stack->top, "Invalid destination fp register\n");
                                 reg = 0;
                             }
 
+                            /*
+                             * We could check here that the general mode
+                             * is not R6 or R7, but the original Macro11
+                             * doesn't do that either.
+                             */
                             word = op->value | mode.type | (reg << 6);
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
@@ -1651,8 +1656,8 @@ static int assemble(
                             cp = value->cp;
 
                             reg = get_register(value);
-                            if (reg == NO_REG || reg > 4) {
-                                report(stack->top, "Illegal source register\n");
+                            if (reg == NO_REG || reg > 3) {
+                                report(stack->top, "Illegal source fp register\n");
                                 reg = 0;
                             }
 
@@ -1669,6 +1674,11 @@ static int assemble(
                                 return 0;
                             }
 
+                            /*
+                             * We could check here that the general mode
+                             * is not R6 or R7, but the original Macro11
+                             * doesn't do that either.
+                             */
                             word = op->value | mode.type | (reg << 6);
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
