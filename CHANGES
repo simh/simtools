@@ -1,5 +1,12 @@
 ??.??.20??: Rhialto
         version 0.6:
+        - Fixed rounding issues with floating point literals.
+        - Fixed FPP instructions which take fp immediate operands.
+        - Fixed bounds check on FPP AC0-3 operands.
+        - Fix listing to show a % before values that represent a register
+          number.
+        - Added checks for junk text following correct code. This revealed
+          some small other issues, now fixed.
 
 25.04.2020: Rhialto
         version 0.5:
