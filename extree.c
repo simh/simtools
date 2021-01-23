@@ -718,7 +718,7 @@ EX_TREE        *evaluate(
 EX_TREE        *new_ex_tree(
     void)
 {
-    EX_TREE        *tr = memcheck(malloc(sizeof(EX_TREE)));
+    EX_TREE        *tr = memcheck(calloc(1, sizeof(EX_TREE)));
 
     return tr;
 }

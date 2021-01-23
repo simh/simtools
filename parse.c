@@ -951,7 +951,7 @@ EX_TREE        *parse_unary(
                 char bound = tolower((unsigned char)cp[2]);
                 char *cp2 = skipwhite(cp + 3);
                 int islocal = 0;
-                char *endcp;
+                char *endcp = NULL;
                 char *psectname = get_symbol(cp2, &endcp, &islocal);
                 SYMBOL *sectsym = psectname ? lookup_sym(psectname, &section_st) : NULL;
 
@@ -974,6 +974,9 @@ EX_TREE        *parse_unary(
                     }
                 } else {
                     /* report(stack->top, "psect name %s not found\n", psectname); */
+                    if (!endcp) {
+                        endcp = cp;
+                    }
                     if (pass == 0) {
                         /*
                          * During the first pass it is expected that the psect is not
