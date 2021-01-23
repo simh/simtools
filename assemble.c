@@ -1407,7 +1407,7 @@ static int assemble(
                             mode_extension(tr, &left, stack->top);
                             mode_extension(tr, &right, stack->top);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_BR:
                         /* branches */  {
@@ -1467,7 +1467,7 @@ static int assemble(
 
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_SOB:
                         {
@@ -1531,7 +1531,7 @@ static int assemble(
 
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_ASH:
                         /* First op is gen, second is register. */  {
@@ -1568,7 +1568,7 @@ static int assemble(
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_JSR:
                         /* For JSR and XOR, first op is register, second is gen. */  {
@@ -1609,7 +1609,7 @@ static int assemble(
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_1REG:
                         /* One register (RTS) */  {
@@ -1628,7 +1628,7 @@ static int assemble(
                             store_word(stack->top, tr, 2, op->value | reg);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
 #if 0
 /*
@@ -1652,7 +1652,7 @@ static int assemble(
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
                         }
-                        return 1;
+                        return CHECK_EOL;
 #endif
 
                     case OC_FPPGENAC:
@@ -1693,7 +1693,7 @@ static int assemble(
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_FPPACGEN:
                         /* One reg 0-3 and one gen */  {
@@ -1737,7 +1737,7 @@ static int assemble(
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     default:
                         report(stack->top, "Unimplemented instruction format\n");
