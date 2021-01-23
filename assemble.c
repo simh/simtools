@@ -25,6 +25,23 @@
 
 
 
+static int check_eol(
+    STACK *stack,
+    char *cp)
+{
+    cp = skipwhite(cp);
+
+    if (EOL(*cp)) {
+        return 1;
+    }
+
+    report(stack->top, "Junk at end of line ('%c')", *cp);
+
+    return 0;
+}
+
+#define CHECK_EOL       check_eol(stack, cp)
+
 /* assemble - read a line from the input stack, assemble it. */
 
 /* This function is way way too large, because I just coded most of
@@ -178,6 +195,7 @@ static int assemble(
             cp = skipwhite(cp);
 
             value = parse_expr(cp, 0);
+            cp = value->cp;
 
             /* Special code: if the symbol is the program counter,
                this is harder. */
@@ -198,7 +216,7 @@ static int assemble(
                     } else if (symb->flags & SYMBOLFLAG_UNDEFINED) {
                         report(stack->top, "Can't ORG to undefined sym\n");
                     } else if (symb->section != current_pc->section) {
-                        report(stack->top, "Can't ORG to alternate section " "(use PSECT)\n");
+                        report(stack->top, "Can't ORG to alternate section (use PSECT)\n");
                     } else {
                         DOT = symb->value + offset;
                         list_value(stack->top, DOT);
@@ -219,7 +237,7 @@ static int assemble(
                 }
                 free_tree(value);
                 free(label);
-                return 1;
+                return CHECK_EOL;
             }
 
             /* regular symbols */
@@ -228,7 +246,7 @@ static int assemble(
             } else if (value->type == EX_SYM || value->type == EX_TEMP_SYM) {
                 sym = add_sym(label, value->data.symbol->value, flags, value->data.symbol->section, &symbol_st);
             } else {
-                report(stack->top, "Complex expression cannot be assigned " "to a symbol\n");
+                report(stack->top, "Complex expression cannot be assigned to a symbol\n");
 
                 if (!pass) {
                     /* This may work better in pass 2 - something in
@@ -245,7 +263,7 @@ static int assemble(
             free_tree(value);
             free(label);
 
-            return sym != NULL;
+            return sym != NULL && CHECK_EOL;
         }
 
         /* Try to resolve macro */
@@ -263,7 +281,7 @@ static int assemble(
             stack_push(stack, macstr); /* Push macro expansion
                                           onto input stream */
 
-            return 1;
+            return 1;                  /* TODO: CHECK_EOL */
         }
 
         /* Try to resolve instruction or pseudo */
@@ -318,7 +336,8 @@ static int assemble(
                         ident[len] = 0;
                         upcase(ident);
 
-                        return 1;
+                        cp += len + 1;
+                        return CHECK_EOL;
                     }
 
                 case P_RADIX:
@@ -331,7 +350,7 @@ static int assemble(
                             report(stack->top, "Illegal radix\n");
                             return 0;
                         }
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_FLT4:
@@ -356,7 +375,7 @@ static int assemble(
                             }
                             cp = skipdelim(cp);
                         }
-                        return ok;
+                        return ok && CHECK_EOL;
                     }
 
                 case P_ERROR:
@@ -371,7 +390,7 @@ static int assemble(
                     sect_sp++;
                     sect_stack[sect_sp] = current_pc->section;
                     dot_stack[sect_sp] = DOT;
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_RESTORE:
                     if (sect_sp < 0) {
@@ -386,7 +405,7 @@ static int assemble(
                         }
                         sect_sp--;
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_NARG:
                     {
@@ -418,7 +437,7 @@ static int assemble(
                                 &symbol_st);
                         free(label);
                         list_value(stack->top, mstr->nargs);
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_NCHR:
@@ -441,7 +460,7 @@ static int assemble(
                                 &symbol_st);
                         free(label);
                         free(string);
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_NTYPE:
@@ -467,7 +486,7 @@ static int assemble(
                         free_addr_mode(&mode);
                         free(label);
 
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_INCLUDE:
@@ -499,7 +518,7 @@ static int assemble(
 
                         stack_push(stack, incl);
 
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_REM:
@@ -523,7 +542,7 @@ static int assemble(
                                 break; /* EOF */
                         }
                     }
-                    return 1;
+                    return 1;          /* TODO: CHECK_EOL? */
 
                 case P_IRP:
                     {
@@ -531,7 +550,7 @@ static int assemble(
 
                         if (str)
                             stack_push(stack, str);
-                        return str != NULL;
+                        return str != NULL;     /* TODO: CHECK_EOL */
                     }
 
                 case P_IRPC:
@@ -540,7 +559,7 @@ static int assemble(
 
                         if (str)
                             stack_push(stack, str);
-                        return str != NULL;
+                        return str != NULL;     /* TODO: CHECK_EOL */
                     }
 
                 case P_LIBRARY:
@@ -562,7 +581,7 @@ static int assemble(
                         }
                         free(name);
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_MCALL:
                     {
@@ -661,7 +680,7 @@ static int assemble(
                                     list_level = -1;
                                     mac = defmacro(maccp, &macstack, CALLED_NOLIST);
                                     if (mac == NULL) {
-                                        report(stack->top, "Failed to define macro " "called %s\n", label);
+                                        report(stack->top, "Failed to define macro called %s\n", label);
                                     }
 
                                     stmtno = saveline;
@@ -674,6 +693,7 @@ static int assemble(
 
                             free(label);
                         }
+                        /* NOTREACHED */
                     }
                     return 1;
 
@@ -681,7 +701,7 @@ static int assemble(
                     {
                         MACRO          *mac = defmacro(cp, stack, CALLED_NORMAL);
 
-                        return mac != NULL;
+                        return mac != NULL;     /* TODO: CHECK_EOL */
                     }
 
                 case P_MEXIT:
@@ -701,7 +721,7 @@ static int assemble(
                         /* and finally, pop the macro */
                         stack_pop(stack);
 
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_REPT:
@@ -710,7 +730,7 @@ static int assemble(
 
                         if (reptstr)
                             stack_push(stack, reptstr);
-                        return reptstr != NULL;
+                        return reptstr != NULL; /* TODO: CHECK_EOL */
                     }
 
                 case P_ENABL:
@@ -757,7 +777,7 @@ static int assemble(
 
                 case P_LIMIT:
                     store_limits(stack->top, tr);
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_TITLE:
                     /* accquire module name */
@@ -774,8 +794,9 @@ static int assemble(
                         if (xfer_address)
                             free_tree(xfer_address);
                         xfer_address = parse_expr(cp, 0);
+                        cp = xfer_address->cp;
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFDF:
                     opcp = skipwhite(opcp);
@@ -915,7 +936,8 @@ static int assemble(
                                 cp = skipdelim(cp);
                                 goto reassemble;
                             }
-                            return 1;
+                            return 1;           /* Ignore rest of line if
+                                                   condition is false */
                         }
 
                         push_cond(ok, stack->top);
@@ -925,7 +947,7 @@ static int assemble(
                                                    suppressed
                                                    until .ENDC */
                     }
-                    return 1;
+                    return 1;                   /* TODO: CHECK_EOL */
 
                 case P_IFF:
                     if (last_cond < 0) {
@@ -935,7 +957,7 @@ static int assemble(
                     if (conds[last_cond].ok)    /* Suppress if last cond
                                                    is true */
                         suppressed++;
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFT:
                     if (last_cond < 0) {
@@ -945,14 +967,14 @@ static int assemble(
                     if (!conds[last_cond].ok)   /* Suppress if last cond
                                                    is false */
                         suppressed++;
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFTF:
                     if (last_cond < 0) {
                         report(stack->top, "No conditional block active\n");
                         return 0;
                     }
-                    return 1;          /* Don't suppress. */
+                    return CHECK_EOL;           /* Don't suppress. */
 
                 case P_ENDC:
                     if (last_cond < 0) {
@@ -961,7 +983,7 @@ static int assemble(
                     }
 
                     pop_cond(last_cond - 1);
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_ENDM:
                     report(stack->top, "No macro definition block active\n");
@@ -1000,7 +1022,7 @@ static int assemble(
                     }
                     go_section(tr, &absolute_section);
                     list_location(stack->top, DOT);
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_CSECT:
                 case P_PSECT:
@@ -1078,7 +1100,7 @@ static int assemble(
                                 } else if (strcmp(label, "LCL") == 0) {
                                     sect->flags &= ~PSECT_GBL;      /* Local */
                                 } else {
-                                    report(stack->top, "Unknown flag %s given to " ".PSECT directive\n", label);
+                                    report(stack->top, "Unknown flag %s given to .PSECT directive\n", label);
                                     free(label);
                                     return 0;
                                 }
@@ -1116,7 +1138,7 @@ static int assemble(
                         go_section(tr, sect);
                         list_location(stack->top, DOT);
 
-                        return 1;
+                        return CHECK_EOL;
                     }                  /* end PSECT code */
                     break;
 
@@ -1130,7 +1152,7 @@ static int assemble(
                                comma-separated symbols */
                             label = get_symbol(cp, &ncp, NULL);
                             if (label == NULL) {
-                                report(stack->top, "Illegal .GLOBL/.WEAK " "syntax\n");
+                                report(stack->top, "Illegal .GLOBL/.WEAK syntax\n");
                                 return 0;
                             }
 
@@ -1146,7 +1168,7 @@ static int assemble(
                             cp = skipdelim(ncp);
                         }
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_WORD:
                     {
@@ -1154,7 +1176,7 @@ static int assemble(
                            is an implicit .WORD 0 */
                         if (EOL(*cp)) {
                             if (DOT & 1) {
-                                report(stack->top, ".WORD on odd " "boundary\n");
+                                report(stack->top, ".WORD on odd boundary\n");
                                 DOT++; /* Fix it, too */
                             }
                             store_word(stack->top, tr, 2, 0);
@@ -1185,10 +1207,11 @@ static int assemble(
                             value = new_ex_lit(1);
                         } else {
                             value = parse_expr(cp, 0);
+                            cp = value->cp;
                         }
 
                         if (value->type != EX_LIT) {
-                            report(stack->top, "Argument to .BLKB/.BLKW " "must be constant\n");
+                            report(stack->top, "Argument to .BLKB/.BLKW must be constant\n");
                             ok = 0;
                         } else {
                             list_value(stack->top, DOT);
@@ -1196,7 +1219,7 @@ static int assemble(
                             change_dot(tr, 0);
                         }
                         free_tree(value);
-                        return ok;
+                        return ok && CHECK_EOL;
                     }
 
                 case P_ASCIZ:
@@ -1231,7 +1254,7 @@ static int assemble(
 
                 case P_RAD50:
                     if (DOT & 1) {
-                        report(stack->top, ".RAD50 on odd " "boundary\n");
+                        report(stack->top, ".RAD50 on odd boundary\n");
                         DOT++;         /* Fix it */
                     }
                     {
@@ -1308,7 +1331,7 @@ static int assemble(
                     case OC_NONE:
                         /* No operands. */
                         store_word(stack->top, tr, 2, op->value);
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_MARK:
                         /* MARK, EMT, TRAP */  {
@@ -1321,7 +1344,7 @@ static int assemble(
                                           don't require it */
                             value = parse_expr(cp, 0);
                             if (value->type != EX_LIT) {
-                                report(stack->top, "Instruction requires " "simple literal operand\n");
+                                report(stack->top, "Instruction requires simple literal operand\n");
                                 word = op->value;
                             } else {
                                 word = op->value | value->data.lit;
@@ -1330,7 +1353,7 @@ static int assemble(
                             store_word(stack->top, tr, 2, word);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_1GEN:
                         /* One general addressing mode */  {
