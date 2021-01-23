@@ -659,7 +659,7 @@ int do_word(
         } else {
             EX_TREE        *value = parse_expr(cp, 0);
 
-            if (value->cp > cp) {
+            if (value->type != EX_ERR && value->cp > cp) {
                 store_value(stack, tr, size, value);
 
                 cp = value->cp;

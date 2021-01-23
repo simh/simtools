@@ -89,15 +89,42 @@ test-prec.mac:58: ***ERROR Invalid expression
        7                                        .globl  name
        8 000132 000000G                         .word   name
        9                                        .endc
-      81                                
+      82                                
+test-prec.mac:83: ***ERROR Invalid expression in .WORD
+      83                                        .word   (
+test-prec.mac:84: ***ERROR Invalid expression in .WORD
+      84                                (
+      85                                
+test-prec.mac:86: ***ERROR Invalid expression in .WORD
+      86                                        .word   _,$
+test-prec.mac:87: ***ERROR Invalid expression in .WORD
+      87                                _
+      88 000134 000000G                 $
+test-prec.mac:89: ***ERROR Invalid expression in .WORD
+      89                                        .word   /
+test-prec.mac:90: ***ERROR Invalid expression in .WORD
+      90                                        /
+test-prec.mac:91: ***ERROR Invalid expression in .WORD
+      91                                        .word ^px
+test-prec.mac:92: ***ERROR Invalid expression in .WORD
+      92                                        ^px
+test-prec.mac:93: ***ERROR Invalid expression in .WORD
+      93                                	.word	^px / 256
+test-prec.mac:94: ***ERROR Invalid expression in .WORD
+      94                                	^px / 256
+      95                                
+      96 000136 000001  000002  000003          1,2,3
+      97 000144 000000G 000000G 000000G         .1,.2,.3
+      97                                
 
 
 Symbol table
 
-.       ******R      001 NAME  = ****** G         
+$     = ****** GX        .1    = ****** GX        .3    = ****** GX        
+.       ******R      001 .2    = ****** GX        NAME  = ****** G         
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000134    001   (RW,I,LCL,REL,CON,NOSAV)
+        000152    001   (RW,I,LCL,REL,CON,NOSAV)

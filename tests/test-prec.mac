@@ -79,3 +79,19 @@
         .endm
 
         dirdef name
+
+        .word   (
+(
+
+        .word   _,$
+_
+$
+        .word   /
+        /
+        .word ^px
+        ^px
+	.word	^px / 256
+	^px / 256
+
+        1,2,3
+        .1,.2,.3

@@ -35,28 +35,24 @@ test-asciz.mac:18: ***ERROR Complex expression cannot be assigned to a symbol
       18                                        .asciz =DEF=                    ; syntax error: assignment
 test-asciz.mac:19: ***ERROR Complex expression cannot be assigned to a symbol
       19                                        .asciz =###=                    ; syntax error: assignment
-test-asciz.mac:20: ***ERROR .WORD on odd boundary
-test-asciz.mac:20: ***ERROR Invalid expression
-      20 000075    000  000001  000000          .asciz :SOH:                    ; syntax error: colon not allowed
-test-asciz.mac:21: ***ERROR Illegal symbol definition .ASCIZ
-test-asciz.mac:21: ***ERROR Invalid expression
-test-asciz.mac:21: ***ERROR Invalid expression
-test-asciz.mac:21: ***ERROR Invalid expression
-test-asciz.mac:21: ***ERROR Invalid expression
-      21 000102 000000  000000  000000          .asciz :###:                    ; syntax error: colon not allowed
-         000110 000000                  
-      22 000112    043     043     043          .asciz ^###^                    ; previous versions of this macro11
-         000115    000                  
-      23                                	; used ^/.../ quoting as an extension; however this should be ^...^.
-      23                                
+      20 000075    000                  	.even
+test-asciz.mac:21: ***ERROR Invalid expression in .WORD
+      21 000076 000001                          .asciz :SOH:                    ; syntax error: colon not allowed
+test-asciz.mac:22: ***ERROR Illegal symbol definition .ASCIZ
+test-asciz.mac:22: ***ERROR Invalid expression in .WORD
+      22                                        .asciz :###:                    ; syntax error: colon not allowed
+      23 000100    043     043     043          .asciz ^###^                    ; previous versions of this macro11
+         000103    000                  
+      24                                	; used ^/.../ quoting as an extension; however this should be ^...^.
+      24                                
 
 
 Symbol table
 
-.       ******R      001 .ASCIZ  000075R      001 CR    = 000015           LF    = 000012           SOH   = 000001           
+.       ******R      001 .ASCIZ  000076R      001 CR    = 000015           LF    = 000012           SOH   = 000001           
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000116    001   (RW,I,LCL,REL,CON,NOSAV)
+        000104    001   (RW,I,LCL,REL,CON,NOSAV)

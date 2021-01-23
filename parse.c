@@ -953,7 +953,7 @@ EX_TREE        *parse_unary(
                 int islocal = 0;
                 char *endcp;
                 char *psectname = get_symbol(cp2, &endcp, &islocal);
-                SYMBOL *sectsym = lookup_sym(psectname, &section_st);
+                SYMBOL *sectsym = psectname ? lookup_sym(psectname, &section_st) : NULL;
 
                 if (sectsym && !islocal) {
                     SECTION *psect = sectsym->section;
@@ -970,11 +970,20 @@ EX_TREE        *parse_unary(
                         tp = new_ex_bin(EX_ADD, tp, rightp);
                     } else {
                         tp = ex_err(tp, endcp);
-                        /* report(stack->top, "^p: %c not recognized", bound); */
+                        /* report(stack->top, "^p: %c not recognized\n", bound); */
                     }
                 } else {
-                    /* report(stack->top, "psect name %s not found"); */
-                    tp = ex_err(new_ex_lit(0), endcp);
+                    /* report(stack->top, "psect name %s not found\n", psectname); */
+                    if (pass == 0) {
+                        /*
+                         * During the first pass it is expected that the psect is not
+                         * found. Return a dummy value of the expected size, so that
+                         * the size of the psect keeps in sync.
+                         */
+                        tp = new_ex_lit(0);
+                    } else {
+                        tp = ex_err(new_ex_lit(0), endcp);
+                    }
                 }
                 free(psectname);
                 tp->cp = endcp;
@@ -1072,9 +1081,6 @@ EX_TREE        *parse_unary(
            get_symbol a second time. */
 
         if (!(label = get_symbol(cp, &cp, &local))) {
-            if (!EOL(*cp)) {
-                cp++;                  /*JH: eat first char of illegal label, else endless loop on implied .WORD */
-            }
             tp = ex_err(NULL, cp);     /* Not a valid label. */
             return tp;
         }
