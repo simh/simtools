@@ -32,8 +32,6 @@
 /* This function is way way too large, because I just coded most of
    the operation code and pseudo-op handling right in line.  */
 
-/* FIXME: nobody checks for extra junk after a valid statement */
-
 static int assemble(
     STACK *stack,
     TEXT_RLD *tr)
