@@ -153,8 +153,8 @@ test-if.mac:143: ***ERROR Bad .IF expression
 
 Symbol table
 
-.      ******R      001 DEFD2 =000003           LAB2   000037R      001 ONE   =000001           
-DEFD  =000002           LAB1   000036R      001 MIN1  =177777           ZERO  =000000           
+.       ******R      001 DEFD2 = 000003           LAB2    000037R      001 ONE   = 000001           
+DEFD  = 000002           LAB1    000036R      001 MIN1  = 177777           ZERO  = 000000           
 
 
 Program sections:

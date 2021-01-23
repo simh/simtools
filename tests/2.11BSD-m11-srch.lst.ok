@@ -943,23 +943,23 @@
 
 Symbol table
 
-$BRKAD=****** G         2$5    000556R  L   002 CR    =000015           ROLNDX 000004RG     006 SYMBOL=****** G         
-$BRKSY=****** G         2$6    000762R  L   002 DEBUG =000000           ROLPNT 000006R      006 SYMBOT 000014RG     006 
-$SBRK =****** GX        3$1    000232R  L   002 DUMROL=****** G         ROLUPD 000010RG     006 SYMHP =****** G         
-$TIMDF=000007           3$4    000432R  L   002 ED.REG=****** G         RSX11D=000000           SYMLP =****** G         
-.      ******R      002 3$6    001004R  L   002 EDMASK=****** G         SAVREG=****** G         SYMOVF=****** G         
-1$0    000004R  L   002 30$6   001052R  L   002 FF    =000014           SCAN   000334RG     002 SYMROL=****** G         
-1$1    000162R  L   002 4$5    000562R  L   002 FT.ID =000001           SCANC  000320RG     002 TAB   =000011           
-1$2    000300R  L   002 5$1    000242R  L   002 FT.UNX=000001           SCANF  000340R      002 UPBOMB 000002RG     006 
-1$3    000342R  L   002 5$5    000602R  L   002 INSERF 000456R      002 SCANW  000272RG     002 UPGAP  000000R      006 
-1$4    000414R  L   002 6$1    000244R  L   002 INSERT 000452RG     002 SCANX  000372R      002 UPLIFT 000626RG     002 
-1$5    000550R  L   002 6$5    000604R  L   002 LF    =000012           SCANXF 000370R      002 VT    =000013           
-1$6    000732R  L   002 9$6    000774R  L   002 MACTOP 000012RG     006 SCANY  000404R      002 X40   =000000           
-10$1   000144R  L   002 98$6   000724R  L   002 MK.SYM=000001           SEARCH 000072RG     002 XMIT0 =****** G         
-10$6   000656R  L   002 99$6   001052R  L   002 NEXT   000250RG     002 SETROF 001106R      002 ZAP    001064RG     002 
-2$1    000216R  L   002 APPEND 000434RG     002 PDPV45=000000           SETROL 001102R      002 
-2$3    000364R  L   002 BPMB  =000020           PUTN  =****** G         SPACE =000040           
-2$4    000426R  L   002 CPOPJ =****** G         REGROL=****** G         SRCHI  000000RG     002 
+$BRKAD= ****** G         2$5     000556R  L   002 CR    = 000015           ROLNDX  000004RG     006 SYMBOL= ****** G         
+$BRKSY= ****** G         2$6     000762R  L   002 DEBUG = 000000           ROLPNT  000006R      006 SYMBOT  000014RG     006 
+$SBRK = ****** GX        3$1     000232R  L   002 DUMROL= ****** G         ROLUPD  000010RG     006 SYMHP = ****** G         
+$TIMDF= 000007           3$4     000432R  L   002 ED.REG= ****** G         RSX11D= 000000           SYMLP = ****** G         
+.       ******R      002 3$6     001004R  L   002 EDMASK= ****** G         SAVREG= ****** G         SYMOVF= ****** G         
+1$0     000004R  L   002 30$6    001052R  L   002 FF    = 000014           SCAN    000334RG     002 SYMROL= ****** G         
+1$1     000162R  L   002 4$5     000562R  L   002 FT.ID = 000001           SCANC   000320RG     002 TAB   = 000011           
+1$2     000300R  L   002 5$1     000242R  L   002 FT.UNX= 000001           SCANF   000340R      002 UPBOMB  000002RG     006 
+1$3     000342R  L   002 5$5     000602R  L   002 INSERF  000456R      002 SCANW   000272RG     002 UPGAP   000000R      006 
+1$4     000414R  L   002 6$1     000244R  L   002 INSERT  000452RG     002 SCANX   000372R      002 UPLIFT  000626RG     002 
+1$5     000550R  L   002 6$5     000604R  L   002 LF    = 000012           SCANXF  000370R      002 VT    = 000013           
+1$6     000732R  L   002 9$6     000774R  L   002 MACTOP  000012RG     006 SCANY   000404R      002 X40   = 000000           
+10$1    000144R  L   002 98$6    000724R  L   002 MK.SYM= 000001           SEARCH  000072RG     002 XMIT0 = ****** G         
+10$6    000656R  L   002 99$6    001052R  L   002 NEXT    000250RG     002 SETROF  001106R      002 ZAP     001064RG     002 
+2$1     000216R  L   002 APPEND  000434RG     002 PDPV45= 000000           SETROL  001102R      002 
+2$3     000364R  L   002 BPMB  = 000020           PUTN  = ****** G         SPACE = 000040           
+2$4     000426R  L   002 CPOPJ = ****** G         REGROL= ****** G         SRCHI   000000RG     002 
 
 
 Program sections:

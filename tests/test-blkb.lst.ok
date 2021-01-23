@@ -32,7 +32,7 @@ test-blkb.mac:25: ***ERROR .ODD must not have an argument
 
 Symbol table
 
-.      ******R      001 LABEL  000000R      001 LABEL2 000154R      001 
+.       ******R      001 LABEL   000000R      001 LABEL2  000154R      001 
 
 
 Program sections:

@@ -63,7 +63,7 @@ test-prec.mac:58: ***ERROR Invalid expression
 
 Symbol table
 
-.      ******R      001 EXPRES=****** GX        INVALI=****** GX        
+.       ******R      001 EXPRES= ****** GX        INVALI= ****** GX        
 
 
 Program sections:

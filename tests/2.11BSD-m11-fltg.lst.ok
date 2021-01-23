@@ -958,26 +958,26 @@
 
 Symbol table
 
-$TIMDF =000007           32768$3 000400R  L   002 EDMASK =****** G         FLTG2W  000122R      002 FT.UNX =000001           
-.       ******R      002 32768$4 000650R  L   002 ERN10  =****** G         FLTG3   000360R      002 GETCHR =****** G         
-..Z    =****** G         32768$5 001026R  L   002 ERN11  =****** G         FLTG4W  000116R      002 GETNB  =****** G         
-..ZBUF =****** G         33$3    000442R  L   002 ERN9   =****** G         FLTG5   000550R      002 LF     =000012           
-1$2     000150R  L   002 4$5     000664R  L   002 ERR.A  =****** G         FLTGAD  001144R      002 MK.SYM =000001           
-1$6     001066R  L   002 40$3    000450R  L   002 ERR.N  =****** G         FLTGEX  001040R      002 MODE   =****** G         
-1$7     001112R  L   002 41$3    000460R  L   002 ERR.T  =****** G         FLTGLS  001204R      002 PDPV45 =000000           
-1$8     001146R  L   002 42$3    000500R  L   002 ERR.XX =****** G         FLTGRS  001166R      002 RSX11D =000000           
-10$2    000210R  L   002 43$3    000516R  L   002 ERRBTS =****** G         FLTGSV  001220R      002 SAVREG =****** G         
-11$2    000214R  L   002 5$5     000740R  L   002 ERRREF =****** G         FLTM50  001130R      002 SDEBUG =****** G         
-12$2    000244R  L   002 6$5     000756R  L   002 FF     =000014           FLTM54  001074R      002 SETNB  =****** G         
-13$2    000272R  L   002 8$5     000726R  L   002 FG53$   000656R      002 FLTPNT  000000R      005 SPACE  =000040           
-2$4     000600R  L   002 ABSTRM =****** G         FLT2    000002RG     002 FLTSAV  000020R      008 STCODE =****** G         
-2$8     001154R  L   002 BPMB   =000020           FLT4    000000RG     002 FLTSGN  000000R      008 TAB    =000011           
-20$2    000304R  L   002 CHRPNT =****** G         FLTBEG  000000R      008 FLTWDC  000000R      010 TSTARG =****** G         
-21$2    000320R  L   002 CPOPJ  =****** G         FLTBEX  000006R      008 FP.1    000006R      002 VALUE  =****** G         
-3$1     000102R  L   002 CR     =000015           FLTBUF  000010R      008 FP.2    000074R      002 VT     =000013           
-31$3    000400R  L   002 CRADIX =****** G         FLTDOT  000002R      008 FP.9    000114R      002 X      =000002           
-32$3    000430R  L   002 DEBUG  =000000           FLTEXP  000004R      008 FP57$   001034R      002 X40    =000000           
-32768$0 000066R  L   002 ED.FPT =****** G         FLTG1W  000126RG     002 FT.ID  =000001           XMIT0  =****** G         
+$TIMDF = 000007           32768$3  000400R  L   002 EDMASK = ****** G         FLTG2W   000122R      002 FT.UNX = 000001           
+.        ******R      002 32768$4  000650R  L   002 ERN10  = ****** G         FLTG3    000360R      002 GETCHR = ****** G         
+..Z    = ****** G         32768$5  001026R  L   002 ERN11  = ****** G         FLTG4W   000116R      002 GETNB  = ****** G         
+..ZBUF = ****** G         33$3     000442R  L   002 ERN9   = ****** G         FLTG5    000550R      002 LF     = 000012           
+1$2      000150R  L   002 4$5      000664R  L   002 ERR.A  = ****** G         FLTGAD   001144R      002 MK.SYM = 000001           
+1$6      001066R  L   002 40$3     000450R  L   002 ERR.N  = ****** G         FLTGEX   001040R      002 MODE   = ****** G         
+1$7      001112R  L   002 41$3     000460R  L   002 ERR.T  = ****** G         FLTGLS   001204R      002 PDPV45 = 000000           
+1$8      001146R  L   002 42$3     000500R  L   002 ERR.XX = ****** G         FLTGRS   001166R      002 RSX11D = 000000           
+10$2     000210R  L   002 43$3     000516R  L   002 ERRBTS = ****** G         FLTGSV   001220R      002 SAVREG = ****** G         
+11$2     000214R  L   002 5$5      000740R  L   002 ERRREF = ****** G         FLTM50   001130R      002 SDEBUG = ****** G         
+12$2     000244R  L   002 6$5      000756R  L   002 FF     = 000014           FLTM54   001074R      002 SETNB  = ****** G         
+13$2     000272R  L   002 8$5      000726R  L   002 FG53$    000656R      002 FLTPNT   000000R      005 SPACE  = 000040           
+2$4      000600R  L   002 ABSTRM = ****** G         FLT2     000002RG     002 FLTSAV   000020R      008 STCODE = ****** G         
+2$8      001154R  L   002 BPMB   = 000020           FLT4     000000RG     002 FLTSGN   000000R      008 TAB    = 000011           
+20$2     000304R  L   002 CHRPNT = ****** G         FLTBEG   000000R      008 FLTWDC   000000R      010 TSTARG = ****** G         
+21$2     000320R  L   002 CPOPJ  = ****** G         FLTBEX   000006R      008 FP.1     000006R      002 VALUE  = ****** G         
+3$1      000102R  L   002 CR     = 000015           FLTBUF   000010R      008 FP.2     000074R      002 VT     = 000013           
+31$3     000400R  L   002 CRADIX = ****** G         FLTDOT   000002R      008 FP.9     000114R      002 X      = 000002           
+32$3     000430R  L   002 DEBUG  = 000000           FLTEXP   000004R      008 FP57$    001034R      002 X40    = 000000           
+32768$0  000066R  L   002 ED.FPT = ****** G         FLTG1W   000126RG     002 FT.ID  = 000001           XMIT0  = ****** G         
 
 
 Program sections:

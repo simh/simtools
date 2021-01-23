@@ -99,7 +99,6 @@
         .FLT4  170141183460469230564930741053754966016 ; 2**127-(2**70-2**64+2**62+2)
 
         ; Several ways to define a name for the fpp registers
-        ; TODO: change symbol table to show % sign
 
 ac0 = r0
 ac1 = %1

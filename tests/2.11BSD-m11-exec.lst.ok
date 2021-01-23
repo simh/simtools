@@ -4581,90 +4581,111 @@
 
 Symbol table
 
-$$EXIT   000316R      002 32768$25 001404R  L   002 CMOBUF   000146R      008 FT.UNX  =000001           PDPV45  =000000 G         
-$BRKAD   000322RG     006 32768$39 003544R  L   002 CMOCHN  =000000 G         GETIC    002204RG     002 PROP1   =****** G         
-$BRKSY  =****** G         32768$4  000000R  L   011 CMOLEN  =000120           GETSRC   002322RG     002 PROP2   =****** G         
-$CLOSE  =****** G         32768$40 003600R  L   002 CNTTBL   000236RG     006 GLBFLG  =000100           PROSW   =****** G         
-$CREAT  =****** G         32768$42 004216R  L   002 CPOPJ   =****** G         GMTSEC  =061160           PSAROL  =****** G         
-$CRTMD   000314R      006 32768$43 004256R  L   002 CR      =000015           GSARG   =****** G         PSDFLT  =****** G         
-$CRTNM   000312R      006 32768$5  000004R  L   011 CR.LIN  =000003           HA.SET   000734R      002 PSTROL  =****** G         
-$EXECV  =****** G         32768$6  000010R  L   011 CR.PAG  =000002           HARVID   000166R      006 PUTKB   =****** G         
-$EXIT   =****** G         32768$7  000014R  L   011 CR.SET   001250R      002 HDRTTL  =****** G         PUTKBL  =****** G         
-$FEB     000326R      006 32768$8  000020R  L   011 CR.SYM  =000020           IARGC    000002R      006 PUTLP   =****** G         
-$FORK   =****** G         32768$9  000024R  L   011 CR.VER  =000401           IARGV    000004RG     006 PUTOC    002650RG     002 
-$GETTO  =****** G         32769$22 000104R  L   011 CRAP     000122R      006 INICOR  =****** G         PUTXRF   004176R      002 
-$OPEN   =****** G         32769$40 003612R  L   002 CREFAV   000074R      006 INIP0    000336R      002 R50UNP  =****** G         
-$OPNMD   000320R      006 32770$40 003624R  L   002 CREFIL   000014R      006 INIP0Z   001470R      002 REGFLG  =000001           
-$OPNNM   000316R      006 32771$40 003640R  L   002 CRFCHN  =000012 G         INIP1    001414R      002 REGROL  =****** G         
-$RDBFP   000306R      006 32772$40 003736R  L   002 CRFDEF   003562RG     002 INIP2    001432R      002 RELFLG  =000040           
-$RDCNT   000310R      006 33$2     000450R  L   002 CRFDFL   000002R      010 INIP2F   001450R      002 ROLNDX  =****** G         
-$READ   =****** G         4$2      000464R  L   002 CRFEXT   000224R      005 INISML   002714RG     002 RSX11D  =000000 G         
-$SBRK   =****** G         4$26     001664R  L   002 CRFFLG   000736R      008 INSFLG  =000002           SAVREG  =****** G         
-$SEEK   =****** G         4$28     001776R  L   002 CRFLAG   000106R      006 IO.EOF  =000010 G         SCANW   =****** G         
-$TIMDF  =000007           4$31     002226R  L   002 CRFLEN  =001000           IO.EOI  =000040 G         SDEBUG  =****** G         
-$WAIT   =****** G         4$32     002610R  L   002 CRFLIN   000750R      008 IO.ERR  =000020 G         SECROL  =****** G         
-$WRBFP   000302RG     006 4$33     002674R  L   002 CRFPAG   000746R      008 IO.INI  =000001           SERROR   002136R      002 
-$WRCNT   000304RG     006 4$36     003406R  L   002 CRFPND   000004R      008 IO.OPN  =000002           SETDN    002050R      002 
-$WRITE  =****** G         4$40     003742R  L   002 CRFPNT   000740R      008 IO.OUT  =100000           SETED   =****** G         
-$WRSYS  =****** G         4$41     004140R  L   002 CRFREF   003566RG     002 IO.TTY  =000004 G         SETLC   =****** G         
-.        ******R      002 4$44     004370R  L   002 CRFROL  =****** G         IOFTBL   000074RG     008 SETTEN   000664R      002 
-..Z     =****** G         44$40    003772R  L   002 CRFRUN   000240R      005 IOLTBL   000170RG     005 SHRFLG  =000001           
-..ZBUF  =****** G         5$2      000502R  L   002 CRFSET   003502R      002 LBLFLG  =000002           SMLBUF   000602R      008 
-1$1      000330R  L   002 5$28     002006R  L   002 CRFSYM   000726R      008 LF      =000012           SMLCHN  =000010 G         
-1$2      000360R  L   002 5$31     002272R  L   002 CRFTYP   000232R      005 LINBUF  =****** G         SMLEXT   000220R      005 
-1$25     001270R  L   002 5$32     002620R  L   002 CRFVER   000744R      008 LINNUM   000002RG     009 SMLFIL   000034RG     008 
-1$26     001570R  L   002 5$33     002676R  L   002 CSDFLT  =****** G         LP.SET   001172R      002 SMLLEN  =000120           
-1$27     001734R  L   002 5$40     004016R  L   002 CT.ALP  =000040           LPARGS   000000R      005 SMLNAM   000032RG     008 
-1$29     002036R  L   002 51$36    003300R  L   002 CT.COM  =000001           LPFLAG   000012R      008 SPACE   =000040           
-1$3      000574R  L   002 55$2     000510R  L   002 CT.EOL  =000000           LPRRUN   000006R      005 SRC.AP   002020R      002 
-1$30     002134R  L   002 55$40    004040R  L   002 CT.LC   =000100           LS.SET   001210R      002 SRC.FP   001716R      002 
-1$32     002352R  L   002 59$36    003334R  L   002 CT.NUM  =000020           LSTCHN  =000004 G         SRCBUF   000300R      008 
-1$34     002766R  L   002 6$2      000516R  L   002 CT.PC   =000271           LSTEXT   000210R      005 SRCCHN  =000002 G         
-1$35     003174R  L   002 6$32     002634R  L   002 CT.PCX  =000010           LSTFLG   000000RG     008 SRCEXT   000204R      005 
-1$37     003466R  L   002 6$40     004056R  L   002 CT.SMC  =000200           LSTLEN  =001000           SRCHI   =****** G         
-1$38     000150R  L   006 6$44     004512R  L   002 CT.SP   =000004           LT.SET   000672R      002 SRCLEN  =000204           
-1$40     003644R  L   002 7$2      000526R  L   002 CT.TAB  =000002           LTTFLG   000002RG     008 SRCNAM   000026R      008 
-1$41     004174R  L   002 7$26     001702R  L   002 CTTBL   =****** G         M.IDF   =000007           START    000000RG     002 
-1$43     004230R  L   002 7$29     002046R  L   002 CVTIM    004260RG     002 MAC.ER  =****** G         SWCERR   000076R      005 
-1$44     004326R  L   002 7$32     002644R  L   002 DA.SET   001032R      002 MACERR   000024R      005 SX.FLG   000022RG     008 
-10$21    001110R  L   002 7$44     004546R  L   002 DATTI1   000136R      006 MACOVF   002170RG     002 SX.SET   000616R      002 
-10$32    002634R  L   002 8$2      000534R  L   002 DATTI2   000143R      006 MACROL  =****** G         SYMBOL  =****** G         
-100$26   001562R  L   002 8$35     003210R  L   002 DATTIM   000124RG     006 MAXCHN  =000014           SYMERR   000050R      005 
-100$30   002124R  L   002 8$40     004072R  L   002 DC.SET   001040R      002 MDEPTH  =****** G         SYMHP    000012RG     006 
-11$26    001604R  L   002 8$45     004574R  L   002 DE.SET   000764R      002 MDFFLG  =000004           SYMLP    000010RG     006 
-13$32    002434R  L   002 81$0     000220R  L   002 DEBUG   =000000 G         MK.SYM  =000001           SYMOVF   002160RG     002 
-14$32    002504R  L   002 9$0      000252R  L   002 DECID    000203R      006 MK.UP    000554R      002 SYMROL  =****** G         
-15$32    002514R  L   002 9$2      000544R  L   002 DEFFLG  =000010           MO.TAB   000260R      005 TAB     =000011           
-19$2     000544R  L   002 9$21     001166R  L   002 DFGFLG  =000200           MONTAB   000324R      006 TMPCNT  =000014           
-2$25     001412R  L   002 9$25     001334R  L   002 DFLGTB  =000000 G         MOVBYT  =****** G         TSTREG   004100R      002 
-2$26     001616R  L   002 9$26     001714R  L   002 DNC     =****** G         MX.2    =****** G         U.FLAG   000010RG     008 
-2$28     001742R  L   002 9$31     002314R  L   002 DP.SET   001046R      002 MX.FLG   000014RG     008 U.SET    000624R      002 
-2$29     002042R  L   002 9$36     003420R  L   002 DX.SET   001052R      002 MX.SET   000640R      002 UC.SET  =****** G         
-2$3      000604R  L   002 9$39     003560R  L   002 ED.CRF  =****** G         MY.FLG   000020RG     008 UM.SET  =****** G         
-2$32     002526R  L   002 9$40     004072R  L   002 ED.GBL  =****** G         MY.SET   000656R      002 VERITA   000000RG     003 
-2$40     003676R  L   002 99$26    001642R  L   002 EDDFLT  =****** G         NAM.AP   002012R      002 VERNAM   000146RG     006 
-2$41     004170R  L   002 99$32    002464R  L   002 EDMASK  =****** G         NAM.FP   001740R      002 VT      =000013           
-21$44    004364R  L   002 99$34    003016R  L   002 ENDP1   =****** G         NCMSG    000147R      005 VTCNT    000734R      008 
-3$2      000420R  L   002 99$35    003160R  L   002 ENDP2   =****** G         NFMSG    000134R      005 VTINI   =000144           
-3$25     001324R  L   002 99$36    003374R  L   002 ERN45   =****** G         NMONTH   000754R      008 X       =000002           
-3$26     001652R  L   002 AATTRS  =000130           ERN55   =****** G         NO.FLG   000006R      008 X40     =000000 G         
-3$28     001772R  L   002 ABSEXP  =****** G         ERR.A   =****** G         NO.SET   000610R      002 XCTPAS  =****** G         
-3$32     002552R  L   002 ADDBUF   001220R      002 ERR.BY  =****** G         NS.SET   000720R      002 XCTPRG  =****** G         
-3$40     003724R  L   002 AP.EXT   002024R      002 ERR.XX  =****** G         NULEXT   000230R      005 XEDFPT  =000000 G         
-32768$10 000030R  L   011 ARGC     000000R      006 ERRBTS  =****** G         NYEAR    000752R      008 XFLTG   =000000 G         
-32768$11 000034R  L   011 ARGV     000006R      006 ERRCNT  =****** G         OBJBUF   000516R      008 XMIT0   =****** G         
-32768$12 000040R  L   011 ASDFLT  =****** G         ERRREF  =****** G         OBJCHN  =000006 G         XS.SET   000726R      002 
-32768$13 000044R  L   011 B.IDF   =000001           ERRROL  =000001 G         OBJEXT   000214R      005 XX.FLG   000016RG     008 
-32768$14 000050R  L   011 BINTBL   000266RG     006 ESRCNA   000030R      008 OBJLEN  =000052 G         XX.SET   000632R      002 
-32768$15 000054R  L   011 BKSIZ   =****** G         EXTTBL   000222RG     006 OPCLAS  =****** G         XXXREG   000742RG     008 
-32768$16 000060R  L   011 BPMB    =000020           FF      =000014           OPENC   =****** G         YEARL    004556R      002 
-32768$17 000064R  L   011 BSSFLG  =000004           FILELN   000006RG     009 OPENO    001532RG     002 ZCLOSE   003430R      002 
-32768$18 000070R  L   011 BUFTBL   000252RG     006 FIN     =****** G         OUT$YM  =****** G         ZINIT    003046R      002 
-32768$19 000074R  L   011 CATTRS  =000170           FINMSG   000111R      005 OVRFLG  =000020           ZOPEN    003056R      002 
-32768$20 000100R  L   011 CHNTBL   000124RG     008 FINP1    001520R      002 PAGNUM   000000RG     009 ZREAD    003100RG     002 
-32768$21 001160R  L   002 CHRPNT  =****** G         FINSML   003032RG     002 PASS    =****** G         ZRLSE    003470R      002 
-32768$23 000110R  L   011 CHRTBL   000110RG     008 FIXTIT  =****** G         PATTRS  =000050           ZWRITE   003216RG     002 
-32768$24 000114R  L   011 CKVTC    004220R      002 FT.ID   =000001           PDP10    000024RG     008 
+$$EXIT    000316R      002 4$32      002610R  L   002 CT.TAB  = 000002           NCMSG     000147R      005 
+$BRKAD    000322RG     006 4$33      002674R  L   002 CTTBL   = ****** G         NFMSG     000134R      005 
+$BRKSY  = ****** G         4$36      003406R  L   002 CVTIM     004260RG     002 NMONTH    000754R      008 
+$CLOSE  = ****** G         4$40      003742R  L   002 DA.SET    001032R      002 NO.FLG    000006R      008 
+$CREAT  = ****** G         4$41      004140R  L   002 DATTI1    000136R      006 NO.SET    000610R      002 
+$CRTMD    000314R      006 4$44      004370R  L   002 DATTI2    000143R      006 NS.SET    000720R      002 
+$CRTNM    000312R      006 44$40     003772R  L   002 DATTIM    000124RG     006 NULEXT    000230R      005 
+$EXECV  = ****** G         5$2       000502R  L   002 DC.SET    001040R      002 NYEAR     000752R      008 
+$EXIT   = ****** G         5$28      002006R  L   002 DE.SET    000764R      002 OBJBUF    000516R      008 
+$FEB      000326R      006 5$31      002272R  L   002 DEBUG   = 000000 G         OBJCHN  = 000006 G         
+$FORK   = ****** G         5$32      002620R  L   002 DECID     000203R      006 OBJEXT    000214R      005 
+$GETTO  = ****** G         5$33      002676R  L   002 DEFFLG  = 000010           OBJLEN  = 000052 G         
+$OPEN   = ****** G         5$40      004016R  L   002 DFGFLG  = 000200           OPCLAS  = ****** G         
+$OPNMD    000320R      006 51$36     003300R  L   002 DFLGTB  = 000000 G         OPENC   = ****** G         
+$OPNNM    000316R      006 55$2      000510R  L   002 DNC     = ****** G         OPENO     001532RG     002 
+$RDBFP    000306R      006 55$40     004040R  L   002 DP.SET    001046R      002 OUT$YM  = ****** G         
+$RDCNT    000310R      006 59$36     003334R  L   002 DX.SET    001052R      002 OVRFLG  = 000020           
+$READ   = ****** G         6$2       000516R  L   002 ED.CRF  = ****** G         PAGNUM    000000RG     009 
+$SBRK   = ****** G         6$32      002634R  L   002 ED.GBL  = ****** G         PASS    = ****** G         
+$SEEK   = ****** G         6$40      004056R  L   002 EDDFLT  = ****** G         PATTRS  = 000050           
+$TIMDF  = 000007           6$44      004512R  L   002 EDMASK  = ****** G         PDP10     000024RG     008 
+$WAIT   = ****** G         7$2       000526R  L   002 ENDP1   = ****** G         PDPV45  = 000000 G         
+$WRBFP    000302RG     006 7$26      001702R  L   002 ENDP2   = ****** G         PROP1   = ****** G         
+$WRCNT    000304RG     006 7$29      002046R  L   002 ERN45   = ****** G         PROP2   = ****** G         
+$WRITE  = ****** G         7$32      002644R  L   002 ERN55   = ****** G         PROSW   = ****** G         
+$WRSYS  = ****** G         7$44      004546R  L   002 ERR.A   = ****** G         PSAROL  = ****** G         
+.         ******R      002 8$2       000534R  L   002 ERR.BY  = ****** G         PSDFLT  = ****** G         
+..Z     = ****** G         8$35      003210R  L   002 ERR.XX  = ****** G         PSTROL  = ****** G         
+..ZBUF  = ****** G         8$40      004072R  L   002 ERRBTS  = ****** G         PUTKB   = ****** G         
+1$1       000330R  L   002 8$45      004574R  L   002 ERRCNT  = ****** G         PUTKBL  = ****** G         
+1$2       000360R  L   002 81$0      000220R  L   002 ERRREF  = ****** G         PUTLP   = ****** G         
+1$25      001270R  L   002 9$0       000252R  L   002 ERRROL  = 000001 G         PUTOC     002650RG     002 
+1$26      001570R  L   002 9$2       000544R  L   002 ESRCNA    000030R      008 PUTXRF    004176R      002 
+1$27      001734R  L   002 9$21      001166R  L   002 EXTTBL    000222RG     006 R50UNP  = ****** G         
+1$29      002036R  L   002 9$25      001334R  L   002 FF      = 000014           REGFLG  = 000001           
+1$3       000574R  L   002 9$26      001714R  L   002 FILELN    000006RG     009 REGROL  = ****** G         
+1$30      002134R  L   002 9$31      002314R  L   002 FIN     = ****** G         RELFLG  = 000040           
+1$32      002352R  L   002 9$36      003420R  L   002 FINMSG    000111R      005 ROLNDX  = ****** G         
+1$34      002766R  L   002 9$39      003560R  L   002 FINP1     001520R      002 RSX11D  = 000000 G         
+1$35      003174R  L   002 9$40      004072R  L   002 FINSML    003032RG     002 SAVREG  = ****** G         
+1$37      003466R  L   002 99$26     001642R  L   002 FIXTIT  = ****** G         SCANW   = ****** G         
+1$38      000150R  L   006 99$32     002464R  L   002 FT.ID   = 000001           SDEBUG  = ****** G         
+1$40      003644R  L   002 99$34     003016R  L   002 FT.UNX  = 000001           SECROL  = ****** G         
+1$41      004174R  L   002 99$35     003160R  L   002 GETIC     002204RG     002 SERROR    002136R      002 
+1$43      004230R  L   002 99$36     003374R  L   002 GETSRC    002322RG     002 SETDN     002050R      002 
+1$44      004326R  L   002 AATTRS  = 000130           GLBFLG  = 000100           SETED   = ****** G         
+10$21     001110R  L   002 ABSEXP  = ****** G         GMTSEC  = 061160           SETLC   = ****** G         
+10$32     002634R  L   002 ADDBUF    001220R      002 GSARG   = ****** G         SETTEN    000664R      002 
+100$26    001562R  L   002 AP.EXT    002024R      002 HA.SET    000734R      002 SHRFLG  = 000001           
+100$30    002124R  L   002 ARGC      000000R      006 HARVID    000166R      006 SMLBUF    000602R      008 
+11$26     001604R  L   002 ARGV      000006R      006 HDRTTL  = ****** G         SMLCHN  = 000010 G         
+13$32     002434R  L   002 ASDFLT  = ****** G         IARGC     000002R      006 SMLEXT    000220R      005 
+14$32     002504R  L   002 B.IDF   = 000001           IARGV     000004RG     006 SMLFIL    000034RG     008 
+15$32     002514R  L   002 BINTBL    000266RG     006 INICOR  = ****** G         SMLLEN  = 000120           
+19$2      000544R  L   002 BKSIZ   = ****** G         INIP0     000336R      002 SMLNAM    000032RG     008 
+2$25      001412R  L   002 BPMB    = 000020           INIP0Z    001470R      002 SPACE   = 000040           
+2$26      001616R  L   002 BSSFLG  = 000004           INIP1     001414R      002 SRC.AP    002020R      002 
+2$28      001742R  L   002 BUFTBL    000252RG     006 INIP2     001432R      002 SRC.FP    001716R      002 
+2$29      002042R  L   002 CATTRS  = 000170           INIP2F    001450R      002 SRCBUF    000300R      008 
+2$3       000604R  L   002 CHNTBL    000124RG     008 INISML    002714RG     002 SRCCHN  = 000002 G         
+2$32      002526R  L   002 CHRPNT  = ****** G         INSFLG  = 000002           SRCEXT    000204R      005 
+2$40      003676R  L   002 CHRTBL    000110RG     008 IO.EOF  = 000010 G         SRCHI   = ****** G         
+2$41      004170R  L   002 CKVTC     004220R      002 IO.EOI  = 000040 G         SRCLEN  = 000204           
+21$44     004364R  L   002 CMOBUF    000146R      008 IO.ERR  = 000020 G         SRCNAM    000026R      008 
+3$2       000420R  L   002 CMOCHN  = 000000 G         IO.INI  = 000001           START     000000RG     002 
+3$25      001324R  L   002 CMOLEN  = 000120           IO.OPN  = 000002           SWCERR    000076R      005 
+3$26      001652R  L   002 CNTTBL    000236RG     006 IO.OUT  = 100000           SX.FLG    000022RG     008 
+3$28      001772R  L   002 CPOPJ   = ****** G         IO.TTY  = 000004 G         SX.SET    000616R      002 
+3$32      002552R  L   002 CR      = 000015           IOFTBL    000074RG     008 SYMBOL  = ****** G         
+3$40      003724R  L   002 CR.LIN  = 000003           IOLTBL    000170RG     005 SYMERR    000050R      005 
+32768$10  000030R  L   011 CR.PAG  = 000002           LBLFLG  = 000002           SYMHP     000012RG     006 
+32768$11  000034R  L   011 CR.SET    001250R      002 LF      = 000012           SYMLP     000010RG     006 
+32768$12  000040R  L   011 CR.SYM  = 000020           LINBUF  = ****** G         SYMOVF    002160RG     002 
+32768$13  000044R  L   011 CR.VER  = 000401           LINNUM    000002RG     009 SYMROL  = ****** G         
+32768$14  000050R  L   011 CRAP      000122R      006 LP.SET    001172R      002 TAB     = 000011           
+32768$15  000054R  L   011 CREFAV    000074R      006 LPARGS    000000R      005 TMPCNT  = 000014           
+32768$16  000060R  L   011 CREFIL    000014R      006 LPFLAG    000012R      008 TSTREG    004100R      002 
+32768$17  000064R  L   011 CRFCHN  = 000012 G         LPRRUN    000006R      005 U.FLAG    000010RG     008 
+32768$18  000070R  L   011 CRFDEF    003562RG     002 LS.SET    001210R      002 U.SET     000624R      002 
+32768$19  000074R  L   011 CRFDFL    000002R      010 LSTCHN  = 000004 G         UC.SET  = ****** G         
+32768$20  000100R  L   011 CRFEXT    000224R      005 LSTEXT    000210R      005 UM.SET  = ****** G         
+32768$21  001160R  L   002 CRFFLG    000736R      008 LSTFLG    000000RG     008 VERITA    000000RG     003 
+32768$23  000110R  L   011 CRFLAG    000106R      006 LSTLEN  = 001000           VERNAM    000146RG     006 
+32768$24  000114R  L   011 CRFLEN  = 001000           LT.SET    000672R      002 VT      = 000013           
+32768$25  001404R  L   002 CRFLIN    000750R      008 LTTFLG    000002RG     008 VTCNT     000734R      008 
+32768$39  003544R  L   002 CRFPAG    000746R      008 M.IDF   = 000007           VTINI   = 000144           
+32768$4   000000R  L   011 CRFPND    000004R      008 MAC.ER  = ****** G         X       = 000002           
+32768$40  003600R  L   002 CRFPNT    000740R      008 MACERR    000024R      005 X40     = 000000 G         
+32768$42  004216R  L   002 CRFREF    003566RG     002 MACOVF    002170RG     002 XCTPAS  = ****** G         
+32768$43  004256R  L   002 CRFROL  = ****** G         MACROL  = ****** G         XCTPRG  = ****** G         
+32768$5   000004R  L   011 CRFRUN    000240R      005 MAXCHN  = 000014           XEDFPT  = 000000 G         
+32768$6   000010R  L   011 CRFSET    003502R      002 MDEPTH  = ****** G         XFLTG   = 000000 G         
+32768$7   000014R  L   011 CRFSYM    000726R      008 MDFFLG  = 000004           XMIT0   = ****** G         
+32768$8   000020R  L   011 CRFTYP    000232R      005 MK.SYM  = 000001           XS.SET    000726R      002 
+32768$9   000024R  L   011 CRFVER    000744R      008 MK.UP     000554R      002 XX.FLG    000016RG     008 
+32769$22  000104R  L   011 CSDFLT  = ****** G         MO.TAB    000260R      005 XX.SET    000632R      002 
+32769$40  003612R  L   002 CT.ALP  = 000040           MONTAB    000324R      006 XXXREG    000742RG     008 
+32770$40  003624R  L   002 CT.COM  = 000001           MOVBYT  = ****** G         YEARL     004556R      002 
+32771$40  003640R  L   002 CT.EOL  = 000000           MX.2    = ****** G         ZCLOSE    003430R      002 
+32772$40  003736R  L   002 CT.LC   = 000100           MX.FLG    000014RG     008 ZINIT     003046R      002 
+33$2      000450R  L   002 CT.NUM  = 000020           MX.SET    000640R      002 ZOPEN     003056R      002 
+4$2       000464R  L   002 CT.PC   = 000271           MY.FLG    000020RG     008 ZREAD     003100RG     002 
+4$26      001664R  L   002 CT.PCX  = 000010           MY.SET    000656R      002 ZRLSE     003470R      002 
+4$28      001776R  L   002 CT.SMC  = 000200           NAM.AP    002012R      002 ZWRITE    003216RG     002 
+4$31      002226R  L   002 CT.SP   = 000004           NAM.FP    001740R      002 
 
 
 Program sections:

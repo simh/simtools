@@ -58,7 +58,7 @@ test-include.mac:21: ***ERROR Unable to find .INCLUDE file "does-not-exist.mac"
 
 Symbol table
 
-.      ******R      001 .INCLU 000012R      001 INCL.M=****** GX        
+.       ******R      001 .INCLU  000012R      001 INCL.M= ****** GX        
 
 
 Program sections:

@@ -461,9 +461,9 @@
 
 Symbol table
 
-$CLOSE=104406 G         $EXIT =104401 G         $OPEN =104405 G         $SEEK =104423 G         .      ******R      001 
-$CREAT=104410 G         $FORK =104402 G         $READ =104403 G         $WAIT =104524 G         DEBUG =000001           
-$EXECV=104413 G         $GETTO=104564 G         $SBRK =104505 G         $WRITE=104404 G         
+$CLOSE= 104406 G         $EXIT = 104401 G         $OPEN = 104405 G         $SEEK = 104423 G         .       ******R      001 
+$CREAT= 104410 G         $FORK = 104402 G         $READ = 104403 G         $WAIT = 104524 G         DEBUG = 000001           
+$EXECV= 104413 G         $GETTO= 104564 G         $SBRK = 104505 G         $WRITE= 104404 G         
 
 
 Program sections:

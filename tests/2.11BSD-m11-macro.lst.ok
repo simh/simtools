@@ -1277,34 +1277,34 @@
 
 Symbol table
 
-$TIMDF=000007           CH.MUL=000052           ENDFLG=****** G         LET.R =000122           ROLBAS 000000R      018 
-.      ******R      002 CH.PCT=000045           ENDLIN=****** G         LET.Z =000132           ROLUPD=****** G         
-2$0    000006R  L   002 CH.QM =000077           ENDP1  000110RG     002 LF    =000012           RSX11D=000000           
-3$1    000062R  L   002 CH.QTM=000042           ENDP1C=****** G         LSYROL=000010 G         SAVREG=****** G         
-31$2   000134R  L   002 CH.RAB=000076           ENDP2  000162RG     002 M.IDF =000007           SCAN  =****** G         
-32$2   000160R  L   002 CH.RP =000051           ENDP2C=****** G         MACROL=000004 G         SCANW =****** G         
-4$1    000074R  L   002 CH.SMC=000073           ENDP2L=****** G         MAXXMT=000005           SECINI=****** G         
-9$3    000260R  L   002 CH.SUB=000055           ERRBTS=****** G         MDFFLG=000004           SECROL=000012 G         
-AATTRS=000130           CH.UAR=000136           EXMFLG 000000RG     010 MK.SYM=000001           SECTOR 000005RG     009 
-B.IDF =000001           CH.XCL=000047           FF    =000014           MODE   000004RG     009 SETMAX=****** G         
-BKSIZ  000002RG     008 CLCFGS 000016RG     009 FLAGS  000004RG     009 NEXT  =****** G         SETNB =****** G         
-BPMB  =000020           CLCLOC 000020RG     009 FT.ID =000001           OBJCHN=****** G         SETXPR=****** G         
-BSSFLG=000004           CLCMAX 000022RG     009 FT.UNX=000001           OPENO =****** G         SHRFLG=000001           
-CATTRS=000170           CLCNAM 000012RG     009 GETLIN=****** G         OVRFLG=000020           SPACE =000040           
-CH.ADD=000053           CLCSEC 000017RG     009 GLBFLG=000100           PASS   000000RG     008 STMNT =****** G         
-CH.AND=000046           CNDROL=000020 G         INSERT=****** G         PATTRS=000050           SWTROL=000022 G         
-CH.BSL=000134           CODROL=000014 G         INSFLG=000002           PDPV45=000000           SYMBOL 000000RG     009 
-CH.COL=000072           CPOPJ =****** G         LBLFLG=000002           PROP1  000000RG     002 SYMROL=000002 G         
-CH.COM=000054           CR    =000015           LCDROL=000026 G         PROP2  000052RG     002 TAB   =000011           
-CH.DIV=000057           CRFROL=000034 G         LET.A =000101           PROPC =****** G         VALUE  000006RG     009 
-CH.DOL=000044           DEBUG =000000           LET.B =000102           PROSW  000176RG     002 VT    =000013           
-CH.DOT=000056           DEFFLG=000010           LET.C =000103           PSAROL=000030 G         X40   =000000           
-CH.EQU=000075           DFGFLG=000200           LET.D =000104           PSTROL=000032 G         XCTLIN=****** G         
-CH.HSH=000043           DIG.0 =000060           LET.E =000105           REGFLG=000001           XCTPAS=****** G         
-CH.IND=000100           DIG.9 =000071           LET.F =000106           REGROL=000000 G         XMIT0 =****** G         
-CH.IOR=000041           DMAROL=000006 G         LET.G =000107           REGTBL 000000R      005 
-CH.LAB=000074           DUMROL=000016 G         LET.O =000117           RELFLG=000040           
-CH.LP =000050           EDTROL=000024 G         LET.P =000120           RELLVL 000010RG     009 
+$TIMDF= 000007           CH.MUL= 000052           ENDFLG= ****** G         LET.R = 000122           ROLBAS  000000R      018 
+.       ******R      002 CH.PCT= 000045           ENDLIN= ****** G         LET.Z = 000132           ROLUPD= ****** G         
+2$0     000006R  L   002 CH.QM = 000077           ENDP1   000110RG     002 LF    = 000012           RSX11D= 000000           
+3$1     000062R  L   002 CH.QTM= 000042           ENDP1C= ****** G         LSYROL= 000010 G         SAVREG= ****** G         
+31$2    000134R  L   002 CH.RAB= 000076           ENDP2   000162RG     002 M.IDF = 000007           SCAN  = ****** G         
+32$2    000160R  L   002 CH.RP = 000051           ENDP2C= ****** G         MACROL= 000004 G         SCANW = ****** G         
+4$1     000074R  L   002 CH.SMC= 000073           ENDP2L= ****** G         MAXXMT= 000005           SECINI= ****** G         
+9$3     000260R  L   002 CH.SUB= 000055           ERRBTS= ****** G         MDFFLG= 000004           SECROL= 000012 G         
+AATTRS= 000130           CH.UAR= 000136           EXMFLG  000000RG     010 MK.SYM= 000001           SECTOR  000005RG     009 
+B.IDF = 000001           CH.XCL= 000047           FF    = 000014           MODE    000004RG     009 SETMAX= ****** G         
+BKSIZ   000002RG     008 CLCFGS  000016RG     009 FLAGS   000004RG     009 NEXT  = ****** G         SETNB = ****** G         
+BPMB  = 000020           CLCLOC  000020RG     009 FT.ID = 000001           OBJCHN= ****** G         SETXPR= ****** G         
+BSSFLG= 000004           CLCMAX  000022RG     009 FT.UNX= 000001           OPENO = ****** G         SHRFLG= 000001           
+CATTRS= 000170           CLCNAM  000012RG     009 GETLIN= ****** G         OVRFLG= 000020           SPACE = 000040           
+CH.ADD= 000053           CLCSEC  000017RG     009 GLBFLG= 000100           PASS    000000RG     008 STMNT = ****** G         
+CH.AND= 000046           CNDROL= 000020 G         INSERT= ****** G         PATTRS= 000050           SWTROL= 000022 G         
+CH.BSL= 000134           CODROL= 000014 G         INSFLG= 000002           PDPV45= 000000           SYMBOL  000000RG     009 
+CH.COL= 000072           CPOPJ = ****** G         LBLFLG= 000002           PROP1   000000RG     002 SYMROL= 000002 G         
+CH.COM= 000054           CR    = 000015           LCDROL= 000026 G         PROP2   000052RG     002 TAB   = 000011           
+CH.DIV= 000057           CRFROL= 000034 G         LET.A = 000101           PROPC = ****** G         VALUE   000006RG     009 
+CH.DOL= 000044           DEBUG = 000000           LET.B = 000102           PROSW   000176RG     002 VT    = 000013           
+CH.DOT= 000056           DEFFLG= 000010           LET.C = 000103           PSAROL= 000030 G         X40   = 000000           
+CH.EQU= 000075           DFGFLG= 000200           LET.D = 000104           PSTROL= 000032 G         XCTLIN= ****** G         
+CH.HSH= 000043           DIG.0 = 000060           LET.E = 000105           REGFLG= 000001           XCTPAS= ****** G         
+CH.IND= 000100           DIG.9 = 000071           LET.F = 000106           REGROL= 000000 G         XMIT0 = ****** G         
+CH.IOR= 000041           DMAROL= 000006 G         LET.G = 000107           REGTBL  000000R      005 
+CH.LAB= 000074           DUMROL= 000016 G         LET.O = 000117           RELFLG= 000040           
+CH.LP = 000050           EDTROL= 000024 G         LET.P = 000120           RELLVL  000010RG     009 
 
 
 Program sections:

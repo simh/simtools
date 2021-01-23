@@ -122,41 +122,40 @@
          000346 177777                  
      100                                
      101                                        ; Several ways to define a name for the fpp registers
-     102                                        ; TODO: change symbol table to show % sign
-     103                                
-     104        000000                  ac0 = r0
-     105        000001                  ac1 = %1
-     106        000002                  f2  = %2
-     107                                
-     108 000350 171003                          mulf    r3,ac0
-     109 000352 171102                          mulf    r2,ac1
-     110 000354 172227  041040                  ADDF    #^O41040,F2
-     111 000360 172127  040200                  addf    #1,ac1
-     112                                
-     113 000364 171003                          mulf    r3,ac0
-     114 000366 171102                          mulf    r2,ac1
-     115 000370 172227  041040                  addf    #^O41040,F2     ; taken literally
-     116 000374 172127  040200                  addf    #1,ac1          ;       as float
-     117 000400 172127  040200                  addf    #1.,ac1         ;       as float
-     118 000404 172127  000001                  addf    #^D1,ac1        ;       literally
-     119 000410 172127  000002                  addf    #<1+1>,ac1      ;       literally
-     120 000414 172127  040300                  addf    #1.5,ac1        ;       as float
-     121 000420 172127  140263                  addd    #-1.4,ac1       ;       as float
-     122                                
-     123                                                                ; TODO: let parser check for junk at end of line
-     124 000424 170627  000002                  absf    #2.5            ; bad: operand is destination
-     125 000430 170527  000002                  tstd    #2.5            ; bad: operand is considered FDST by the arch handbook
-     126 000434 174027  000002                  stf     ac0,#2.5        ; bad: junk at end of line
-     127 000440 174027  000002                  stf     ac0,#2          ; doesn't makes sense but MACRO11 allows it
+     102                                
+     103        000000                  ac0 = r0
+     104        000001                  ac1 = %1
+     105        000002                  f2  = %2
+     106                                
+     107 000350 171003                          mulf    r3,ac0
+     108 000352 171102                          mulf    r2,ac1
+     109 000354 172227  041040                  ADDF    #^O41040,F2
+     110 000360 172127  040200                  addf    #1,ac1
+     111                                
+     112 000364 171003                          mulf    r3,ac0
+     113 000366 171102                          mulf    r2,ac1
+     114 000370 172227  041040                  addf    #^O41040,F2     ; taken literally
+     115 000374 172127  040200                  addf    #1,ac1          ;       as float
+     116 000400 172127  040200                  addf    #1.,ac1         ;       as float
+     117 000404 172127  000001                  addf    #^D1,ac1        ;       literally
+     118 000410 172127  000002                  addf    #<1+1>,ac1      ;       literally
+     119 000414 172127  040300                  addf    #1.5,ac1        ;       as float
+     120 000420 172127  140263                  addd    #-1.4,ac1       ;       as float
+     121                                
+     122                                                                ; TODO: let parser check for junk at end of line
+     123 000424 170627  000002                  absf    #2.5            ; bad: operand is destination
+     124 000430 170527  000002                  tstd    #2.5            ; bad: operand is considered FDST by the arch handbook
+     125 000434 174027  000002                  stf     ac0,#2.5        ; bad: junk at end of line
+     126 000440 174027  000002                  stf     ac0,#2          ; doesn't makes sense but MACRO11 allows it
+     127                                
      128                                
+     129                                        .end
      129                                
-     130                                        .end
-     130                                
 
 
 Symbol table
 
-.      ******R      001 AC0   =000000           AC1   =000001           F2    =000002           
+.       ******R      001 AC0   =%000000           AC1   =%000001           F2    =%000002           
 
 
 Program sections:

@@ -2216,75 +2216,92 @@
 
 Symbol table
 
-$TIMDF  =000007           32768$31 004414R  L   002 CRFREF  =****** G         GSARGF  =****** G         NCHR     002614RG     002 
-.        ******R      004 32768$4  000404R  L   002 CT.ALP  =000040           INCMAC   004122R      002 NTYPE    002652RG     002 
-..Z     =****** G         32768$5  000464R  L   002 CT.COM  =000001           INISML  =****** G         NTYPER   003034R      002 
-..ZBUF  =****** G         32768$6  000544R  L   002 CT.EOL  =000000           INSERT  =****** G         NTYPEX   002716R      002 
-1$10     001336R  L   002 32768$7  000624R  L   002 CT.LC   =000100           IRP      001220RG     002 OPCER1   000554R      002 
-1$11     001442R  L   002 32768$8  001050R  L   002 CT.NUM  =000020           IRPC     001216RG     002 OPCERR   000474RG     002 
-1$15     002140R  L   002 32769$31 004616R  L   002 CT.PC   =000271           LBLEND  =****** G         PASS    =****** G         
-1$17     002232R  L   002 32770$31 004704R  L   002 CT.PCX  =000010           LC.MC   =****** G         PDPV45  =000000           
-1$18     002634R  L   002 32771$31 004764R  L   002 CT.SMC  =000200           LC.MD   =****** G         PRMC1    001534R      002 
-1$2      000230R  L   002 32772$31 005044R  L   002 CT.SP   =000004           LC.ME   =****** G         PRMC10   001730R      002 
-1$23     003332R  L   002 4$0      000056R  L   002 CT.TAB  =000002           LCENDL  =****** G         PRMC20   001776R      002 
-1$24     003460R  L   002 4$17     002404R  L   002 CTTBL   =****** G         LCFLAG  =****** G         PRMC30   002040R      002 
-1$26     004016R  L   002 4$24     003570R  L   002 DEBUG   =000000           LCMASK  =****** G         PRMC4    001644R      002 
-1$27     004106R  L   002 4$31     004546R  L   002 DECMAC   004130R      002 LET.A   =000101           PRMC40   002200R      002 
-1$28     004140R  L   002 41$16    002216R  L   002 DFLMAC  =****** G         LET.B   =000102           PRMC5    001650R      002 
-1$29     004204R  L   002 41$31    004626R  L   002 DFLSMC  =****** G         LET.C   =000103           PRMC6    001656R      002 
-1$3      000324R  L   002 42$31    004714R  L   002 DIG.0   =000060           LET.D   =000104           PRMC7    001666R      002 
-1$30     004252R  L   002 44$31    004774R  L   002 DIG.9   =000071           LET.E   =000105           PROMA    001416R      002 
-1$31     004422R  L   002 5$17     002450R  L   002 DMAROL  =****** G         LET.F   =000106           PROMC    001514R      002 
-1$32     005066R  L   002 5$31     005052R  L   002 DNC     =****** G         LET.G   =000107           PROMCF   001516R      002 
-1$8      000674R  L   002 6$17     002454R  L   002 ED.LC   =****** G         LET.O   =000117           PROMT    002230R      002 
-10$0     000060R  L   002 61$17    002510R  L   002 EDMASK  =****** G         LET.P   =000120           PUTIL2  =****** G         
-10$17    002306R  L   002 63$17    002322R  L   002 ENDFLG  =****** G         LET.R   =000122           PUTLI2  =****** G         
-10$24    003476R  L   002 64$17    002366R  L   002 ENDLIN  =****** G         LET.Z   =000132           R50UNP  =****** G         
-100$19   003030R  L   002 7$17     002516R  L   002 ENDM     000334RG     002 LF      =000012           REMMAC   004136R      002 
-11$14    001764R  L   002 8$13     001712R  L   002 ENDMAC   000300R      002 LINBUF  =****** G         REMMAX   004160R      002 
-11$24    003536R  L   002 8$17     002566R  L   002 ENDR     000414RG     002 LSGBAS  =****** G         REPT     000170RG     002 
-11$31    004336R  L   002 9$12     001560R  L   002 ERN24   =****** G         LST.KB  =****** G         REPTF    000254R      002 
-111$10   001316R  L   002 9$17     002572R  L   002 ERN25   =****** G         MAC.ER   005126RG     002 RMARG    003734R      002 
-12$0     000112R  L   002 9$33     005162R  L   002 ERN26   =****** G         MAC.XX   000000R      003 ROLUPD  =****** G         
-12$14    001772R  L   002 9$9      001176R  L   002 ERN27   =****** G         MAC3     001056R      002 RSX11D  =000000           
-12$24    003604R  L   002 ABSEXP  =****** G         ERN28   =****** G         MACDFN   000000RG     004 SAVREG  =****** G         
-12$31    004346R  L   002 AEXP    =****** G         ERN29   =****** G         MACGSB   000034R      008 SCAN    =****** G         
-14$0     000116R  L   002 APPEND  =****** G         ERN30   =****** G         MACLVL   000022R      008 SDEBUG  =****** G         
-14$31    004376R  L   002 ARGCNT  =****** G         ERN31   =****** G         MACNAM   000030R      008 SEARCH  =****** G         
-16$0     000126R  L   002 ARGMAX   000026R      008 ERN54   =****** G         MACNXT   000020R      008 SETCHR  =****** G         
-18$0     000140R  L   002 ASGMTF  =****** G         ERN56   =****** G         MACOVF  =****** G         SETCLI  =****** G         
-2$0      000040R  L   002 BPMB    =000020           ERN57   =****** G         MACR     000634RG     002 SETNB   =****** G         
-2$11     001466R  L   002 CH.ADD  =000053           ERN60   =****** G         MACRO    000634RG     002 SETPF0  =****** G         
-2$12     001604R  L   002 CH.AND  =000046           ERN61   =****** G         MACROF   000642R      002 SETPF1  =****** G         
-2$17     002314R  L   002 CH.BSL  =000134           ERN62   =****** G         MACROL  =****** G         SETSYM  =****** G         
-2$18     002644R  L   002 CH.COL  =000072           ERN63   =****** G         MACTOP  =****** G         SMLFIL  =****** G         
-2$23     003342R  L   002 CH.COM  =000054           ERR.A   =****** G         MACTST   001074RG     002 SMLLVL   000022RG     009 
-2$26     004022R  L   002 CH.DIV  =000057           ERR.O   =****** G         MCALL    004310RG     002 SMLNAM  =****** G         
-2$27     004112R  L   002 CH.DOL  =000044           ERR.T   =****** G         MDEPTH  =****** G         SMLTST   005066R      002 
-2$28     004150R  L   002 CH.DOT  =000056           ERR.U   =****** G         MEX1     003202R      002 SPACE   =000040           
-2$30     004262R  L   002 CH.EQU  =000075           ERR.XX  =****** G         MEXIT    003114RG     002 SYMBOL  =****** G         
-2$31     004430R  L   002 CH.HSH  =000043           ERRBTS  =****** G         MK.SYM  =000001           SYMBOT  =****** G         
-2$32     005112R  L   002 CH.IND  =000100           ERRREF  =****** G         MODE    =****** G         SYSMAC   000000R      005 
-2$8      001000R  L   002 CH.IOR  =000041           FF      =000014           MPOP     004232R      002 TAB     =000011           
-20$24    003620R  L   002 CH.LAB  =000074           FINSML  =****** G         MPUSH    004162R      002 TCB      003204R      002 
-21$17    002504R  L   002 CH.LP   =000050           FT.ID   =000001           MSBARG   000010R      008 TCBERR   003222R      002 
-22$1     000164R  L   002 CH.MUL  =000052           FT.UNX  =000001           MSBBLK   000002R      008 TCBERX   003300R      002 
-22$17    002550R  L   002 CH.PCT  =000045           GETBLK   004050R      002 MSBCNT   000012R      008 TCID     003302R      002 
-22$25    003710R  L   002 CH.QM   =000077           GETCHR  =****** G         MSBEND   000020R      008 TCIDF    003406R      002 
-3$11     001510R  L   002 CH.QTM  =000042           GETLIN  =****** G         MSBMRP   000016RG     008 TCIDT    003410R      002 
-3$12     001630R  L   002 CH.RAB  =000076           GETMC2   000150R      002 MSBPBP   000004R      008 TSTARG  =****** G         
-3$17     002372R  L   002 CH.RP   =000051           GETMCH   000000RG     002 MSBTXT   000006R      008 UCFLAG  =****** G         
-3$23     003366R  L   002 CH.SMC  =000073           GETMCS   000000R      008 MSBTYP   000002R      008 UPBOMB  =****** G         
-3$24     003534R  L   002 CH.SUB  =000055           GETNB   =****** G         MSRCH    001200R      002 UPLIFT  =****** G         
-3$26     004044R  L   002 CH.UAR  =000136           GETR50  =****** G         MT.IRP  =177602           VALUE   =****** G         
-3$31     004432R  L   002 CH.XCL  =000047           GETSYM  =****** G         MT.MAC  =177603           VT      =000013           
-3$32     005120R  L   002 CHRPNT  =****** G         GM21     003676R      002 MT.MAX  =177603           WCIMT    003772R      002 
-32768$10 001406R  L   002 CNDMEX  =****** G         GMABLK   000002R      009 MT.RPT  =177601           X       =000002           
-32768$15 002132R  L   002 CODROL  =****** G         GMAPNT   000000R      009 MX.2    =****** G         X40     =000000           
-32768$20 003104R  L   002 CONCNT   000024R      008 GMARG    003414R      002 MX.FLG  =****** G         XMIT0   =****** G         
-32768$21 003174R  L   002 CR      =000015           GMARGF   003422R      002 MX.NUM  =****** G         ZAP     =****** G         
-32768$22 003272R  L   002 CRADIX  =****** G         GMARGX   003732R      002 MX.SYM  =****** G         
-32768$24 003670R  L   002 CRFDEF  =****** G         GSARG   =****** G         NARG     002600RG     002 
+$TIMDF  = 000007           44$31     004774R  L   002 ERN31   = ****** G         MSBARG    000010R      008 
+.         ******R      004 5$17      002450R  L   002 ERN54   = ****** G         MSBBLK    000002R      008 
+..Z     = ****** G         5$31      005052R  L   002 ERN56   = ****** G         MSBCNT    000012R      008 
+..ZBUF  = ****** G         6$17      002454R  L   002 ERN57   = ****** G         MSBEND    000020R      008 
+1$10      001336R  L   002 61$17     002510R  L   002 ERN60   = ****** G         MSBMRP    000016RG     008 
+1$11      001442R  L   002 63$17     002322R  L   002 ERN61   = ****** G         MSBPBP    000004R      008 
+1$15      002140R  L   002 64$17     002366R  L   002 ERN62   = ****** G         MSBTXT    000006R      008 
+1$17      002232R  L   002 7$17      002516R  L   002 ERN63   = ****** G         MSBTYP    000002R      008 
+1$18      002634R  L   002 8$13      001712R  L   002 ERR.A   = ****** G         MSRCH     001200R      002 
+1$2       000230R  L   002 8$17      002566R  L   002 ERR.O   = ****** G         MT.IRP  = 177602           
+1$23      003332R  L   002 9$12      001560R  L   002 ERR.T   = ****** G         MT.MAC  = 177603           
+1$24      003460R  L   002 9$17      002572R  L   002 ERR.U   = ****** G         MT.MAX  = 177603           
+1$26      004016R  L   002 9$33      005162R  L   002 ERR.XX  = ****** G         MT.RPT  = 177601           
+1$27      004106R  L   002 9$9       001176R  L   002 ERRBTS  = ****** G         MX.2    = ****** G         
+1$28      004140R  L   002 ABSEXP  = ****** G         ERRREF  = ****** G         MX.FLG  = ****** G         
+1$29      004204R  L   002 AEXP    = ****** G         FF      = 000014           MX.NUM  = ****** G         
+1$3       000324R  L   002 APPEND  = ****** G         FINSML  = ****** G         MX.SYM  = ****** G         
+1$30      004252R  L   002 ARGCNT  = ****** G         FT.ID   = 000001           NARG      002600RG     002 
+1$31      004422R  L   002 ARGMAX    000026R      008 FT.UNX  = 000001           NCHR      002614RG     002 
+1$32      005066R  L   002 ASGMTF  = ****** G         GETBLK    004050R      002 NTYPE     002652RG     002 
+1$8       000674R  L   002 BPMB    = 000020           GETCHR  = ****** G         NTYPER    003034R      002 
+10$0      000060R  L   002 CH.ADD  = 000053           GETLIN  = ****** G         NTYPEX    002716R      002 
+10$17     002306R  L   002 CH.AND  = 000046           GETMC2    000150R      002 OPCER1    000554R      002 
+10$24     003476R  L   002 CH.BSL  = 000134           GETMCH    000000RG     002 OPCERR    000474RG     002 
+100$19    003030R  L   002 CH.COL  = 000072           GETMCS    000000R      008 PASS    = ****** G         
+11$14     001764R  L   002 CH.COM  = 000054           GETNB   = ****** G         PDPV45  = 000000           
+11$24     003536R  L   002 CH.DIV  = 000057           GETR50  = ****** G         PRMC1     001534R      002 
+11$31     004336R  L   002 CH.DOL  = 000044           GETSYM  = ****** G         PRMC10    001730R      002 
+111$10    001316R  L   002 CH.DOT  = 000056           GM21      003676R      002 PRMC20    001776R      002 
+12$0      000112R  L   002 CH.EQU  = 000075           GMABLK    000002R      009 PRMC30    002040R      002 
+12$14     001772R  L   002 CH.HSH  = 000043           GMAPNT    000000R      009 PRMC4     001644R      002 
+12$24     003604R  L   002 CH.IND  = 000100           GMARG     003414R      002 PRMC40    002200R      002 
+12$31     004346R  L   002 CH.IOR  = 000041           GMARGF    003422R      002 PRMC5     001650R      002 
+14$0      000116R  L   002 CH.LAB  = 000074           GMARGX    003732R      002 PRMC6     001656R      002 
+14$31     004376R  L   002 CH.LP   = 000050           GSARG   = ****** G         PRMC7     001666R      002 
+16$0      000126R  L   002 CH.MUL  = 000052           GSARGF  = ****** G         PROMA     001416R      002 
+18$0      000140R  L   002 CH.PCT  = 000045           INCMAC    004122R      002 PROMC     001514R      002 
+2$0       000040R  L   002 CH.QM   = 000077           INISML  = ****** G         PROMCF    001516R      002 
+2$11      001466R  L   002 CH.QTM  = 000042           INSERT  = ****** G         PROMT     002230R      002 
+2$12      001604R  L   002 CH.RAB  = 000076           IRP       001220RG     002 PUTIL2  = ****** G         
+2$17      002314R  L   002 CH.RP   = 000051           IRPC      001216RG     002 PUTLI2  = ****** G         
+2$18      002644R  L   002 CH.SMC  = 000073           LBLEND  = ****** G         R50UNP  = ****** G         
+2$23      003342R  L   002 CH.SUB  = 000055           LC.MC   = ****** G         REMMAC    004136R      002 
+2$26      004022R  L   002 CH.UAR  = 000136           LC.MD   = ****** G         REMMAX    004160R      002 
+2$27      004112R  L   002 CH.XCL  = 000047           LC.ME   = ****** G         REPT      000170RG     002 
+2$28      004150R  L   002 CHRPNT  = ****** G         LCENDL  = ****** G         REPTF     000254R      002 
+2$30      004262R  L   002 CNDMEX  = ****** G         LCFLAG  = ****** G         RMARG     003734R      002 
+2$31      004430R  L   002 CODROL  = ****** G         LCMASK  = ****** G         ROLUPD  = ****** G         
+2$32      005112R  L   002 CONCNT    000024R      008 LET.A   = 000101           RSX11D  = 000000           
+2$8       001000R  L   002 CR      = 000015           LET.B   = 000102           SAVREG  = ****** G         
+20$24     003620R  L   002 CRADIX  = ****** G         LET.C   = 000103           SCAN    = ****** G         
+21$17     002504R  L   002 CRFDEF  = ****** G         LET.D   = 000104           SDEBUG  = ****** G         
+22$1      000164R  L   002 CRFREF  = ****** G         LET.E   = 000105           SEARCH  = ****** G         
+22$17     002550R  L   002 CT.ALP  = 000040           LET.F   = 000106           SETCHR  = ****** G         
+22$25     003710R  L   002 CT.COM  = 000001           LET.G   = 000107           SETCLI  = ****** G         
+3$11      001510R  L   002 CT.EOL  = 000000           LET.O   = 000117           SETNB   = ****** G         
+3$12      001630R  L   002 CT.LC   = 000100           LET.P   = 000120           SETPF0  = ****** G         
+3$17      002372R  L   002 CT.NUM  = 000020           LET.R   = 000122           SETPF1  = ****** G         
+3$23      003366R  L   002 CT.PC   = 000271           LET.Z   = 000132           SETSYM  = ****** G         
+3$24      003534R  L   002 CT.PCX  = 000010           LF      = 000012           SMLFIL  = ****** G         
+3$26      004044R  L   002 CT.SMC  = 000200           LINBUF  = ****** G         SMLLVL    000022RG     009 
+3$31      004432R  L   002 CT.SP   = 000004           LSGBAS  = ****** G         SMLNAM  = ****** G         
+3$32      005120R  L   002 CT.TAB  = 000002           LST.KB  = ****** G         SMLTST    005066R      002 
+32768$10  001406R  L   002 CTTBL   = ****** G         MAC.ER    005126RG     002 SPACE   = 000040           
+32768$15  002132R  L   002 DEBUG   = 000000           MAC.XX    000000R      003 SYMBOL  = ****** G         
+32768$20  003104R  L   002 DECMAC    004130R      002 MAC3      001056R      002 SYMBOT  = ****** G         
+32768$21  003174R  L   002 DFLMAC  = ****** G         MACDFN    000000RG     004 SYSMAC    000000R      005 
+32768$22  003272R  L   002 DFLSMC  = ****** G         MACGSB    000034R      008 TAB     = 000011           
+32768$24  003670R  L   002 DIG.0   = 000060           MACLVL    000022R      008 TCB       003204R      002 
+32768$31  004414R  L   002 DIG.9   = 000071           MACNAM    000030R      008 TCBERR    003222R      002 
+32768$4   000404R  L   002 DMAROL  = ****** G         MACNXT    000020R      008 TCBERX    003300R      002 
+32768$5   000464R  L   002 DNC     = ****** G         MACOVF  = ****** G         TCID      003302R      002 
+32768$6   000544R  L   002 ED.LC   = ****** G         MACR      000634RG     002 TCIDF     003406R      002 
+32768$7   000624R  L   002 EDMASK  = ****** G         MACRO     000634RG     002 TCIDT     003410R      002 
+32768$8   001050R  L   002 ENDFLG  = ****** G         MACROF    000642R      002 TSTARG  = ****** G         
+32769$31  004616R  L   002 ENDLIN  = ****** G         MACROL  = ****** G         UCFLAG  = ****** G         
+32770$31  004704R  L   002 ENDM      000334RG     002 MACTOP  = ****** G         UPBOMB  = ****** G         
+32771$31  004764R  L   002 ENDMAC    000300R      002 MACTST    001074RG     002 UPLIFT  = ****** G         
+32772$31  005044R  L   002 ENDR      000414RG     002 MCALL     004310RG     002 VALUE   = ****** G         
+4$0       000056R  L   002 ERN24   = ****** G         MDEPTH  = ****** G         VT      = 000013           
+4$17      002404R  L   002 ERN25   = ****** G         MEX1      003202R      002 WCIMT     003772R      002 
+4$24      003570R  L   002 ERN26   = ****** G         MEXIT     003114RG     002 X       = 000002           
+4$31      004546R  L   002 ERN27   = ****** G         MK.SYM  = 000001           X40     = 000000           
+41$16     002216R  L   002 ERN28   = ****** G         MODE    = ****** G         XMIT0   = ****** G         
+41$31     004626R  L   002 ERN29   = ****** G         MPOP      004232R      002 ZAP     = ****** G         
+42$31     004714R  L   002 ERN30   = ****** G         MPUSH     004162R      002 
 
 
 Program sections:

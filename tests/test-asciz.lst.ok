@@ -53,7 +53,7 @@ test-asciz.mac:21: ***ERROR Invalid expression
 
 Symbol table
 
-.      ******R      001 .ASCIZ 000075R      001 CR    =000015           LF    =000012           SOH   =000001           
+.       ******R      001 .ASCIZ  000075R      001 CR    = 000015           LF    = 000012           SOH   = 000001           
 
 
 Program sections:

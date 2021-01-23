@@ -40,7 +40,7 @@ test-bsl-mac-arg.mac:23: ***ERROR Constant value required
 
 Symbol table
 
-.      ******R      001 FOO   =000002           SIZE  =000010           
+.       ******R      001 FOO   = 000002           SIZE  = 000010           
 
 
 Program sections:

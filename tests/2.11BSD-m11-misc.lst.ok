@@ -1189,32 +1189,32 @@
 
 Symbol table
 
-$TIMDF =000007           4$3     000360R  L   002 CH.SMC =000073           ERR.XX =****** G         PDPV45 =000000           
-.       ******R      002 4$4     000504R  L   002 CH.SUB =000055           ERRBTS =****** G         R50UNP  000150RG     002 
-..Z    =****** G         5$3     000364R  L   002 CH.UAR =000136           ERRREF =****** G         RSX11D =000000           
-..ZBUF =****** G         5$4     000510R  L   002 CH.XCL =000047           FF     =000014           SAVREG  000754RG     002 
-1$0     000072R  L   002 9$5     000566R  L   002 CHRPNT  000000RG     008 FT.ID  =000001           SDEBUG =****** G         
-1$1     000120R  L   002 BPMB   =000020           CPOPJ   001006RG     002 FT.UNX =000001           SETBYT  000024RG     002 
-1$2     000156R  L   002 CH.ADD =000053           CR     =000015           GETCHR  000626RG     002 SETBYX  000060R      002 
-1$3     000326R  L   002 CH.AND =000046           CT.ALP =000040           GETNB   000604RG     002 SETCHR  000632RG     002 
-1$4     000470R  L   002 CH.BSL =000134           CT.COM =000001           GETR50  000412RG     002 SETNB   000610RG     002 
-1$5     000526R  L   002 CH.COL =000072           CT.EOL =000000           GETSYM  000264RG     002 SETR50  000416RG     002 
-1$6     000656R  L   002 CH.COM =000054           CT.LC  =000100           LET.A  =000101           SETSYM  000574RG     002 
-1$7     001052R  L   002 CH.DIV =000057           CT.NUM =000020           LET.B  =000102           SETWRD  000000RG     002 
-10$2    000220R  L   002 CH.DOL =000044           CT.PC  =000271           LET.C  =000103           SPACE  =000040           
-10$4    000454R  L   002 CH.DOT =000056           CT.PCX =000010           LET.D  =000104           SYMBEG  000002RG     008 
-11$2    000224R  L   002 CH.EQU =000075           CT.SMC =000200           LET.E  =000105           SYMBOL =****** G         
-2$1     000136R  L   002 CH.HSH =000043           CT.SP  =000004           LET.F  =000106           TAB    =000011           
-2$3     000332R  L   002 CH.IND =000100           CT.TAB =000002           LET.G  =000107           TSTR50  000420RG     002 
-2$4     000474R  L   002 CH.IOR =000041           CTTBL   000000RG     005 LET.O  =000117           VALUE  =****** G         
-2$5     000550R  L   002 CH.LAB =000074           CVTNUM  000516RG     002 LET.P  =000120           VT     =000013           
-2$6     000752R  L   002 CH.LP  =000050           DEBUG  =000000           LET.R  =000122           X      =000002           
-21$2    000244R  L   002 CH.MUL =000052           DIG.0  =000060           LET.Z  =000132           X40    =000000           
-22$2    000250R  L   002 CH.PCT =000045           DIG.9  =000071           LF     =000012           XMIT0   001050RG     002 
-23$2    000254R  L   002 CH.QM  =000077           DIV    =****** G         MK.SYM =000001           
-3$3     000340R  L   002 CH.QTM =000042           DNC     000114RG     002 MOVBYT  001052RG     002 
-3$4     000500R  L   002 CH.RAB =000076           ERN13  =****** G         MUL    =****** G         
-32768$6 000732R  L   002 CH.RP  =000051           ERR.I  =****** G         MULR50  000372RG     002 
+$TIMDF = 000007           4$3      000360R  L   002 CH.SMC = 000073           ERR.XX = ****** G         PDPV45 = 000000           
+.        ******R      002 4$4      000504R  L   002 CH.SUB = 000055           ERRBTS = ****** G         R50UNP   000150RG     002 
+..Z    = ****** G         5$3      000364R  L   002 CH.UAR = 000136           ERRREF = ****** G         RSX11D = 000000           
+..ZBUF = ****** G         5$4      000510R  L   002 CH.XCL = 000047           FF     = 000014           SAVREG   000754RG     002 
+1$0      000072R  L   002 9$5      000566R  L   002 CHRPNT   000000RG     008 FT.ID  = 000001           SDEBUG = ****** G         
+1$1      000120R  L   002 BPMB   = 000020           CPOPJ    001006RG     002 FT.UNX = 000001           SETBYT   000024RG     002 
+1$2      000156R  L   002 CH.ADD = 000053           CR     = 000015           GETCHR   000626RG     002 SETBYX   000060R      002 
+1$3      000326R  L   002 CH.AND = 000046           CT.ALP = 000040           GETNB    000604RG     002 SETCHR   000632RG     002 
+1$4      000470R  L   002 CH.BSL = 000134           CT.COM = 000001           GETR50   000412RG     002 SETNB    000610RG     002 
+1$5      000526R  L   002 CH.COL = 000072           CT.EOL = 000000           GETSYM   000264RG     002 SETR50   000416RG     002 
+1$6      000656R  L   002 CH.COM = 000054           CT.LC  = 000100           LET.A  = 000101           SETSYM   000574RG     002 
+1$7      001052R  L   002 CH.DIV = 000057           CT.NUM = 000020           LET.B  = 000102           SETWRD   000000RG     002 
+10$2     000220R  L   002 CH.DOL = 000044           CT.PC  = 000271           LET.C  = 000103           SPACE  = 000040           
+10$4     000454R  L   002 CH.DOT = 000056           CT.PCX = 000010           LET.D  = 000104           SYMBEG   000002RG     008 
+11$2     000224R  L   002 CH.EQU = 000075           CT.SMC = 000200           LET.E  = 000105           SYMBOL = ****** G         
+2$1      000136R  L   002 CH.HSH = 000043           CT.SP  = 000004           LET.F  = 000106           TAB    = 000011           
+2$3      000332R  L   002 CH.IND = 000100           CT.TAB = 000002           LET.G  = 000107           TSTR50   000420RG     002 
+2$4      000474R  L   002 CH.IOR = 000041           CTTBL    000000RG     005 LET.O  = 000117           VALUE  = ****** G         
+2$5      000550R  L   002 CH.LAB = 000074           CVTNUM   000516RG     002 LET.P  = 000120           VT     = 000013           
+2$6      000752R  L   002 CH.LP  = 000050           DEBUG  = 000000           LET.R  = 000122           X      = 000002           
+21$2     000244R  L   002 CH.MUL = 000052           DIG.0  = 000060           LET.Z  = 000132           X40    = 000000           
+22$2     000250R  L   002 CH.PCT = 000045           DIG.9  = 000071           LF     = 000012           XMIT0    001050RG     002 
+23$2     000254R  L   002 CH.QM  = 000077           DIV    = ****** G         MK.SYM = 000001           
+3$3      000340R  L   002 CH.QTM = 000042           DNC      000114RG     002 MOVBYT   001052RG     002 
+3$4      000500R  L   002 CH.RAB = 000076           ERN13  = ****** G         MUL    = ****** G         
+32768$6  000732R  L   002 CH.RP  = 000051           ERR.I  = ****** G         MULR50   000372RG     002 
 
 
 Program sections:

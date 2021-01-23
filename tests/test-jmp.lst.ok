@@ -74,7 +74,7 @@ test-jmp.mac:60: ***ERROR Illegal addressing mode
 
 Symbol table
 
-.      ******R      001 LABEL  000156R      001 SECND  000046R      001 START  000000R      001 THIRD  000112R      001 
+.       ******R      001 LABEL   000156R      001 SECND   000046R      001 START   000000R      001 THIRD   000112R      001 
 
 
 Program sections:

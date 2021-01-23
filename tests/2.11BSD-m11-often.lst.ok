@@ -696,18 +696,18 @@
 
 Symbol table
 
-$TIMDF=000007           CHRPNT=****** G         GLBFLG=000100           MACDFN=****** G         SHRFLG=000001           
-.      ******R      002 CR    =000015           INSFLG=000002           MDFFLG=000004           SPACE =000040           
-1$0    000004R  L   002 CRADIX=****** G         IO.TTY=****** G         MK.SYM=000001           TAB   =000011           
-1$1    000030R  L   002 DEBUG =000000           IOFTBL=****** G         OBJSEC=****** G         TITLE =****** G         
-1$2    000120R  L   002 DEFFLG=000010           LBLFLG=000002           OVRFLG=000020           U.FLAG=****** G         
-2$1    000076R  L   002 DEFTTL=****** G         LF    =000012           PATTRS=000050           VT    =000013           
-3$1    000102R  L   002 DFGFLG=000200           LST.KB=****** G         PCRCNT=****** G         X40   =000000           
-AATTRS=000130           ENDVEC=****** G         LST.LP=****** G         PDPV45=000000           XCTLIN 000114RG     002 
-B.IDF =000001           FF    =000014           LSTCHN=****** G         REGFLG=000001           XCTPAS 000024RG     002 
-BPMB  =000020           FIXTIT 000136RG     002 LSTDEV=****** G         RELFLG=000040           XCTPRG 000000RG     002 
-BSSFLG=000004           FT.ID =000001           LSTFLG=****** G         RSX11D=000000           
-CATTRS=000170           FT.UNX=000001           M.IDF =000007           SETCHR=****** G         
+$TIMDF= 000007           CHRPNT= ****** G         GLBFLG= 000100           MACDFN= ****** G         SHRFLG= 000001           
+.       ******R      002 CR    = 000015           INSFLG= 000002           MDFFLG= 000004           SPACE = 000040           
+1$0     000004R  L   002 CRADIX= ****** G         IO.TTY= ****** G         MK.SYM= 000001           TAB   = 000011           
+1$1     000030R  L   002 DEBUG = 000000           IOFTBL= ****** G         OBJSEC= ****** G         TITLE = ****** G         
+1$2     000120R  L   002 DEFFLG= 000010           LBLFLG= 000002           OVRFLG= 000020           U.FLAG= ****** G         
+2$1     000076R  L   002 DEFTTL= ****** G         LF    = 000012           PATTRS= 000050           VT    = 000013           
+3$1     000102R  L   002 DFGFLG= 000200           LST.KB= ****** G         PCRCNT= ****** G         X40   = 000000           
+AATTRS= 000130           ENDVEC= ****** G         LST.LP= ****** G         PDPV45= 000000           XCTLIN  000114RG     002 
+B.IDF = 000001           FF    = 000014           LSTCHN= ****** G         REGFLG= 000001           XCTPAS  000024RG     002 
+BPMB  = 000020           FIXTIT  000136RG     002 LSTDEV= ****** G         RELFLG= 000040           XCTPRG  000000RG     002 
+BSSFLG= 000004           FT.ID = 000001           LSTFLG= ****** G         RSX11D= 000000           
+CATTRS= 000170           FT.UNX= 000001           M.IDF = 000007           SETCHR= ****** G         
 
 
 Program sections:

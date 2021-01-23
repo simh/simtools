@@ -624,12 +624,12 @@
 
 Symbol table
 
-$TIMDF=000007           ..ZBUF 000204RG     006 DDD    000042R      002 LF    =000012           SDEBUG 000000RG     002 
-$WRITE=****** G         1$0    000022R  L   002 DEBUG =000000           MK.SYM=000001           SPACE =000040           
-.      ******R      006 100$1  000074R  L   002 DNC   =****** G         NDEBUG 000100RG     002 TAB   =000011           
-..N    000000R      006 2$0    000032R  L   002 FF    =000014           PDPV45=000000           VT    =000013           
-..S    000004R      006 BPMB  =000020           FT.ID =000001           RSX11D=000000           X40   =000000           
-..Z    000002RG     006 CR    =000015           FT.UNX=000001           SAVREG=****** G         XX.FLG=****** G         
+$TIMDF= 000007           ..ZBUF  000204RG     006 DDD     000042R      002 LF    = 000012           SDEBUG  000000RG     002 
+$WRITE= ****** G         1$0     000022R  L   002 DEBUG = 000000           MK.SYM= 000001           SPACE = 000040           
+.       ******R      006 100$1   000074R  L   002 DNC   = ****** G         NDEBUG  000100RG     002 TAB   = 000011           
+..N     000000R      006 2$0     000032R  L   002 FF    = 000014           PDPV45= 000000           VT    = 000013           
+..S     000004R      006 BPMB  = 000020           FT.ID = 000001           RSX11D= 000000           X40   = 000000           
+..Z     000002RG     006 CR    = 000015           FT.UNX= 000001           SAVREG= ****** G         XX.FLG= ****** G         
 
 
 Program sections:

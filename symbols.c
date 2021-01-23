@@ -537,18 +537,19 @@ void list_symbol_table(
     symbolp = symbols;
 
     /* Print the listing in NCOLS columns. */
-    int ncols = (132 / (longest_symbol + 18));
+    int ncols = (132 / (longest_symbol + 19));
     int nlines = (nsyms + ncols - 1) / ncols;
     int line;
     /*
-     * DIRER$  004562RGX    006
-     * ^       ^     ^      ^-- for R symbols: program segment number
-     * |       |     +-- Flags: R = relocatable
-     * |       |                G = global
-     * |       |                X = implicit global
-     * |       |                L = local
-     * |       |                W = weak
-     * |       +- value, ****** for if it was not a definition
+     * DIRER$  =%004562RGX    006
+     * ^        ^^     ^      ^-- for R symbols: program segment number
+     * |        ||     +-- Flags: R = relocatable
+     * |        ||                G = global
+     * |        ||                X = implicit global
+     * |        ||                L = local
+     * |        ||                W = weak
+     * |        |+- value, ****** for if it was not a definition
+     * |        +-- % for a register
      * +- label name
      */
 
@@ -559,6 +560,7 @@ void list_symbol_table(
 
             fprintf(lstfile,"%-*s", longest_symbol, sym->label);
             fprintf(lstfile,"%c", (sym->section->flags & PSECT_REL) ? ' ' : '=');
+            fprintf(lstfile,"%c", (sym->section->type == SECTION_REGISTER) ? '%' : ' ');
             if (!(sym->flags & SYMBOLFLAG_DEFINITION)) {
                 fprintf(lstfile,"******");
             } else {

@@ -3021,27 +3021,27 @@
 
 Symbol table
 
-$TIMDF=000007           DSABL =****** G         IFL   =****** G         NCHR  =****** G         PDPV45=000000           
-.      ******R      002 ENABL =****** G         IFLE  =****** G         NLIST =****** G         PRINT =****** G         
-AAAA  =000001           END   =****** G         IFLT  =****** G         NTYPE =****** G         PSECT =****** G         
-ASCII =****** G         ENDC  =****** G         IFNDF =****** G         ODD   =****** G         RAD50 =****** G         
-ASCIZ =****** G         ENDM  =****** G         IFNE  =****** G         OPCERR=****** G         RADIX =****** G         
-ASECT =****** G         ENDR  =****** G         IFNZ  =****** G         OPCL00=****** G         REM   =****** G         
-BLKB  =****** G         EOT   =****** G         IFT   =****** G         OPCL01=****** G         REPT  =****** G         
-BLKW  =****** G         ERROR =****** G         IFTF  =****** G         OPCL02=****** G         RSX11D=000000           
-BPMB  =000020           EVEN  =****** G         IFZ   =****** G         OPCL03=****** G         SBTTL =****** G         
-BYTE  =****** G         FF    =000014           IIF   =****** G         OPCL04=****** G         SPACE =000040           
-CR    =000015           FT.ID =000001           IRP   =****** G         OPCL05=****** G         TAB   =000011           
-CSECT =****** G         FT.UNX=000001           IRPC  =****** G         OPCL06=****** G         TITLE =****** G         
-DEBUG =000000           GLOBL =****** G         LF    =000012           OPCL07=****** G         VT    =000013           
-DFLCND=000004 G         IDENT =****** G         LIMIT =****** G         OPCL08=****** G         WORD  =****** G         
-DFLGBM=000010 G         IF    =****** G         LIST  =****** G         OPCL09=****** G         WRDSYM 003170RG     017 
-DFLGDG=000040 G         IFDF  =****** G         MACR  =****** G         OPCL10=****** G         X40   =000000           
-DFLGEV=000020 G         IFEQ  =****** G         MACRO =****** G         OPCL11=****** G         X4045 =000000           
-DFLMAC=000002 G         IFF   =****** G         MCALL =****** G         OPCL12=****** G         X40FLT=000000           
-DFLSMC=000001 G         IFG   =****** G         MEXIT =****** G         OPCL13=****** G         XFLTG =000000           
-DR1   =000200           IFGE  =****** G         MK.SYM=000001           OPCL14=****** G         
-DR2   =000100           IFGT  =****** G         NARG  =****** G         PAGE  =****** G         
+$TIMDF= 000007           DSABL = ****** G         IFL   = ****** G         NCHR  = ****** G         PDPV45= 000000           
+.       ******R      002 ENABL = ****** G         IFLE  = ****** G         NLIST = ****** G         PRINT = ****** G         
+AAAA  = 000001           END   = ****** G         IFLT  = ****** G         NTYPE = ****** G         PSECT = ****** G         
+ASCII = ****** G         ENDC  = ****** G         IFNDF = ****** G         ODD   = ****** G         RAD50 = ****** G         
+ASCIZ = ****** G         ENDM  = ****** G         IFNE  = ****** G         OPCERR= ****** G         RADIX = ****** G         
+ASECT = ****** G         ENDR  = ****** G         IFNZ  = ****** G         OPCL00= ****** G         REM   = ****** G         
+BLKB  = ****** G         EOT   = ****** G         IFT   = ****** G         OPCL01= ****** G         REPT  = ****** G         
+BLKW  = ****** G         ERROR = ****** G         IFTF  = ****** G         OPCL02= ****** G         RSX11D= 000000           
+BPMB  = 000020           EVEN  = ****** G         IFZ   = ****** G         OPCL03= ****** G         SBTTL = ****** G         
+BYTE  = ****** G         FF    = 000014           IIF   = ****** G         OPCL04= ****** G         SPACE = 000040           
+CR    = 000015           FT.ID = 000001           IRP   = ****** G         OPCL05= ****** G         TAB   = 000011           
+CSECT = ****** G         FT.UNX= 000001           IRPC  = ****** G         OPCL06= ****** G         TITLE = ****** G         
+DEBUG = 000000           GLOBL = ****** G         LF    = 000012           OPCL07= ****** G         VT    = 000013           
+DFLCND= 000004 G         IDENT = ****** G         LIMIT = ****** G         OPCL08= ****** G         WORD  = ****** G         
+DFLGBM= 000010 G         IF    = ****** G         LIST  = ****** G         OPCL09= ****** G         WRDSYM  003170RG     017 
+DFLGDG= 000040 G         IFDF  = ****** G         MACR  = ****** G         OPCL10= ****** G         X40   = 000000           
+DFLGEV= 000020 G         IFEQ  = ****** G         MACRO = ****** G         OPCL11= ****** G         X4045 = 000000           
+DFLMAC= 000002 G         IFF   = ****** G         MCALL = ****** G         OPCL12= ****** G         X40FLT= 000000           
+DFLSMC= 000001 G         IFG   = ****** G         MEXIT = ****** G         OPCL13= ****** G         XFLTG = 000000           
+DR1   = 000200           IFGE  = ****** G         MK.SYM= 000001           OPCL14= ****** G         
+DR2   = 000100           IFGT  = ****** G         NARG  = ****** G         PAGE  = ****** G         
 
 
 Program sections:

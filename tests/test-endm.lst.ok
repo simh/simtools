@@ -90,7 +90,7 @@ test-endm.mac:45: ***ERROR No conditional block active
 
 Symbol table
 
-.      ******R      001 M8    =****** GX        
+.       ******R      001 M8    = ****** GX        
 
 
 Program sections:
