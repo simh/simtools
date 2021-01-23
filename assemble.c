@@ -30,6 +30,8 @@
 /* This function is way way too large, because I just coded most of
    the operation code and pseudo-op handling right in line.  */
 
+/* FIXME: nobody checks for extra junk after a valid statement */
+
 static int assemble(
     STACK *stack,
     TEXT_RLD *tr)
@@ -1605,6 +1607,31 @@ static int assemble(
                         }
                         return 1;
 
+#if 0
+/*
+ * Although it is arguable that the FPP TSTF/TSTD instruction has 1
+ * operand which is a floating point source, the PDP11 Architecture
+ * Handbook describes it as a destination, and MACRO11 V05.05 doesn't
+ * allow a FP literal argument.
+ */
+                    case OC_FPPSRC:
+                        /* One fp immediate or a general addressing mode */  {
+                            ADDR_MODE       mode;
+                            unsigned        word;
+
+                            if (!get_fp_src_mode(cp, &cp, &mode)) {
+                                report(stack->top, "Illegal addressing mode\n");
+                                return 0;
+                            }
+
+                            /* Build instruction word */
+                            word = op->value | mode.type;
+                            store_word(stack->top, tr, 2, word);
+                            mode_extension(tr, &mode, stack->top);
+                        }
+                        return 1;
+#endif
+
                     case OC_FPPGENAC:
                         /* One one gen and one reg 0-3 */  {
                             ADDR_MODE       mode;
@@ -1612,7 +1639,7 @@ static int assemble(
                             unsigned        reg;
                             unsigned        word;
 
-                            if (!get_mode(cp, &cp, &mode)) {
+                            if (!get_fp_src_mode(cp, &cp, &mode)) {
                                 report(stack->top, "Illegal addressing mode\n");
                                 return 0;
                             }
@@ -1635,7 +1662,7 @@ static int assemble(
 
                             /*
                              * We could check here that the general mode
-                             * is not R6 or R7, but the original Macro11
+                             * is not AC6 or AC7, but the original Macro11
                              * doesn't do that either.
                              */
                             word = op->value | mode.type | (reg << 6);
@@ -1676,8 +1703,11 @@ static int assemble(
 
                             /*
                              * We could check here that the general mode
-                             * is not R6 or R7, but the original Macro11
+                             * is not AC6 or AC7, but the original Macro11
                              * doesn't do that either.
+                             *
+                             * For some (mostly STore instructions) the
+                             * destination isn't a FDST but a plain DST.
                              */
                             word = op->value | mode.type | (reg << 6);
                             store_word(stack->top, tr, 2, word);

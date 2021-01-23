@@ -98,4 +98,33 @@
         .FLT4  170141183460469230564930741053754966015 ; 2**127-(2**70-2**64+2**62+1)
         .FLT4  170141183460469230564930741053754966016 ; 2**127-(2**70-2**64+2**62+2)
 
+        ; Several ways to define a name for the fpp registers
+        ; TODO: change symbol table to show % sign
+
+ac0 = r0
+ac1 = %1
+f2  = %2
+
+        mulf    r3,ac0
+        mulf    r2,ac1
+        ADDF    #^O41040,F2
+        addf    #1,ac1
+
+        mulf    r3,ac0
+        mulf    r2,ac1
+        addf    #^O41040,F2     ; taken literally
+        addf    #1,ac1          ;       as float
+        addf    #1.,ac1         ;       as float
+        addf    #^D1,ac1        ;       literally
+        addf    #<1+1>,ac1      ;       literally
+        addf    #1.5,ac1        ;       as float
+        addd    #-1.4,ac1       ;       as float
+
+                                ; TODO: let parser check for junk at end of line
+        absf    #2.5            ; bad: operand is destination
+        tstd    #2.5            ; bad: operand is considered FDST by the arch handbook
+        stf     ac0,#2.5        ; bad: junk at end of line
+        stf     ac0,#2          ; doesn't makes sense but MACRO11 allows it
+
+
         .end

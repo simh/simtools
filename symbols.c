@@ -414,13 +414,14 @@ void add_symbols(
     add_sym("XOR", I_XOR, OC_JSR, &instruction_section, &system_st);
     add_sym("MFPT", I_MFPT, OC_NONE, &instruction_section, &system_st);
 
-    add_sym("ABSD", I_ABSD, OC_1GEN, &instruction_section, &system_st);
-    add_sym("ABSF", I_ABSF, OC_1GEN, &instruction_section, &system_st);
+    /* FPP instructions */
+    add_sym("ABSD", I_ABSD, OC_FPPDST, &instruction_section, &system_st);
+    add_sym("ABSF", I_ABSF, OC_FPPDST, &instruction_section, &system_st);
     add_sym("ADDD", I_ADDD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("ADDF", I_ADDF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("CFCC", I_CFCC, OC_NONE, &instruction_section, &system_st);
-    add_sym("CLRD", I_CLRD, OC_1GEN, &instruction_section, &system_st);
-    add_sym("CLRF", I_CLRF, OC_1GEN, &instruction_section, &system_st);
+    add_sym("CLRD", I_CLRD, OC_FPPDST, &instruction_section, &system_st);
+    add_sym("CLRF", I_CLRF, OC_FPPDST, &instruction_section, &system_st);
     add_sym("CMPD", I_CMPD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("CMPF", I_CMPF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("DIVD", I_DIVD, OC_FPPGENAC, &instruction_section, &system_st);
@@ -438,8 +439,8 @@ void add_symbols(
     add_sym("MODF", I_MODF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("MULD", I_MULD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("MULF", I_MULF, OC_FPPGENAC, &instruction_section, &system_st);
-    add_sym("NEGD", I_NEGD, OC_1GEN, &instruction_section, &system_st);
-    add_sym("NEGF", I_NEGF, OC_1GEN, &instruction_section, &system_st);
+    add_sym("NEGD", I_NEGD, OC_FPPDST, &instruction_section, &system_st);
+    add_sym("NEGF", I_NEGF, OC_FPPDST, &instruction_section, &system_st);
     add_sym("SETD", I_SETD, OC_NONE, &instruction_section, &system_st);
     add_sym("SETF", I_SETF, OC_NONE, &instruction_section, &system_st);
     add_sym("SETI", I_SETI, OC_NONE, &instruction_section, &system_st);
@@ -459,8 +460,8 @@ void add_symbols(
     add_sym("STST", I_STST, OC_1GEN, &instruction_section, &system_st);
     add_sym("SUBD", I_SUBD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("SUBF", I_SUBF, OC_FPPGENAC, &instruction_section, &system_st);
-    add_sym("TSTD", I_TSTD, OC_1GEN, &instruction_section, &system_st);
-    add_sym("TSTF", I_TSTF, OC_1GEN, &instruction_section, &system_st);
+    add_sym("TSTD", I_TSTD, OC_FPPDST, &instruction_section, &system_st);
+    add_sym("TSTF", I_TSTF, OC_FPPDST, &instruction_section, &system_st);
 
     /* FIXME: The CIS instructions are missing! */
 

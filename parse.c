@@ -318,6 +318,45 @@ int get_mode(
     return TRUE;
 }
 
+/* get_fp_src_mode - parse an immediate fp literal or a general mode */
+
+int get_fp_src_mode(
+    char *cp,
+    char **endp,
+    ADDR_MODE *mode)
+{
+    cp = skipwhite(cp);
+
+    char *savecp = cp;
+
+    if (cp[0] == '#') {
+        unsigned flt[1];
+        char *fltendp = NULL;
+
+        cp = skipwhite(cp + 1);
+
+        int ret = parse_float(cp, &fltendp, 1, flt);
+
+        if (ret) {
+            mode->type = 027;
+            mode->rel = 0;
+            mode->offset = new_ex_lit(flt[0]);
+            mode->offset->cp = fltendp;
+
+            if (endp)
+                *endp = mode->offset->cp;
+
+            return TRUE;
+        } else if (fltendp) {
+            /* it looked like a fp number but something was wrong with it */
+        }
+    }
+
+    int ret = get_mode(savecp, endp, mode);
+
+    return ret;
+}
+
 #define DEBUG_FLOAT     0
 #if DEBUG_FLOAT
 

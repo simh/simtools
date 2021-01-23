@@ -283,6 +283,10 @@ enum operand_codes { OC_MASK = 0xff00,
     /* FPP (gen, floating ac 0-3) */
     OC_FPPACGEN = 0x0a00,
     /* FPP (floating ac 0-3, gen) */
+    OC_FPPSRC = 0x0b00,
+    /* FPP fp source: immediate or gen */
+    OC_FPPDST = OC_1GEN,
+    /* FPP general destination */
     OC__LAST = 0xff00
 };
 

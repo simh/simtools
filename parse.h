@@ -37,6 +37,10 @@ int             get_mode(
     char *cp,
     char **endp,
     ADDR_MODE *mode);
+int             get_fp_src_mode(
+    char *cp,
+    char **endp,
+    ADDR_MODE *mode);
 
 EX_TREE        *parse_expr(
     char *cp,
