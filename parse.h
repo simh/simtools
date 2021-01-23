@@ -23,6 +23,9 @@ char           *skipdelim_comma(
 SYMBOL         *get_op(
     char *cp,
     char **endp);
+int             check_eol(
+    STACK *stack,
+    char *cp);
 char           *getstring(
     char *cp,
     char **endp);

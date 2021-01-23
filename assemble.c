@@ -25,21 +25,6 @@
 
 
 
-static int check_eol(
-    STACK *stack,
-    char *cp)
-{
-    cp = skipwhite(cp);
-
-    if (EOL(*cp)) {
-        return 1;
-    }
-
-    report(stack->top, "Junk at end of line ('%c')\n", *cp);
-
-    return 0;
-}
-
 #define CHECK_EOL       check_eol(stack, cp)
 
 /* assemble - read a line from the input stack, assemble it. */
@@ -281,7 +266,7 @@ static int assemble(
             stack_push(stack, macstr); /* Push macro expansion
                                           onto input stream */
 
-            return 1;                  /* TODO: CHECK_EOL */
+            return 1;
         }
 
         /* Try to resolve instruction or pseudo */
@@ -542,7 +527,7 @@ static int assemble(
                                 break; /* EOF */
                         }
                     }
-                    return 1;          /* TODO: CHECK_EOL? */
+                    return 1;
 
                 case P_IRP:
                     {
@@ -550,7 +535,7 @@ static int assemble(
 
                         if (str)
                             stack_push(stack, str);
-                        return str != NULL;     /* TODO: CHECK_EOL */
+                        return str != NULL;
                     }
 
                 case P_IRPC:
@@ -559,7 +544,7 @@ static int assemble(
 
                         if (str)
                             stack_push(stack, str);
-                        return str != NULL;     /* TODO: CHECK_EOL */
+                        return str != NULL;
                     }
 
                 case P_LIBRARY:
@@ -701,7 +686,7 @@ static int assemble(
                     {
                         MACRO          *mac = defmacro(cp, stack, CALLED_NORMAL);
 
-                        return mac != NULL;     /* TODO: CHECK_EOL */
+                        return mac != NULL;
                     }
 
                 case P_MEXIT:
@@ -730,7 +715,7 @@ static int assemble(
 
                         if (reptstr)
                             stack_push(stack, reptstr);
-                        return reptstr != NULL; /* TODO: CHECK_EOL */
+                        return reptstr != NULL;
                     }
 
                 case P_ENABL:

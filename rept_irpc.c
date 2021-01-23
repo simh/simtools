@@ -84,6 +84,12 @@ STREAM         *expand_rept(
         free_tree(value);
         return NULL;
     }
+    /*
+     * Reading the next lines-to-be-repeated overwrites the line buffer
+     * that the caller is using. So for junk-at-end-of-line checking we
+     * need to do it here.
+     */
+    check_eol(stack, value->cp);
 
     list_value(stack->top, value->data.lit);
 
@@ -214,6 +220,8 @@ STREAM         *expand_irp(
         return NULL;
     }
 
+    check_eol(stack, cp);
+
     gb = new_buffer();
 
     levelmod = 0;
@@ -341,6 +349,8 @@ STREAM         *expand_irpc(
         free(label);
         return NULL;
     }
+
+    check_eol(stack, cp);
 
     gb = new_buffer();
 

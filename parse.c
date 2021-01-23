@@ -50,6 +50,25 @@ char           *skipdelim_comma(
     return cp;
 }
 
+/*
+ * check_eol - check that we're at the end of a line.
+ * Complain if not.
+ */
+int check_eol(
+    STACK *stack,
+    char *cp)
+{
+    cp = skipwhite(cp);
+
+    if (EOL(*cp)) {
+        return 1;
+    }
+
+    report(stack->top, "Junk at end of line ('%s')\n", cp);
+
+    return 0;
+}
+
 /* Parses a string from the input stream. */
 /* If not bracketed by <...> or ^/.../, then */
 /* the string is delimited by trailing comma or whitespace. */
