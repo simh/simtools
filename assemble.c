@@ -35,7 +35,7 @@ static int check_eol(
         return 1;
     }
 
-    report(stack->top, "Junk at end of line ('%c')", *cp);
+    report(stack->top, "Junk at end of line ('%c')\n", *cp);
 
     return 0;
 }
@@ -1375,7 +1375,7 @@ static int assemble(
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_2GEN:
                         /* Two general addressing modes */  {
