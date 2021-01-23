@@ -56,3 +56,26 @@
 	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
 	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
 	.word	1 + ^* 2 * 3 *	; Invalid expression
+
+;;;;;
+;
+; There was an obscure bug in parse_expr(), used to evaluate 'if df',
+; where it could skip past the end of the line marker.
+;
+; If this happened inside an expanded macro, then after that was the
+; next line...
+; In other cases it might be worse.
+;
+        .macro  dirdef  name,   flags,  cond
+        .rad50  /.'name/
+        .byte   flags+0,        0
+        .if df  cond
+        .globl  opcerr
+        .word   opcerr
+        .iff
+        .globl  name
+        .word   name
+        .endc
+        .endm
+
+        dirdef name

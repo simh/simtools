@@ -143,11 +143,11 @@
      120 000420 172127  140263                  addd    #-1.4,ac1       ;       as float
      121                                
      122                                                                ; TODO: let parser check for junk at end of line
-test-float.mac:123: ***ERROR Junk at end of line ('5')
+test-float.mac:123: ***ERROR Junk at end of line ('5            ; bad: ')
      123 000424 170627  000002                  absf    #2.5            ; bad: operand is destination
-test-float.mac:124: ***ERROR Junk at end of line ('5')
+test-float.mac:124: ***ERROR Junk at end of line ('5            ; bad: ')
      124 000430 170527  000002                  tstd    #2.5            ; bad: operand is considered FDST by the arch handbook
-test-float.mac:125: ***ERROR Junk at end of line ('5')
+test-float.mac:125: ***ERROR Junk at end of line ('5        ; bad: junk')
      125 000434 174027  000002                  stf     ac0,#2.5        ; bad: junk at end of line
      126 000440 174027  000002                  stf     ac0,#2          ; doesn't makes sense but MACRO11 allows it
      127                                

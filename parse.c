@@ -64,7 +64,7 @@ int check_eol(
         return 1;
     }
 
-    report(stack->top, "Junk at end of line ('%s')\n", cp);
+    report(stack->top, "Junk at end of line ('%.20s')\n", cp);
 
     return 0;
 }
@@ -1072,7 +1072,9 @@ EX_TREE        *parse_unary(
            get_symbol a second time. */
 
         if (!(label = get_symbol(cp, &cp, &local))) {
-            cp++;                      /*JH: eat first char of illegal label, else endless loop on implied .WORD */
+            if (!EOL(*cp)) {
+                cp++;                  /*JH: eat first char of illegal label, else endless loop on implied .WORD */
+            }
             tp = ex_err(NULL, cp);     /* Not a valid label. */
             return tp;
         }

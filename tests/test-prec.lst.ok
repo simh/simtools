@@ -56,17 +56,48 @@
       56 000114 000007                  	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
       57 000116 000007                  	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
 test-prec.mac:58: ***ERROR Invalid expression
-      58 000120 000003  000000  000000G 	.word	1 + ^* 2 * 3 *	; Invalid expression
-         000126 000000G                 
-      58                                
+      58 000120 000003  000000          	.word	1 + ^* 2 * 3 *	; Invalid expression
+      59                                
+      60                                ;;;;;
+      61                                ;
+      62                                ; There was an obscure bug in parse_expr(), used to evaluate 'if df',
+      63                                ; where it could skip past the end of the line marker.
+      64                                ;
+      65                                ; If this happened inside an expanded macro, then after that was the
+      66                                ; next line...
+      67                                ; In other cases it might be worse.
+      68                                ;
+      69                                        .macro  dirdef  name,   flags,  cond
+      70                                        .rad50  /.'name/
+      71                                        .byte   flags+0,        0
+      72                                        .if df  cond
+      73                                        .globl  opcerr
+      74                                        .word   opcerr
+      75                                        .iff
+      76                                        .globl  name
+      77                                        .word   name
+      78                                        .endc
+      79                                        .endm
+      80                                
+      81 000124                                 dirdef name
+       1 000124 130461  051010                  .rad50  /.name/
+       2 000130    000     000                  .byte   +0,        0
+       3                                        .if df  
+       4                                        .globl  opcerr
+       5                                        .word   opcerr
+       6                                        .iff
+       7                                        .globl  name
+       8 000132 000000G                         .word   name
+       9                                        .endc
+      81                                
 
 
 Symbol table
 
-.       ******R      001 EXPRES= ****** GX        INVALI= ****** GX        
+.       ******R      001 NAME  = ****** G         
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000130    001   (RW,I,LCL,REL,CON,NOSAV)
+        000134    001   (RW,I,LCL,REL,CON,NOSAV)

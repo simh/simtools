@@ -932,7 +932,7 @@ static int assemble(
                                                    suppressed
                                                    until .ENDC */
                     }
-                    return 1;                   /* TODO: CHECK_EOL */
+                    return CHECK_EOL;
 
                 case P_IFF:
                     if (last_cond < 0) {
