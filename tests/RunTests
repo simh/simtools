@@ -10,6 +10,7 @@ TESTS="test-asciz \
     test-backpatch \
     test-blkb \
     test-bsl-mac-arg \
+    test-cis \
     test-complex-reloc \
     test-enabl-ama \
     test-enabl-lcm \

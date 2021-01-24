@@ -1722,6 +1722,45 @@ static int assemble(
                         }
                         return CHECK_EOL;
 
+                        {   int nwords;
+                            EX_TREE *expr[4];
+                    case OC_CIS2:
+                        /* Either no operands or 2 (mostly) address operand words
+                         * (extension) */
+                            nwords = 2;
+                            goto cis_common;
+                    case OC_CIS3:
+                        /* Either no operands or 3 (mostly) address operand words
+                         * (extension) */
+                            nwords = 3;
+                            goto cis_common;
+                    case OC_CIS4:
+                        /* Either no operands or 4 (mostly) address operand words
+                         * (extension) */
+                            nwords = 4;
+                    cis_common:
+                            if (!EOL(*cp)) {
+                                for (int i = 0; i < nwords; i++) {
+                                    if (i > 0)
+                                        cp = skipdelim(cp);
+                                    EX_TREE *ex = parse_expr(cp, 0);
+                                    cp = ex->cp;
+                                    expr[i] = ex;
+                                }
+                            } else {
+                                expr[0] = NULL;
+                            }
+
+                            store_word(stack->top, tr, 2, op->value);
+
+                            if (expr[0]) {
+                                for (int i = 0; i < nwords; i++) {
+                                    store_value(stack, tr, 2, expr[i]);
+                                }
+                            }
+                        }
+                        return CHECK_EOL;
+
                     default:
                         report(stack->top, "Unimplemented instruction format\n");
                         return 0;

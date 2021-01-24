@@ -7,6 +7,9 @@
           number.
         - Added checks for junk text following correct code. This revealed
           some small other issues, now fixed.
+        - Added CIS instructions; as an extension, for the Inline variants
+          you can specify the descriptor addresses etc as arguments to
+          the instruction (much like an implied .word).
 
 25.04.2020: Rhialto
         version 0.5:
