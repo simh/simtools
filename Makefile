@@ -3,9 +3,12 @@
 # Makefile for macro11 and dumpobj
 #
 
-WARNS ?= -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
-OBJFORMAT = -DDEFAULT_OBJECTFORMAT_RT11=0
-CFLAGS ?= -O2 -ggdb -std=gnu99 $(WARNS) $(OBJFORMAT)
+WARNS     ?= -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
+OBJFORMAT ?= -DDEFAULT_OBJECTFORMAT_RT11=0
+SANITIZE  ?= #-fsanitize=address -fsanitize=undefined -fsanitize-recover=all -fno-omit-frame-pointer
+DEBUG     ?= -ggdb $(SANITIZE)
+OPT       ?= -O3
+CFLAGS    ?= -std=gnu99 $(WARNS) $(DEBUG) $(OPT) $(OBJFORMAT)
 
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\
