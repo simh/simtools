@@ -354,7 +354,7 @@ BUFFER         *mlb_rsx_entry(
     char *name)
 {
     int             i;
-    MLBENT         *ent;
+    MLBENT         *ent = NULL;
     BUFFER         *buf;
     char           *bp;
     int             c;
