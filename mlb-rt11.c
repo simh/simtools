@@ -265,7 +265,7 @@ BUFFER         *mlb_rt11_entry(
     char *name)
 {
     int             i;
-    MLBENT         *ent;
+    MLBENT         *ent = NULL;
     BUFFER         *buf;
     char           *bp;
     int             c;
