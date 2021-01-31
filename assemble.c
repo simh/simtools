@@ -1595,7 +1595,7 @@ static int assemble(
                         return CHECK_EOL;
 
                     case OC_1REG:
-                        /* One register (RTS) */  {
+                        /* One register (RTS,FADD,FSUB,FMUL,FDIV,SPL) */  {
                             EX_TREE        *value;
                             unsigned        reg;
 

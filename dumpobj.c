@@ -715,13 +715,13 @@ int main(
             outfile = argv[arg];
         }
         else {
-            fprintf(stderr, "Extra paraeter %s\n", argv[arg]);
+            fprintf(stderr, "Extra parameter %s\n", argv[arg]);
             exit(EXIT_FAILURE);
         }
     }
 
     if (infile == 0) {
-        fprintf(stderr, "Usage: [ -rt11 ] [ -rsx ] dumpobj input.obj [ output.obj ]\n");
+        fprintf(stderr, "Usage: dumpobj [ -rt11 ] [ -rsx ] input.obj [ output.obj ]\n");
         exit(1);
     }
 
