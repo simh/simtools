@@ -1,4 +1,4 @@
-??.??.20??: Rhialto
+13.02.2021: Rhialto
         version 0.6:
         - Fixed rounding issues with floating point literals.
         - Fixed FPP instructions which take fp immediate operands.
