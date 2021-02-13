@@ -1639,7 +1639,7 @@ static int assemble(
 #endif
 
                     case OC_FPPGENAC:
-                        /* One one gen and one reg 0-3 */  {
+                        /* One gen and one reg 0-3 */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
                             unsigned        reg;
