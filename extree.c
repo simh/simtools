@@ -112,6 +112,14 @@ void print_tree(
         print_tree(printfile, tp->data.child.right, depth + 4);
         fputc('>', printfile);
         break;
+
+    case EX_LSH:
+        fputc('<', printfile);
+        print_tree(printfile, tp->data.child.left, depth + 4);
+        fputc('_', printfile);
+        print_tree(printfile, tp->data.child.right, depth + 4);
+        fputc('>', printfile);
+        break;
     }
 
     if (depth == 0)
@@ -150,6 +158,7 @@ void free_tree(
     case EX_DIV:
     case EX_AND:
     case EX_OR:
+    case EX_LSH:
         free_tree(tp->data.child.left);
         free_tree(tp->data.child.right);
         break;
@@ -244,6 +253,7 @@ EX_TREE *dup_tree(
     case EX_DIV:
     case EX_AND:
     case EX_OR:
+    case EX_LSH:
         res->data.child.left = dup_tree(tp->data.child.left);
         res->data.child.right = dup_tree(tp->data.child.right);
         break;
@@ -703,6 +713,28 @@ EX_TREE        *evaluate(
             res = new_ex_bin(EX_OR, left, right);
         }
         break;
+
+    case EX_LSH:
+        {
+            EX_TREE        *left,
+                           *right;
+
+            left = evaluate(tp->data.child.left, undef);
+            right = evaluate(tp->data.child.right, undef);
+
+            /* Operate if both are literals */
+            if (left->type == EX_LIT && right->type == EX_LIT) {
+                res = new_ex_lit(left->data.lit << right->data.lit);
+                free_tree(left);
+                free_tree(right);
+                break;
+            }
+
+            /* Anything else returns verbatim */
+            res = new_ex_bin(EX_LSH, left, right);
+        }
+        break;
+
     default:
         fprintf(stderr, "Invalid tree\n");
         return NULL;

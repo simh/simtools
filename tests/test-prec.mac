@@ -20,6 +20,11 @@
 	.word	12. / 4		; 000003
 	.word	123 & 771	; 000121
 	.word	123121 ! 322	; 123323
+five = 5
+a:	.word	123 _ 3	 	; 001230
+	.word	five _ 6	; 000500
+	.word	101_five	; 004040
+	.word	a _ 3		; Invalid expression
 
 	.word	- 377		; 177401
 	.word	+ 377		; 000377

@@ -596,6 +596,7 @@ int parse_float(
 #define MUL_PREC 1
 #define AND_PREC 1
 #define OR_PREC 1
+#define LSH_PREC 1
 
 EX_TREE        *parse_unary(
     char *cp);                  /* Prototype for forward calls */
@@ -674,6 +675,16 @@ EX_TREE        *parse_binary(
 
             rightp = parse_binary(cp + 1, term, AND_PREC);
             tp = new_ex_bin(EX_AND, leftp, rightp);
+            tp->cp = rightp->cp;
+            leftp = tp;
+            break;
+
+        case '_':
+            if (symbol_allow_underscores || depth >= LSH_PREC)
+                return leftp;
+
+            rightp = parse_binary(cp + 1, term, LSH_PREC);
+            tp = new_ex_bin(EX_LSH, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;

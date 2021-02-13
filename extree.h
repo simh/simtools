@@ -31,7 +31,10 @@ typedef struct ex_tree {
         /* Divide */
         EX_AND = 12,
         /* bitwise and */
-        EX_OR = 13                     /* bitwise or */
+        EX_OR = 13,
+	/* bitwise or */
+        EX_LSH = 14
+	/* left shift */
     } type;
 
     char           *cp;         /* points to end of parsed expression */
