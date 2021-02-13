@@ -1,5 +1,8 @@
+git-info.h
 *.d
 *.o
+dumpobj
+macro11
 tests/*.lst
 tests/*.obj
 tests/*.objd
