@@ -24,7 +24,7 @@ int             last_locsym = 32768;    /* The last local symbol number generate
 
 int             enabl_debug = 0;        /* Whether assembler debugging is enabled */
 
-int             opt_enabl_ama = 0; 	/* May be changed by command line */
+int             opt_enabl_ama = 0;      /* May be changed by command line */
 int             enabl_ama;      /* When set, chooses absolute (037) versus
                                    PC-relative */
                                 /* (067) addressing mode */

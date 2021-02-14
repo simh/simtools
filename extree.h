@@ -32,9 +32,9 @@ typedef struct ex_tree {
         EX_AND = 12,
         /* bitwise and */
         EX_OR = 13,
-	/* bitwise or */
+        /* bitwise or */
         EX_LSH = 14
-	/* left shift */
+        /* left shift */
     } type;
 
     char           *cp;         /* points to end of parsed expression */

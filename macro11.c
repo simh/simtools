@@ -63,7 +63,7 @@ static void enable_tf(
     if (strcmp(opt, "AMA") == 0)
         opt_enabl_ama = tf;
     else if (strcmp(opt, "GBL") == 0)
-        enabl_gbl = tf;		/* Unused in pass 2 */
+        enabl_gbl = tf;         /* Unused in pass 2 */
     else if (strcmp(opt, "ME") == 0)
         list_me = tf;
     else if (strcmp(opt, "BEX") == 0)

@@ -469,17 +469,17 @@ void mode_extension(
 
     if (value->type == EX_LIT) {
         if (mode->rel) {              /* PC-relative? */
-	    if (current_pc->section->flags & PSECT_REL) {
-		store_displaced_word(str, tr, 2, value->data.lit);
-	    } else {
+            if (current_pc->section->flags & PSECT_REL) {
+                store_displaced_word(str, tr, 2, value->data.lit);
+            } else {
                 /* I can compute this myself. */
-		store_word(str, tr, 2, value->data.lit - DOT - 2);
-	    }
-	} else {
+                store_word(str, tr, 2, value->data.lit - DOT - 2);
+            }
+        } else {
             store_word(str, tr, 2, value->data.lit);    /* Just a
                                                            known
                                                            value. */
-	}
+        }
     } else if (express_sym_offset(value, &sym, &offset)) {
         if ((sym->flags & (SYMBOLFLAG_GLOBAL | SYMBOLFLAG_DEFINITION)) == SYMBOLFLAG_GLOBAL) {
             /* Reference to a global symbol. */
