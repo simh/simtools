@@ -721,11 +721,40 @@ EX_TREE        *evaluate(
 
             left = evaluate(tp->data.child.left, undef);
             right = evaluate(tp->data.child.right, undef);
-
             /* Operate if both are literals */
             if (left->type == EX_LIT && right->type == EX_LIT) {
-                res = new_ex_lit(left->data.lit << right->data.lit);
+                int shift = right->data.lit;
+                if (shift < 0)
+                    res = new_ex_lit(left->data.lit >> -shift);
+                else
+                    res = new_ex_lit(left->data.lit << shift);
                 free_tree(left);
+                free_tree(right);
+                break;
+            }
+
+            if (right->type == EX_LIT &&        /* Symbol shifted 0 == symbol */
+                right->data.lit == 0) {
+                res = left;
+                free_tree(right);
+                break;
+            }
+
+            if (right->type == EX_LIT &&        /* Anything shifted 16 == 0 */
+                ((int)right->data.lit > 15 ||
+                 (int)right->data.lit < -15)) {
+                res = new_ex_lit(0);
+                free_tree(left);
+                free_tree(right);
+                break;
+            }
+
+            if (right->type == EX_LIT) {        /* Other shifts become * or / */
+                int shift = right->data.lit;
+                if (shift > 0)
+                    res = new_ex_bin(EX_MUL, left, new_ex_lit(1 << shift));
+                else
+                    res = new_ex_bin(EX_DIV, left, new_ex_lit(1 << -shift));
                 free_tree(right);
                 break;
             }

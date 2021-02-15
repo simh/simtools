@@ -24,7 +24,8 @@ five = 5
 a:	.word	123 _ 3	 	; 001230
 	.word	five _ 6	; 000500
 	.word	101_five	; 004040
-	.word	a _ 3		; Invalid expression
+	.word	177400 _ -8.	; 000377
+	.word	a _ 3		; Complex relocation
 
 	.word	- 377		; 177401
 	.word	+ 377		; 000377
