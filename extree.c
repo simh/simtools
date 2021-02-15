@@ -721,6 +721,7 @@ EX_TREE        *evaluate(
 
             left = evaluate(tp->data.child.left, undef);
             right = evaluate(tp->data.child.right, undef);
+
             /* Operate if both are literals */
             if (left->type == EX_LIT && right->type == EX_LIT) {
                 int shift = right->data.lit;
