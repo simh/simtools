@@ -1832,6 +1832,7 @@ void readLine()
     WORD32  ix;
     WORD32  iy;
     char    inpline[LINELEN];
+    char *ch;
 
     /* XXX panic if nrepeats > 0 (if self-feeding, do the backup here?) */
 
@@ -1875,7 +1876,9 @@ void readLine()
     lineno++;				/* Count lines read. */
     listed = FALSE;			/* Mark as not listed. */
  READ_LINE:
-    if(( fgets( inpline, LINELEN - 1, infile )) == NULL ) {
+    if(( fgets( inpline, LINELEN - 1, infile )) == NULL || ((ch = strchr(inpline, '\r')) != NULL && ch[1] != '\n')) {
+	if ( (ch = strchr(inpline, '\r')) != NULL && ch[1] != '\n' && pass == 1)
+		fprintf( stderr, "%s: bare CR found in %s; check your line endings\n", save_argv[0], save_argv[filix_curr]);
 	filix_curr++;			/* Advance to next file. */
 	if( filix_curr < save_argc ) {	/* More files? */
 	    fclose( infile );
