@@ -3,13 +3,17 @@
 # Makefile for macro11 and dumpobj
 #
 
-WARNS ?= -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
-CFLAGS ?= -O -ggdb -std=gnu99 $(WARNS)
+WARNS     ?= -Wall -Wshadow -Wextra -pedantic -Woverflow -Wstrict-overflow
+OBJFORMAT ?= -DDEFAULT_OBJECTFORMAT_RT11=0
+SANITIZE  ?= #-fsanitize=address -fsanitize=undefined -fsanitize-recover=all -fno-omit-frame-pointer
+DEBUG     ?= -ggdb $(SANITIZE)
+OPT       ?= -O3
+CFLAGS    ?= -std=gnu99 $(WARNS) $(DEBUG) $(OPT) $(OBJFORMAT)
 
 MACRO11_SRCS = macro11.c \
 	assemble.c assemble_globals.c assemble_aux.c	\
 	extree.c listing.c macros.c parse.c rept_irpc.c symbols.c \
-	mlb-rsx.c object.c stream2.c util.c rad50.c
+	mlb2.c mlb-rsx.c mlb-rt11.c object.c stream2.c util.c rad50.c
 
 MACRO11_OBJS = $(MACRO11_SRCS:.c=.o)
 
@@ -39,6 +43,7 @@ git-info.h:
 # Bootstrap dependency on the git header file, which otherwise
 # gets generated too late.
 macro11.o: git-info.h
+macro11.c: git-info.h
 
 clean:
 	-rm -f $(MACRO11_OBJS) $(DUMPOBJ_OBJS) macro11 dumpobj

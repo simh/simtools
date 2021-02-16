@@ -46,17 +46,22 @@ test-include.mac:14: ***ERROR Bad .INCLUDE file name
 test-include.mac:15: ***ERROR Bad .INCLUDE file name
       15                                        .include <incl.mac<
       16                                        .include =incl.mac=             ; looks like assignment
-test-include.mac:17: ***ERROR Invalid expression
-      17 000012 000000G 000000                  .include :incl.mac:             ; looks like a label
-      17                                
+test-include.mac:17: ***ERROR Invalid expression in .WORD
+      17 000012 000000G                         .include :incl.mac:             ; looks like a label
+      18                                
+      19                                ; this is an error: file does not existst
+      20                                
+test-include.mac:21: ***ERROR Unable to find .INCLUDE file "does-not-exist.mac"
+      21                                	.include "does-not-exist.mac"
+      21                                
 
 
 Symbol table
 
-.      ******R      001 .INCLU 000012R      001 INCL.M=****** GX        
+.       ******R      001 .INCLU  000012R      001 INCL.M= ****** GX        
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000016    001   (RW,I,LCL,REL,CON,NOSAV)
+        000014    001   (RW,I,LCL,REL,CON,NOSAV)

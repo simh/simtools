@@ -25,6 +25,8 @@
 
 
 
+#define CHECK_EOL       check_eol(stack, cp)
+
 /* assemble - read a line from the input stack, assemble it. */
 
 /* This function is way way too large, because I just coded most of
@@ -107,6 +109,8 @@ static int assemble(
 
     /* The line may begin with "label<ws>:[:]" */
 
+    /* PSEUDO P_IIF jumps here.  */
+  reassemble:
     opcp = cp;
     if ((label = get_symbol(cp, &ncp, &local)) != NULL) {
         int             flag = SYMBOLFLAG_PERMANENT | SYMBOLFLAG_DEFINITION | local;
@@ -140,8 +144,6 @@ static int assemble(
         }
     }
 
-    /* PSEUDO P_IIF jumps here.  */
-  reassemble:
     cp = skipwhite(cp);
 
     if (EOL(*cp))
@@ -176,6 +178,7 @@ static int assemble(
             cp = skipwhite(cp);
 
             value = parse_expr(cp, 0);
+            cp = value->cp;
 
             /* Special code: if the symbol is the program counter,
                this is harder. */
@@ -190,13 +193,13 @@ static int assemble(
                        section must = current. */
 
                     if (!express_sym_offset(value, &symb, &offset)) {
-                        report(stack->top, "Illegal ORG\n");
+                        report(stack->top, "Illegal ORG (for relocatable section)\n");
                     } else if ((symb->flags & (SYMBOLFLAG_GLOBAL | SYMBOLFLAG_DEFINITION)) == SYMBOLFLAG_GLOBAL) {
                         report(stack->top, "Can't ORG to external location\n");
                     } else if (symb->flags & SYMBOLFLAG_UNDEFINED) {
                         report(stack->top, "Can't ORG to undefined sym\n");
                     } else if (symb->section != current_pc->section) {
-                        report(stack->top, "Can't ORG to alternate section " "(use PSECT)\n");
+                        report(stack->top, "Can't ORG to alternate section (use PSECT)\n");
                     } else {
                         DOT = symb->value + offset;
                         list_value(stack->top, DOT);
@@ -217,7 +220,7 @@ static int assemble(
                 }
                 free_tree(value);
                 free(label);
-                return 1;
+                return CHECK_EOL;
             }
 
             /* regular symbols */
@@ -226,7 +229,7 @@ static int assemble(
             } else if (value->type == EX_SYM || value->type == EX_TEMP_SYM) {
                 sym = add_sym(label, value->data.symbol->value, flags, value->data.symbol->section, &symbol_st);
             } else {
-                report(stack->top, "Complex expression cannot be assigned " "to a symbol\n");
+                report(stack->top, "Complex expression cannot be assigned to a symbol\n");
 
                 if (!pass) {
                     /* This may work better in pass 2 - something in
@@ -243,7 +246,7 @@ static int assemble(
             free_tree(value);
             free(label);
 
-            return sym != NULL;
+            return sym != NULL && CHECK_EOL;
         }
 
         /* Try to resolve macro */
@@ -274,15 +277,26 @@ static int assemble(
             switch (op->section->type) {
             case SECTION_PSEUDO:
                 switch (op->value) {
-                case P_ENDR:
-                case P_ENDM:
-                case P_SBTTL:
-                case P_LIST:
-                case P_NLIST:
+                case P_PAGE:
                 case P_PRINT:
+                case P_SBTTL:
                     return 1;          /* Accepted, ignored.  (An obvious
                                           need: get assembly listing
-                                          controls working. ) */
+                                          controls working fully. ) */
+                case P_LIST:
+                    if (pass > 0) {
+                        cp = skipwhite(cp);
+                        if (EOL(*cp))
+                            list_level++;
+                    }
+                    return 1;
+                case P_NLIST:
+                    if (pass > 0) {
+                        cp = skipwhite(cp);
+                        if (EOL(*cp))
+                            list_level--;
+                    }
+                    return 1;
 
                 case P_IDENT:
                     {
@@ -305,7 +319,8 @@ static int assemble(
                         ident[len] = 0;
                         upcase(ident);
 
-                        return 1;
+                        cp += len + 1;
+                        return CHECK_EOL;
                     }
 
                 case P_RADIX:
@@ -318,7 +333,7 @@ static int assemble(
                             report(stack->top, "Illegal radix\n");
                             return 0;
                         }
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_FLT4:
@@ -343,7 +358,7 @@ static int assemble(
                             }
                             cp = skipdelim(cp);
                         }
-                        return ok;
+                        return ok && CHECK_EOL;
                     }
 
                 case P_ERROR:
@@ -358,7 +373,7 @@ static int assemble(
                     sect_sp++;
                     sect_stack[sect_sp] = current_pc->section;
                     dot_stack[sect_sp] = DOT;
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_RESTORE:
                     if (sect_sp < 0) {
@@ -373,7 +388,7 @@ static int assemble(
                         }
                         sect_sp--;
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_NARG:
                     {
@@ -405,7 +420,7 @@ static int assemble(
                                 &symbol_st);
                         free(label);
                         list_value(stack->top, mstr->nargs);
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_NCHR:
@@ -428,7 +443,7 @@ static int assemble(
                                 &symbol_st);
                         free(label);
                         free(string);
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_NTYPE:
@@ -454,7 +469,7 @@ static int assemble(
                         free_addr_mode(&mode);
                         free(label);
 
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_INCLUDE:
@@ -469,12 +484,14 @@ static int assemble(
                         }
 
                         my_searchenv(name, "INCLUDE", hitfile, sizeof(hitfile));
-                        free(name);
 
                         if (hitfile[0] == '\0') {
                             report(stack->top, "Unable to find .INCLUDE file \"%s\"\n", name);
+                            free(name);
                             return 0;
                         }
+
+                        free(name);
 
                         incl = new_file_stream(hitfile);
                         if (incl == NULL) {
@@ -484,7 +501,7 @@ static int assemble(
 
                         stack_push(stack, incl);
 
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_REM:
@@ -547,7 +564,7 @@ static int assemble(
                         }
                         free(name);
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_MCALL:
                     {
@@ -565,6 +582,18 @@ static int assemble(
 
                             if (EOL(*cp))
                                 return 1;
+
+                            /* (lib)macro syntax. Ignore (lib) for now. */
+                            if (*cp == '(') {
+                                char *close = strchr(cp + 1, ')');
+
+                                if (close != NULL) {
+                                    char *libname = cp + 1;
+                                    (void)libname;
+                                    *close = '\0';
+                                    cp = close + 1;
+                                }
+                            }
 
                             label = get_symbol(cp, &cp, NULL);
                             if (!label) {
@@ -591,8 +620,14 @@ static int assemble(
                                 macstr = new_buffer_stream(macbuf, label);
                                 buffer_free(macbuf);
                             } else {
-                                strncpy(macfile, label, sizeof(macfile));
-                                strncat(macfile, ".MAC", sizeof(macfile) - strlen(macfile) - 1);
+                                char *bufend = &macfile[sizeof(macfile)],
+                                     *end;
+                                end = stpncpy(macfile, label, sizeof(macfile) - 5);
+                                if (end >= bufend - 5) {
+                                    report(stack->top, ".MCALL: name too long: '%s'\n", label);
+                                    return 0;
+                                }
+                                stpncpy(end, ".MAC", bufend - end);
                                 my_searchenv(macfile, "MCALL", hitfile, sizeof(hitfile));
                                 if (hitfile[0])
                                     macstr = new_file_stream(hitfile);
@@ -626,9 +661,9 @@ static int assemble(
 
                                     saveline = stmtno;
                                     list_level = -1;
-                                    mac = defmacro(maccp, &macstack, TRUE);
+                                    mac = defmacro(maccp, &macstack, CALLED_NOLIST);
                                     if (mac == NULL) {
-                                        report(stack->top, "Failed to define macro " "called %s\n", label);
+                                        report(stack->top, "Failed to define macro called %s\n", label);
                                     }
 
                                     stmtno = saveline;
@@ -641,12 +676,13 @@ static int assemble(
 
                             free(label);
                         }
+                        /* NOTREACHED */
                     }
                     return 1;
 
                 case P_MACRO:
                     {
-                        MACRO          *mac = defmacro(cp, stack, FALSE);
+                        MACRO          *mac = defmacro(cp, stack, CALLED_NORMAL);
 
                         return mac != NULL;
                     }
@@ -668,7 +704,7 @@ static int assemble(
                         /* and finally, pop the macro */
                         stack_pop(stack);
 
-                        return 1;
+                        return CHECK_EOL;
                     }
 
                 case P_REPT:
@@ -693,6 +729,8 @@ static int assemble(
                             enabl_gbl = 1;
                         } else if (strcmp(label, "LC") == 0) {
                             enabl_lc = 1;
+                        } else if (strcmp(label, "LCM") == 0) {
+                            enabl_lcm = 1;
                         }
                         free(label);
                         cp = skipdelim(cp);
@@ -712,6 +750,8 @@ static int assemble(
                             enabl_gbl = 0;
                         } else if (strcmp(label, "LC") == 0) {
                             enabl_lc = 0;
+                        } else if (strcmp(label, "LCM") == 0) {
+                            enabl_lcm = 0;
                         }
                         free(label);
                         cp = skipdelim(cp);
@@ -720,7 +760,7 @@ static int assemble(
 
                 case P_LIMIT:
                     store_limits(stack->top, tr);
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_TITLE:
                     /* accquire module name */
@@ -737,24 +777,27 @@ static int assemble(
                         if (xfer_address)
                             free_tree(xfer_address);
                         xfer_address = parse_expr(cp, 0);
+                        cp = xfer_address->cp;
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFDF:
                     opcp = skipwhite(opcp);
                     cp = opcp + 3;     /* Point cp at the "DF" or
                                           "NDF" part */
-                    /* Falls into... */
+                    /* FALLS THROUGH */
                 case P_IIF:
                 case P_IF:
                     {
                         EX_TREE        *value;
-                        int             ok;
+                        int             ok = FALSE;
 
                         label = get_symbol(cp, &cp, NULL);      /* Get condition */
                         cp = skipdelim(cp);
 
-                        if (strcmp(label, "DF") == 0) {
+                        if (!label) {
+                            report(stack->top, "Missing .(I)IF condition\n");
+                        } else if (strcmp(label, "DF") == 0) {
                             value = parse_expr(cp, 1);
                             cp = value->cp;
                             ok = eval_defined(value);
@@ -766,6 +809,17 @@ static int assemble(
                             free_tree(value);
                         } else if (strcmp(label, "B") == 0 ||
                                    strcmp(label, "NB") == 0) {
+                            /*
+                             * Page 6-46 footnote 1 says
+                             * "A macro argument (a form of symbolic argument)
+                             * is enclosed within angle brackets or delimited
+                             * by the circumflex construction, as described in
+                             * section 7.3. For example,
+                             *   <A,B,C>
+                             *   ^/124/"
+                             * but we don't enforce that here (yet) by using
+                             * simply getstring().
+                             */
                             cp = skipwhite(cp);
                             if (EOL(*cp)) {
                                 ok = 1;
@@ -791,6 +845,12 @@ static int assemble(
                                 thing2 = getstring(cp, &cp);
                             else
                                 thing2 = memcheck(strdup(""));
+
+                            if (!enabl_lcm) {
+                                upcase(thing1);
+                                upcase(thing2);
+                            }
+
                             ok = (strcmp(thing1, thing2) == 0);
                             if (label[0] == 'D') {
                                 ok = !ok;
@@ -822,7 +882,7 @@ static int assemble(
                                 /* FIXME I don't know if the following
                                    is portable enough.  */
                                 if (tvalue->data.lit & 0x8000)
-                                    sword |= ~0xFFFF;   /* Render negative */
+                                    sword |= ~0x7FFF;   /* Render negative */
 
                                 /* Reduce unsigned value to 16 bits */
                                 uword = tvalue->data.lit & 0xffff;
@@ -857,10 +917,10 @@ static int assemble(
                                 /* The "immediate if" */
                                 /* Only slightly tricky. */
                                 cp = skipdelim(cp);
-                                label = get_symbol(cp, &ncp, &local);
                                 goto reassemble;
                             }
-                            return 1;
+                            return 1;           /* Ignore rest of line if
+                                                   condition is false */
                         }
 
                         push_cond(ok, stack->top);
@@ -870,7 +930,7 @@ static int assemble(
                                                    suppressed
                                                    until .ENDC */
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFF:
                     if (last_cond < 0) {
@@ -880,7 +940,7 @@ static int assemble(
                     if (conds[last_cond].ok)    /* Suppress if last cond
                                                    is true */
                         suppressed++;
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFT:
                     if (last_cond < 0) {
@@ -890,14 +950,14 @@ static int assemble(
                     if (!conds[last_cond].ok)   /* Suppress if last cond
                                                    is false */
                         suppressed++;
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_IFTF:
                     if (last_cond < 0) {
                         report(stack->top, "No conditional block active\n");
                         return 0;
                     }
-                    return 1;          /* Don't suppress. */
+                    return CHECK_EOL;           /* Don't suppress. */
 
                 case P_ENDC:
                     if (last_cond < 0) {
@@ -906,9 +966,21 @@ static int assemble(
                     }
 
                     pop_cond(last_cond - 1);
-                    return 1;
+                    return CHECK_EOL;
+
+                case P_ENDM:
+                    report(stack->top, "No macro definition block active\n");
+                    return 0;
+
+                case P_ENDR:
+                    report(stack->top, "No repeat block active\n");
+                    return 0;
 
                 case P_EVEN:
+                    cp = skipwhite(cp);
+                    if (!EOL(*cp)) {
+                        report(stack->top, ".EVEN must not have an argument\n");
+                    }
                     if (DOT & 1) {
                         list_word(stack->top, DOT, 0, 1, "");
                         DOT++;
@@ -917,6 +989,9 @@ static int assemble(
                     return 1;
 
                 case P_ODD:
+                    if (!EOL(*cp)) {
+                        report(stack->top, ".ODD must not have an argument\n");
+                    }
                     if (!(DOT & 1)) {
                         list_word(stack->top, DOT, 0, 1, "");
                         DOT++;
@@ -930,7 +1005,7 @@ static int assemble(
                     }
                     go_section(tr, &absolute_section);
                     list_location(stack->top, DOT);
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_CSECT:
                 case P_PSECT:
@@ -1008,7 +1083,7 @@ static int assemble(
                                 } else if (strcmp(label, "LCL") == 0) {
                                     sect->flags &= ~PSECT_GBL;      /* Local */
                                 } else {
-                                    report(stack->top, "Unknown flag %s given to " ".PSECT directive\n", label);
+                                    report(stack->top, "Unknown flag %s given to .PSECT directive\n", label);
                                     free(label);
                                     return 0;
                                 }
@@ -1046,7 +1121,7 @@ static int assemble(
                         go_section(tr, sect);
                         list_location(stack->top, DOT);
 
-                        return 1;
+                        return CHECK_EOL;
                     }                  /* end PSECT code */
                     break;
 
@@ -1060,7 +1135,7 @@ static int assemble(
                                comma-separated symbols */
                             label = get_symbol(cp, &ncp, NULL);
                             if (label == NULL) {
-                                report(stack->top, "Illegal .GLOBL/.WEAK " "syntax\n");
+                                report(stack->top, "Illegal .GLOBL/.WEAK syntax\n");
                                 return 0;
                             }
 
@@ -1076,7 +1151,7 @@ static int assemble(
                             cp = skipdelim(ncp);
                         }
                     }
-                    return 1;
+                    return CHECK_EOL;
 
                 case P_WORD:
                     {
@@ -1084,7 +1159,7 @@ static int assemble(
                            is an implicit .WORD 0 */
                         if (EOL(*cp)) {
                             if (DOT & 1) {
-                                report(stack->top, ".WORD on odd " "boundary\n");
+                                report(stack->top, ".WORD on odd boundary\n");
                                 DOT++; /* Fix it, too */
                             }
                             store_word(stack->top, tr, 2, 0);
@@ -1104,11 +1179,22 @@ static int assemble(
                 case P_BLKW:
                 case P_BLKB:
                     {
-                        EX_TREE        *value = parse_expr(cp, 0);
+                        EX_TREE        *value;
                         int             ok = 1;
 
+                        cp = skipwhite(cp);
+                        if (EOL(*cp)) {
+                            /* If no argument, assume 1. Documented but
+                             * discouraged. Par 6.5.3, page 6-32. */
+                            /* warning(stack->top, "Argument to .BLKB/.BLKW should be present; 1 assumed\n"); */
+                            value = new_ex_lit(1);
+                        } else {
+                            value = parse_expr(cp, 0);
+                            cp = value->cp;
+                        }
+
                         if (value->type != EX_LIT) {
-                            report(stack->top, "Argument to .BLKB/.BLKW " "must be constant\n");
+                            report(stack->top, "Argument to .BLKB/.BLKW must be constant\n");
                             ok = 0;
                         } else {
                             list_value(stack->top, DOT);
@@ -1116,7 +1202,7 @@ static int assemble(
                             change_dot(tr, 0);
                         }
                         free_tree(value);
-                        return ok;
+                        return ok && CHECK_EOL;
                     }
 
                 case P_ASCIZ:
@@ -1151,7 +1237,7 @@ static int assemble(
 
                 case P_RAD50:
                     if (DOT & 1) {
-                        report(stack->top, ".RAD50 on odd " "boundary\n");
+                        report(stack->top, ".RAD50 on odd boundary\n");
                         DOT++;         /* Fix it */
                     }
                     {
@@ -1228,7 +1314,7 @@ static int assemble(
                     case OC_NONE:
                         /* No operands. */
                         store_word(stack->top, tr, 2, op->value);
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_MARK:
                         /* MARK, EMT, TRAP */  {
@@ -1241,7 +1327,7 @@ static int assemble(
                                           don't require it */
                             value = parse_expr(cp, 0);
                             if (value->type != EX_LIT) {
-                                report(stack->top, "Instruction requires " "simple literal operand\n");
+                                report(stack->top, "Instruction requires simple literal operand\n");
                                 word = op->value;
                             } else {
                                 word = op->value | value->data.lit;
@@ -1250,7 +1336,7 @@ static int assemble(
                             store_word(stack->top, tr, 2, word);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_1GEN:
                         /* One general addressing mode */  {
@@ -1262,7 +1348,7 @@ static int assemble(
                                 return 0;
                             }
 
-                            if (op->value == 0100 && (mode.type & 070) == 0) {
+                            if (op->value == I_JMP && (mode.type & 070) == 0) {
                                 report(stack->top, "JMP Rn is illegal\n");
                                 /* But encode it anyway... */
                             }
@@ -1272,7 +1358,7 @@ static int assemble(
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_2GEN:
                         /* Two general addressing modes */  {
@@ -1304,7 +1390,7 @@ static int assemble(
                             mode_extension(tr, &left, stack->top);
                             mode_extension(tr, &right, stack->top);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_BR:
                         /* branches */  {
@@ -1364,7 +1450,7 @@ static int assemble(
 
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_SOB:
                         {
@@ -1428,7 +1514,7 @@ static int assemble(
 
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_ASH:
                         /* First op is gen, second is register. */  {
@@ -1465,10 +1551,10 @@ static int assemble(
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_JSR:
-                        /* First op is register, second is gen. */  {
+                        /* For JSR and XOR, first op is register, second is gen. */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
                             unsigned        reg;
@@ -1496,7 +1582,7 @@ static int assemble(
                                 return 0;
                             }
 
-                            if ((mode.type & 070) == 0) {
+                            if (op->value == I_JSR && (mode.type & 070) == 0) {
                                 report(stack->top, "JSR Rn,Rm is illegal\n");
                                 /* But encode it anyway... */
                             }
@@ -1506,10 +1592,10 @@ static int assemble(
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
                     case OC_1REG:
-                        /* One register (RTS) */  {
+                        /* One register (RTS,FADD,FSUB,FMUL,FDIV,SPL) */  {
                             EX_TREE        *value;
                             unsigned        reg;
 
@@ -1525,16 +1611,41 @@ static int assemble(
                             store_word(stack->top, tr, 2, op->value | reg);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
-                    case OC_1FIS:
-                        /* One one gen and one reg 0-3 */  {
+#if 0
+/*
+ * Although it is arguable that the FPP TSTF/TSTD instruction has 1
+ * operand which is a floating point source, the PDP11 Architecture
+ * Handbook describes it as a destination, and MACRO11 V05.05 doesn't
+ * allow a FP literal argument.
+ */
+                    case OC_FPPSRC:
+                        /* One fp immediate or a general addressing mode */  {
+                            ADDR_MODE       mode;
+                            unsigned        word;
+
+                            if (!get_fp_src_mode(cp, &cp, &mode)) {
+                                report(stack->top, "Illegal addressing mode\n");
+                                return 0;
+                            }
+
+                            /* Build instruction word */
+                            word = op->value | mode.type;
+                            store_word(stack->top, tr, 2, word);
+                            mode_extension(tr, &mode, stack->top);
+                        }
+                        return CHECK_EOL;
+#endif
+
+                    case OC_FPPGENAC:
+                        /* One gen and one reg 0-3 */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
                             unsigned        reg;
                             unsigned        word;
 
-                            if (!get_mode(cp, &cp, &mode)) {
+                            if (!get_fp_src_mode(cp, &cp, &mode)) {
                                 report(stack->top, "Illegal addressing mode\n");
                                 return 0;
                             }
@@ -1550,19 +1661,24 @@ static int assemble(
                             cp = value->cp;
 
                             reg = get_register(value);
-                            if (reg == NO_REG || reg > 4) {
-                                report(stack->top, "Invalid destination register\n");
+                            if (reg == NO_REG || reg > 3) {
+                                report(stack->top, "Invalid destination fp register\n");
                                 reg = 0;
                             }
 
+                            /*
+                             * We could check here that the general mode
+                             * is not AC6 or AC7, but the original Macro11
+                             * doesn't do that either.
+                             */
                             word = op->value | mode.type | (reg << 6);
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
 
-                    case OC_2FIS:
+                    case OC_FPPACGEN:
                         /* One reg 0-3 and one gen */  {
                             ADDR_MODE       mode;
                             EX_TREE        *value;
@@ -1573,8 +1689,8 @@ static int assemble(
                             cp = value->cp;
 
                             reg = get_register(value);
-                            if (reg == NO_REG || reg > 4) {
-                                report(stack->top, "Illegal source register\n");
+                            if (reg == NO_REG || reg > 3) {
+                                report(stack->top, "Illegal source fp register\n");
                                 reg = 0;
                             }
 
@@ -1591,12 +1707,59 @@ static int assemble(
                                 return 0;
                             }
 
+                            /*
+                             * We could check here that the general mode
+                             * is not AC6 or AC7, but the original Macro11
+                             * doesn't do that either.
+                             *
+                             * For some (mostly STore instructions) the
+                             * destination isn't a FDST but a plain DST.
+                             */
                             word = op->value | mode.type | (reg << 6);
                             store_word(stack->top, tr, 2, word);
                             mode_extension(tr, &mode, stack->top);
                             free_tree(value);
                         }
-                        return 1;
+                        return CHECK_EOL;
+
+                        {   int nwords;
+                            EX_TREE *expr[4];
+                    case OC_CIS2:
+                        /* Either no operands or 2 (mostly) address operand words
+                         * (extension) */
+                            nwords = 2;
+                            goto cis_common;
+                    case OC_CIS3:
+                        /* Either no operands or 3 (mostly) address operand words
+                         * (extension) */
+                            nwords = 3;
+                            goto cis_common;
+                    case OC_CIS4:
+                        /* Either no operands or 4 (mostly) address operand words
+                         * (extension) */
+                            nwords = 4;
+                    cis_common:
+                            if (!EOL(*cp)) {
+                                for (int i = 0; i < nwords; i++) {
+                                    if (i > 0)
+                                        cp = skipdelim(cp);
+                                    EX_TREE *ex = parse_expr(cp, 0);
+                                    cp = ex->cp;
+                                    expr[i] = ex;
+                                }
+                            } else {
+                                expr[0] = NULL;
+                            }
+
+                            store_word(stack->top, tr, 2, op->value);
+
+                            if (expr[0]) {
+                                for (int i = 0; i < nwords; i++) {
+                                    store_value(stack, tr, 2, expr[i]);
+                                }
+                            }
+                        }
+                        return CHECK_EOL;
 
                     default:
                         report(stack->top, "Unimplemented instruction format\n");

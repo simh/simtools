@@ -207,7 +207,36 @@ enum instruction_ops { I_ADC = 0005500,
     I_XFC = 0076700,
     I_XOR = 0074000,
     I_MFPT = 0000007,
-    /* CIS not implemented - maybe later */
+    /* CIS - Commercial Instruction Set */
+    I_CIS_I = 0000100,          /* Inline arguments */
+    I_CIS_P = 0000020,          /* Packed instead of Numeric */
+    I_ADDN =  0076050,
+    I_ADDP =  0076070,
+    I_ASHN =  0076056,
+    I_ASHP =  0076076,
+    I_CMPC =  0076044,
+    I_CMPN =  0076052,
+    I_CMPP =  0076072,
+    I_CVTLN = 0076057,
+    I_CVTLP = 0076077,
+    I_CVTNL = 0076053,
+    I_CVTPL = 0076073,
+    I_CVTNP = 0076055,
+    I_CVTPN = 0076054,
+    I_DIVP =  0076075,
+    I_LOCC =  0076040,
+    I_L2Dr =  0076020,
+    I_L3Dr =  0076060,
+    I_MATC =  0076045,
+    I_MOVC =  0076030,
+    I_MOVRC=  0076031,
+    I_MOVTC=  0076032,
+    I_MULP =  0076074,
+    I_SCANC=  0076042,
+    I_SKPC =  0076041,
+    I_SPANC=  0076043,
+    I_SUBN =  0076051,
+    I_SUBP =  0076071,
     /* FPU */
     I_ABSD = 0170600,
     I_ABSF = 0170600,
@@ -279,10 +308,20 @@ enum operand_codes { OC_MASK = 0xff00,
     /* FADD, FSUB, FMUL, FDIV, RTS */
     OC_SOB = 0x0800,
     /* SOB */
-    OC_1FIS = 0x0900,
-    /* FIS (reg, gen) */
-    OC_2FIS = 0x0a00,
-    /* FIS (gen, reg) */
+    OC_FPPGENAC = 0x0900,
+    /* FPP (gen, floating ac 0-3) */
+    OC_FPPACGEN = 0x0a00,
+    /* FPP (floating ac 0-3, gen) */
+    OC_FPPSRC = 0x0b00,
+    /* FPP fp source: immediate or gen */
+    OC_FPPDST = OC_1GEN,
+    /* FPP general destination */
+    OC_CIS2 = 0x0c00,
+    /* CIS with 2 parameter words */
+    OC_CIS3 = 0x0d00,
+    /* CIS with 3 parameter words */
+    OC_CIS4 = 0x0e00,
+    /* CIS with 4 parameter words */
     OC__LAST = 0xff00
 };
 

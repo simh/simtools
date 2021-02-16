@@ -3,6 +3,10 @@
 ; Tests the addressing modes for JMP.
 ; JMP Rx is not allowed, all other modes are.
 ;
+; XOR shares the instruction format with JSR
+; (their source operand can only be a register),
+; but XOR Rx,Ry is allowed whereas JSR Rx,Ry is not.
+;
 
 start:  jmp     label           ; rel(pc)       jumps to label
         jmp     @label          ; @rel(pc)      does something else!
@@ -10,6 +14,7 @@ start:  jmp     label           ; rel(pc)       jumps to label
         jmp     @#label         ; @(pc)+        jumps to label
 
         jmp     r1              ; must fail
+        jmp     (r0)            ; must succeed (failed before a24e3ba3)
         jmp     (r2)
         jmp     (r1)+
         jmp     @(r1)+
@@ -31,5 +36,27 @@ secnd:  jsr     r0,label        ; rel(pc)       jumps to label
         jsr     r3,@-(r1)
         jsr     r4,1234(r1)
         jsr     r5,@1234(r1)
+
+third:  xor     r0,label        ; rel(pc)
+        xor     r0,@label       ; @rel(pc)
+        xor     r0,#label       ; (pc)+
+        xor     r0,@#label      ; @(pc)+
+
+        xor     r2,r1           ; must succeed
+        xor     r3,(r2)         ; must succeed
+        xor     r4,(r1)+        ; must succeed
+        xor     r5,@(r1)+       ; must succeed
+        xor     r2,-(r1)        ; must succeed
+        xor     r3,@-(r1)       ; must succeed
+        xor     r4,1234(r1)     ; must succeed
+        xor     r5,@1234(r1)    ; must succeed
+
+        xor     (r2),r1         ; must fail
+        xor     (r2)+,r1        ; must fail
+        xor     @(r2)+,r1       ; must fail
+        xor     -(r2),r1        ; must fail
+        xor     @-(r2),r1       ; must fail
+        xor     1234(r2),r1     ; must fail
+        xor     @1234(r2),r1    ; must fail
 
 label:  rts     pc

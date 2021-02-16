@@ -1,0 +1,44 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test case (in)sensitivity of .IF IDN/DIF.
+       4                                ;
+       5                                
+       6                                    ; Default: case insensitive.
+       7                                
+       8 000000    001                      .iif idn <hallo> <hallo>	.byte 1
+       9 000001    001                      .iif idn <HALLO> <hallo>	.byte 1
+      10 000002    001                      .iif idn <hallo> <HALLO>	.byte 1
+      11 000003    001                      .iif idn <HAllo> <halLO>	.byte 1
+      12                                
+      13                                    .iif dif <hallo> <hallo>	.byte 0
+      14                                    .iif dif <HALLO> <hallo>	.byte 0
+      15                                    .iif dif <hallo> <HALLO>	.byte 0
+      16                                    .iif dif <HAllo> <halLO>	.byte 0
+      17                                
+      18                                    .enabl lcm
+      19                                    ; Now: case sensitive
+      20                                
+      21 000004    001                      .iif idn <hallo> <hallo>	.byte 1
+      22                                    .iif idn <HALLO> <hallo>	.byte 0
+      23                                    .iif idn <hallo> <HALLO>	.byte 0
+      24                                    .iif idn <HAllo> <halLO>	.byte 0
+      25                                
+      26                                    .iif dif <hallo> <hallo>	.byte 0
+      27 000005    001                      .iif dif <HALLO> <hallo>	.byte 1
+      28 000006    001                      .iif dif <hallo> <HALLO>	.byte 1
+      29 000007    001                      .iif dif <HAllo> <halLO>	.byte 1
+      30                                
+      31                                    ; Setting is now non-default.
+      32                                    ; Check if it reverts to default in the next pass.
+      32                                
+
+
+Symbol table
+
+.       ******R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000010    001   (RW,I,LCL,REL,CON,NOSAV)

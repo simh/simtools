@@ -1,0 +1,12 @@
+language: c
+dist: bionic
+os:
+    - linux
+    - osx
+compiler:
+    - gcc
+    - clang
+script:
+  - make
+  - cd tests
+  - ./RunTests

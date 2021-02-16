@@ -1,0 +1,22 @@
+;;;;;;
+;
+; Test the (so far very basic) .LIST and .NLIST directives.
+;
+
+; This should get listed (list_level 1)
+	.nlist
+; This should NOT get listed (list_level 0)
+	.list
+; This should get listed (list_level 1)
+	.list
+; This should get listed (list_level 2)
+	.nlist
+; This should get listed (list_level 1)
+	.nlist
+; This should NOT get listed (list_level 0)
+	.nlist
+; This should NOT get listed (list_level -1)
+	.list
+; This should NOT get listed (list_level 0)
+	.list
+; This should get listed (list_level 1)

@@ -20,6 +20,12 @@
 	.word	12. / 4		; 000003
 	.word	123 & 771	; 000121
 	.word	123121 ! 322	; 123323
+five = 5
+a:	.word	123 _ 3	 	; 001230
+	.word	five _ 6	; 000500
+	.word	101_five	; 004040
+	.word	177400 _ -8.	; 000377
+	.word	a _ 3		; Complex relocation
 
 	.word	- 377		; 177401
 	.word	+ 377		; 000377
@@ -45,7 +51,7 @@
 	.word	^r<R D>		; bracketed strings are an extension
 	.word	^r<RA >		; bracketed strings are an extension
 	.word	^R50.		; 157614 there is no whitespace in between.
-	.word	^f 1.5		; 040140
+	.word	^f 1.5		; 040300
 
 ;;;;;
 ;
@@ -56,3 +62,42 @@
 	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
 	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
 	.word	1 + ^* 2 * 3 *	; Invalid expression
+
+;;;;;
+;
+; There was an obscure bug in parse_expr(), used to evaluate 'if df',
+; where it could skip past the end of the line marker.
+;
+; If this happened inside an expanded macro, then after that was the
+; next line...
+; In other cases it might be worse.
+;
+        .macro  dirdef  name,   flags,  cond
+        .rad50  /.'name/
+        .byte   flags+0,        0
+        .if df  cond
+        .globl  opcerr
+        .word   opcerr
+        .iff
+        .globl  name
+        .word   name
+        .endc
+        .endm
+
+        dirdef name
+
+        .word   (
+(
+
+        .word   _,$
+_
+$
+        .word   /
+        /
+        .word ^px
+        ^px
+	.word	^px / 256
+	^px / 256
+
+        1,2,3
+        .1,.2,.3

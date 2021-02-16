@@ -1,0 +1,41 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test .BLKB and .BLKW
+       4                                ;
+       5        000000                  label:	.blkb		; not recommended, but default argument is 1
+       6        000001                  	.blkb	1
+       7        000002                  	.blkb	2
+       8        000004                  	.blkb	100.
+test-blkb.mac:9: ***ERROR Argument to .BLKB/.BLKW must be constant
+       9                                	.blkb	label	; error: not an constant expression
+      10                                
+      11 000150    000                  	.odd
+      12                                
+      13        000151                  	.blkw	1	; should maybe be an error: odd address
+      14                                
+      15 000153    000                  	.even
+      16                                
+      17        000154                  label2:	.blkb		; not recommended, but default argument is 1
+      18        000155                  	.blkb	1
+      19        000156                  	.blkb	2
+      20        000160                  	.blkb	100.
+test-blkb.mac:21: ***ERROR Argument to .BLKB/.BLKW must be constant
+      21                                	.blkb	label2	; error: not an constant expression
+      22                                
+      23                                
+test-blkb.mac:24: ***ERROR .EVEN must not have an argument
+      24                                	.even	1	; error: no argument allowed
+test-blkb.mac:25: ***ERROR .ODD must not have an argument
+      25 000324    000                  	.odd	1	; error: no argument allowed
+      25                                
+
+
+Symbol table
+
+.       ******R      001 LABEL   000000R      001 LABEL2  000154R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000325    001   (RW,I,LCL,REL,CON,NOSAV)

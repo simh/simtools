@@ -5,7 +5,7 @@ test-undef.mac:1: ***ERROR MACRO .TTYOU not found
 
 Symbol table
 
-.      ******R      001 
+.       ******R      001 
 
 
 Program sections:

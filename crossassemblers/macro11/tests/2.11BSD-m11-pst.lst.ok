@@ -1,0 +1,3070 @@
+       1                                ;;;; Wrapper for 2.11BSD/m11/pst.m11
+       2                                	.list
+       3                                	.list
+       4                                	.list
+       5        000001                  debug	=	1
+       6                                	.include "2.11BSD/m11/at.sml"
+       1                                	.title	at.sml	-   assembler/translator system macros
+       2                                	; @(#)at.sml	1.3 11/3/82
+       3                                
+       4                                	.ident	/10may4/
+       5                                
+       6                                	.macro	always		;all files of macro
+       7                                
+       8                                	.macro	.data
+       9                                	entsec	.data
+      10                                	.endm	.data
+      11                                
+      12                                	.macro	.text
+      13                                	entsec	.text
+      14                                	.endm
+      15                                
+      16                                	.macro	.bss
+      17                                	entsec	.bss
+      18                                	.endm
+      19                                
+      20                                mk.symbol=1			;one to make symbols, 0 otherwise
+      21                                x40=	0
+      22                                pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      23                                				; if not you will have to write macros for them
+      24                                $timdf=	7			; California Time Zone
+      25                                				; should really use ftime(2) for this and for
+      26                                				; DST.
+      27                                ;xfltg=	0		;define to assmbl out floating hardware
+      28                                rsx11d	=	0	; rsx11d features 
+      29                                debug	=	0	; <<< REEDS if non zero includes debug junk
+      30                                
+      31                                ft.id=	1			;have set i & d.  set =0 if not
+      32                                
+      33                                ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      34                                
+      35                                	.nlist	bex
+      36                                
+      37                                tab=	11
+      38                                lf=	12
+      39                                vt=	13
+      40                                ff=	14
+      41                                cr=	15
+      42                                space=	40
+      43                                
+      44                                bpmb	=	20		;bytes per macro block
+      45                                
+      46                                
+      47                                
+      48                                
+      49                                
+      50                                	.psect	.text	con, shr, gbl,ins
+      51                                	.psect	.data	con, dat, prv, gbl
+      52                                	.psect	.bss	con, bss, gbl
+      53                                
+      54                                	.psect	dpure	con, dat, prv, gbl
+      55                                	.psect	mixed	con, prv, gbl
+      56                                	.psect	errmes	con, dat, prv, gbl
+      57                                	.psect	impure	con, bss, gbl
+      58                                	.psect	imppas	con, bss, gbl
+      59                                	.psect	implin	con, bss, gbl
+      60                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+      61                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+      62                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+      63                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+      64                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+      65                                	.psect	psasec 	con, dat, prv, gbl
+      66                                	.psect	pstsec 	con, dat, prv, gbl
+      67                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+      68                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+      69                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+      70                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      71                                
+      72                                
+      72                                
+      73                                	.macro	entsec	name 	;init a section
+      74                                	.psect	name	con
+      75                                	.endm	entsec
+      76                                
+      77                                
+      78                                
+      79                                	.macro jeq	x,?fred
+      80                                	bne	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	jne	x,?fred
+      85                                	beq	fred
+      86                                	jmp	x
+      87                                fred:
+      88                                	.endm
+      89                                	.macro	xitsec
+      90                                	entsec	.text
+      91                                	.endm	xitsec
+      92                                
+      93                                
+      94                                	.macro	call	address
+      95                                	jsr	pc,address
+      96                                	.endm
+      97                                
+      98                                	.macro	return
+      99                                	rts	pc
+     100                                	.endm
+     101                                
+     102                                
+     103                                	.macro	always
+     104                                	.nlist	bex
+     105                                	.endm	always
+     106                                	.endm	always
+     107                                
+     108                                
+     109        000001                  	.if ne debug
+     110                                	
+     111                                	.macro	ndebug n
+     112                                	.globl	ndebug,..z
+     113                                	mov	n,..z
+     114                                	call	ndebug
+     115                                	.endm
+     116                                
+     117                                	.macro	sdebug	string
+     118                                	.globl	sdebug,..z,..zbuf
+     119                                	x = 0
+     120                                	.irpc	t,<string>
+     121                                	movb	#''t,..zbuf+x
+     122                                	x = x+1
+     123                                	.endm
+     124                                	movb	#0,..zbuf+x
+     125                                	mov	#..zbuf,..z
+     126                                	call	sdebug
+     127                                	.endm
+     128                                
+     129                                	.iff
+     130                                	
+     131                                	.macro	ndebug n
+     132                                	.endm
+     133                                
+     134                                	.macro	sdebug	string
+     135                                	.endm
+     136                                	
+     137                                	.endc
+     138                                	
+     139                                	
+     140                                	.macro	param	mne,	value	;define default parameters
+     141                                	.iif ndf mne,	mne=	value
+     142                                	.list
+     143                                mne=	mne
+     144                                	.nlist
+     145                                	.endm
+     145                                
+     146                                	.macro	putkb	addr	;list to kb
+     147                                	.globl	putkb
+     148                                	mov	addr,r0
+     149                                	call	putkb
+     150                                	.endm
+     151                                
+     152                                	.macro	putlp	addr	;list to lp
+     153                                	.globl	putlp
+     154                                	mov	addr,r0
+     155                                	call	putlp
+     156                                	.endm
+     157                                
+     158                                	.macro	putkbl	addr	;list to kb and lp
+     159                                	.globl	putkbl
+     160                                	mov	addr,r0
+     161                                	call	putkbl
+     162                                	.endm
+     163                                
+     164                                
+     165                                	.macro	xmit	wrdcnt	;move small # of words
+     166                                	.globl	xmit0
+     167                                	call	xmit0-<wrdcnt*2>
+     168                                	.endm	xmit
+     169                                
+     170                                
+     171                                ;the macro "genswt" is used to specify  a command
+     172                                ;string switch (1st argument) and the address of
+     173                                ;the routine to be called when encountered (2nd arg).
+     174                                ; the switch is made upper-case.
+     175                                
+     176                                	.macro	genswt	mne,addr,?label
+     177                                	entsec	swtsec
+     178                                label:	.irpc	x,mne
+     179                                	.if ge ''x-141
+     180                                		.if le ''x-172
+     181                                			.byte ''x-40
+     182                                		.iff
+     183                                			.byte ''x
+     184                                		.endc
+     185                                	.iff
+     186                                	.byte ''x
+     187                                	.endc
+     188                                	.endm
+     189                                	.iif ne <.-label&1>,	.byte	0
+     190                                	.word	addr
+     191                                	xitsec
+     192                                	.endm
+     192                                
+     193                                	.macro	zread	chan
+     194                                	.globl	zread
+     195                                	mov	#chan'chn,r0
+     196                                	call	zread
+     197                                	.endm	zread
+     198                                
+     199                                	.macro	zwrite	chan
+     200                                	.globl	zwrite
+     201                                	mov	#chan'chn,r0
+     202                                	call	zwrite
+     203                                	.endm	zwrite
+     203                                
+     204                                	.macro	genedt	mne,subr	;gen enable/disable table
+     205                                	entsec	edtsec
+     206                                	.rad50	/mne/
+     207                                	.if nb	subr
+     208                                	.word	subr
+     209                                	.iff
+     210                                	.word	cpopj
+     211                                	.endc
+     212                                	.word	ed.'mne
+     213                                	xitsec
+     214                                	.endm	genedt
+     215                                
+     216                                
+     217                                ;the macro "gencnd" is used to specify conditional
+     218                                ;arguments.  it takes two or three arguments:
+     219                                
+     220                                ;	1-	mnemonic
+     221                                ;	2-	subroutine to be called
+     222                                ;	3-	if non-blank, complement condition
+     223                                
+     224                                	.macro	gencnd	mne,subr,toggle	;generate conditional
+     225                                	entsec	cndsec
+     226                                	.rad50	/mne/
+     227                                	.if b	<toggle>
+     228                                	.word	subr
+     229                                	.iff
+     230                                	.word	subr+1
+     231                                	.endc
+     232                                	xitsec
+     233                                	.endm
+     233                                
+     234                                	.macro	ch.mne
+     235                                
+     236                                ch.ior=	'!
+     237                                ch.qtm=	'"
+     238                                ch.hsh=	'#
+     239                                ch.dol=	'$
+     240                                ch.pct=	'%
+     241                                ch.and=	'&
+     242                                ch.xcl=	''
+     243                                
+     244                                ch.lp=	'(
+     245                                ch.rp=	')
+     246                                ch.mul=	'*
+     247                                ch.add=	'+
+     248                                ch.com=	',
+     249                                ch.sub=	'-
+     250                                ch.dot=	'.
+     251                                ch.div=	'/
+     252                                
+     253                                ch.col=	':
+     254                                ch.smc=	';
+     255                                ch.lab=	'<
+     256                                ch.equ=	'=
+     257                                ch.rab=	'>
+     258                                ch.qm=	'?
+     259                                
+     260                                ch.ind=	'@
+     261                                ch.bsl=	'\
+     262                                ch.uar=	'^
+     263                                
+     264                                let.a=	'a&^c40
+     265                                let.b=	'b&^c40
+     266                                let.c=	'c&^c40
+     267                                let.d=	'd&^c40
+     268                                let.e=	'e&^c40
+     269                                let.f=	'f&^c40
+     270                                let.g=	'g&^c40
+     271                                let.o=	'o&^c40
+     272                                let.p=	'p&^c40
+     273                                let.r=	'r&^c40
+     274                                let.z=	'z&^c40
+     275                                
+     276                                dig.0=	'0
+     277                                dig.9=	'9
+     278                                	.macro	ch.mne
+     279                                	.endm	ch.mne
+     280                                	.endm	ch.mne
+     281                                
+     282                                	.macro error num,arg, mess ,?x
+     283                                	sdebug	<num>
+     284                                	.globl	err.'arg,ern'num, errbts,errref
+     285                                	.if	b	<mess>
+     286                                	deliberate error mistake
+     287                                	.endc
+     288                                	.if	dif	0,num
+     289                                	.globl	err.xx
+     290                                	tst	err.xx
+     291                                	bne	x
+     292                                	mov	#ern'num,err.xx
+     293                                x:
+     294                                	.endc
+     295                                	bis	#err.'arg,errbts
+     296                                	.endm
+     297                                
+     298                                
+     299                                
+     300                                	.macro	setnz	addr	;set addr to non-zero for t/f flags
+     301                                	mov	sp,addr
+     302                                	.endm
+     303                                
+     304                                
+     305                                	.macro	bisbic	arg	; used by .list/.nlist, .enabl/.dsabl
+     306                                	.globl	bisbic
+     307                                	mov	#arg,-(sp)
+     308                                	call	bisbic
+     309                                	tst	(sp)+
+     310                                	.endm
+     310                                
+     311                                				;roll handler calls
+     312                                
+     313                                	.macro	search	rolnum	;binary search
+     314                                	mov	#rolnum,r0
+     315                                	.globl	search
+     316                                	call	search
+     317                                	.endm
+     318                                
+     319                                	.macro	scan	rolnum	;linear scan
+     320                                	mov	#rolnum,r0
+     321                                	.globl	scan
+     322                                	call	scan
+     323                                	.endm
+     324                                
+     325                                	.macro	scanw	rolnum	;linear scan, one word
+     326                                	mov	#rolnum,r0
+     327                                	.globl	scanw
+     328                                	call	scanw
+     329                                	.endm
+     330                                
+     331                                	.macro	next	rolnum	;fetch next entry
+     332                                	mov	#rolnum,r0
+     333                                	.globl	next
+     334                                	call	next
+     335                                	.endm
+     336                                
+     337                                	.macro	append	rolnum	;append to end of roll
+     338                                	mov	#rolnum,r0
+     339                                	.globl	append
+     340                                	call	append
+     341                                	.endm
+     342                                
+     343                                	.macro	zap	rolnum	;clear roll
+     344                                	mov	#rolnum,r0
+     345                                	.globl	zap
+     346                                	call	zap
+     347                                	.endm
+     348                                
+     349                                ;	call	insert		;insert (must be preceded by one 
+     350                                				;of the above to set pointers)
+     351                                ;	call	setrol		;save and set regs for above
+     351                                
+     352                                ;flags used in symbol table mode
+     353                                
+     354                                	.macro	st.flg
+     355                                
+     356                                .if le ft.unx
+     357                                
+     358                                ovrflg=	000004		;overlay (psect only)
+     359                                defflg=	000010		;defined
+     360                                relflg=	000040		;relocatable
+     361                                glbflg=	000100		;global
+     362                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     363                                
+     364                                
+     365                                .endc
+     366                                
+     367                                .if gt ft.unx
+     368                                
+     369                                			; ****** these should not be changed!! ******
+     370                                shrflg=	000001		;shareable (psect only)
+     371                                .if gt ft.id
+     372                                insflg=	shrflg*2	;instruction space (psect only)
+     373                                bssflg=	insflg*2	;blank section (psect only)
+     374                                m.idf=	shrflg!insflg!bssflg	;mask to turn them off
+     375                                .iff
+     376                                bssflg=	shrflg*2
+     377                                m.idf=	shrflg!bssflg
+     378                                .endc
+     379                                b.idf=	1		;shift count to make above bits word offset
+     380                                			; ***********************************
+     381                                defflg=	000010		;defined
+     382                                ovrflg=	000020		;overlay (psect only)
+     383                                relflg=	000040		;relocatable
+     384                                glbflg=	000100		;global
+     385                                dfgflg= 000200		; default global <rsx11d>... reeds's guess
+     386                                
+     387                                .endc
+     388                                
+     389                                ;
+     390                                ; default psect attribs.
+     391                                ; can be changed, but make sure all customers know about
+     392                                ; it, including all the linkers.
+     393                                ;
+     394                                pattrs=relflg!defflg		; For .psects and blank .csects
+     395                                aattrs=glbflg!defflg!ovrflg		; For .asect
+     396                                cattrs=glbflg!relflg!defflg!ovrflg	; For named .csects
+     397                                
+     398                                regflg=	000001		;register
+     399                                lblflg=	000002		;label
+     400                                mdfflg=	000004		;multilpy defined
+     401                                	.macro	st.flg
+     402                                	.endm
+     403                                	.endm	st.flg
+     404                                
+     405                                
+     406                                
+     407                                	.macro	ct.mne
+     408                                	.globl	cttbl
+     409                                ct.eol	=	000		; eol
+     410                                ct.com	=	001		; comma
+     411                                ct.tab	=	002		; tab
+     412                                ct.sp	=	004		; space
+     413                                ct.pcx	=	010		; printing character
+     414                                ct.num	=	020		; numeric
+     415                                ct.alp	=	040		; alpha, dot, dollar
+     416                                ct.lc	=	100		; lower case alpha
+     417                                ct.smc	=	200		; semi-colon (sign bit)
+     418                                
+     419                                ct.pc	=	ct.com!ct.smc!ct.pcx!ct.num!ct.alp
+     420                                	.macro	ct.mne
+     421                                	.endm	ct.mne
+     422                                	.endm	ct.mne
+     423                                
+     424                                
+     425                                	.end
+     425                                
+       7                                	.include "2.11BSD/m11/pst.m11"
+       1                                	.title	pst   v095a11	permanent symbol table
+       2                                
+       3                                	.ident	/03apr4/
+       4                                
+       5                                ;	copyright 1972  digital equipment corporation
+       6                                ;       15 nov 72
+       7                                
+       8                                	.mcall	(at) always
+       9 000000                         	always
+       1                                
+       2                                	.macro	.data
+       3                                	entsec	.data
+       4                                	.endm	.data
+       5                                
+       6                                	.macro	.text
+       7                                	entsec	.text
+       8                                	.endm
+       9                                
+      10                                	.macro	.bss
+      11                                	entsec	.bss
+      12                                	.endm
+      13                                
+      14        000001                  mk.symbol=1			;one to make symbols, 0 otherwise
+      15        000000                  x40=	0
+      16        000000                  pdpv45=	0			; host machine has 'mul', 'div', sob' instrucs.
+      17                                				; if not you will have to write macros for them
+      18        000007                  $timdf=	7			; California Time Zone
+      19                                				; should really use ftime(2) for this and for
+      20                                				; DST.
+      21                                ;xfltg=	0		;define to assmbl out floating hardware
+      22        000000                  rsx11d	=	0	; rsx11d features 
+      23        000000                  debug	=	0	; <<< REEDS if non zero includes debug junk
+      24                                
+      25        000001                  ft.id=	1			;have set i & d.  set =0 if not
+      26                                
+      27        000001                  ft.unx = 1			; this macro-11 is for UNIX.  =0 if not.
+      28                                
+      29                                	.nlist	bex
+      30                                
+      31        000011                  tab=	11
+      32        000012                  lf=	12
+      33        000013                  vt=	13
+      34        000014                  ff=	14
+      35        000015                  cr=	15
+      36        000040                  space=	40
+      37                                
+      38        000020                  bpmb	=	20		;bytes per macro block
+      39                                
+      40                                
+      41                                
+      42                                
+      43                                
+./2.11BSD/m11/pst.m11:9->ALWAYS:44: ***ERROR Unknown flag SHR given to .PSECT directive
+      44                                	.psect	.text	con, shr, gbl,ins
+./2.11BSD/m11/pst.m11:9->ALWAYS:45: ***ERROR Unknown flag DAT given to .PSECT directive
+      45                                	.psect	.data	con, dat, prv, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:46: ***ERROR Unknown flag BSS given to .PSECT directive
+      46                                	.psect	.bss	con, bss, gbl
+      47                                
+./2.11BSD/m11/pst.m11:9->ALWAYS:48: ***ERROR Unknown flag DAT given to .PSECT directive
+      48                                	.psect	dpure	con, dat, prv, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:49: ***ERROR Unknown flag PRV given to .PSECT directive
+      49                                	.psect	mixed	con, prv, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:50: ***ERROR Unknown flag DAT given to .PSECT directive
+      50                                	.psect	errmes	con, dat, prv, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:51: ***ERROR Unknown flag BSS given to .PSECT directive
+      51                                	.psect	impure	con, bss, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:52: ***ERROR Unknown flag BSS given to .PSECT directive
+      52                                	.psect	imppas	con, bss, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:53: ***ERROR Unknown flag BSS given to .PSECT directive
+      53                                	.psect	implin	con, bss, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:54: ***ERROR Unknown flag DAT given to .PSECT directive
+      54                                	.psect	swtsec	con, dat, prv, gbl	; unix command line flags
+./2.11BSD/m11/pst.m11:9->ALWAYS:55: ***ERROR Unknown flag DAT given to .PSECT directive
+      55                                	.psect	cndsec 	con, dat, prv, gbl	; gt, le, equ, etc.  for '.if'
+./2.11BSD/m11/pst.m11:9->ALWAYS:56: ***ERROR Unknown flag DAT given to .PSECT directive
+      56                                	.psect	crfsec 	con, dat, prv, gbl	; args for -cr flag
+./2.11BSD/m11/pst.m11:9->ALWAYS:57: ***ERROR Unknown flag DAT given to .PSECT directive
+      57                                	.psect	edtsec 	con, dat, prv, gbl	; args for .enabl
+./2.11BSD/m11/pst.m11:9->ALWAYS:58: ***ERROR Unknown flag DAT given to .PSECT directive
+      58                                	.psect	lctsec 	con, dat, prv, gbl	; args for .list
+./2.11BSD/m11/pst.m11:9->ALWAYS:59: ***ERROR Unknown flag DAT given to .PSECT directive
+      59                                	.psect	psasec 	con, dat, prv, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:60: ***ERROR Unknown flag DAT given to .PSECT directive
+      60                                	.psect	pstsec 	con, dat, prv, gbl
+./2.11BSD/m11/pst.m11:9->ALWAYS:61: ***ERROR Unknown flag DAT given to .PSECT directive
+      61                                	.psect	rolbas 	con, dat, prv, gbl	; core allocation: starts of tables
+./2.11BSD/m11/pst.m11:9->ALWAYS:62: ***ERROR Unknown flag DAT given to .PSECT directive
+      62                                	.psect	rolsiz 	con, dat, prv, gbl	; sizes of table entries
+./2.11BSD/m11/pst.m11:9->ALWAYS:63: ***ERROR Unknown flag DAT given to .PSECT directive
+      63                                	.psect	roltop 	con, dat, prv, gbl	; tops of tables
+./2.11BSD/m11/pst.m11:9->ALWAYS:64: ***ERROR Unknown flag BSS given to .PSECT directive
+      64                                	.psect	xpcor	con,bss	, gbl	; this one MUST come last in core
+      65                                
+      66                                
+      67                                
+      68                                	.macro	entsec	name 	;init a section
+      69                                	.psect	name	con
+      70                                	.endm	entsec
+      71                                
+      72                                
+      73                                
+      74                                	.macro jeq	x,?fred
+      75                                	bne	fred
+      76                                	jmp	x
+      77                                fred:
+      78                                	.endm
+      79                                	.macro	jne	x,?fred
+      80                                	beq	fred
+      81                                	jmp	x
+      82                                fred:
+      83                                	.endm
+      84                                	.macro	xitsec
+      85                                	entsec	.text
+      86                                	.endm	xitsec
+      87                                
+      88                                
+      89                                	.macro	call	address
+      90                                	jsr	pc,address
+      91                                	.endm
+      92                                
+      93                                	.macro	return
+      94                                	rts	pc
+      95                                	.endm
+      96                                
+      97                                
+      98                                	.macro	always
+      99                                	.nlist	bex
+     100                                	.endm	always
+      10                                
+      11                                	.globl	wrdsym		;pointer to .word
+      12                                
+      13        000200                  dr1=	200			;destructive reference in first field
+      14        000100                  dr2=	100			;destructive reference in second field
+      15                                
+      16                                	.globl	dflgdg,	dflgev,	dflgbm,	dflcnd,	dflmac,	dflsmc
+      17                                
+      18        000040                  dflgdg=	040			;data generating directive
+      19        000020                  dflgev=	020			;directive requires even location
+      20        000010                  dflgbm=	010			;directive uses byte mode
+      21        000004                  dflcnd=	004			;conditional directive
+      22        000002                  dflmac=	002			;macro directive
+      23        000001                  dflsmc=	001			;mcall
+      24                                
+      25                                	.if df	pal11r		;pal11r subset
+      26                                xmacro=	0
+      27                                x40=	0
+      28                                x45=	0
+      29                                	.endc
+      30                                
+      31                                	.if df	x40&x45
+      32        000000                  	xfltg=	0
+      33        000000                  	x4045=	0
+      34                                	.endc
+      35                                
+      36                                	.iif df x45!xfltg,	x45flt=	0
+      37                                
+      38        000000                  	.iif df x40!xfltg,	x40flt=	0
+      39                                
+      40                                	.iif df	xmacro,	xsml=	0
+      41                                
+      42                                	.macro	opcdef	name,	class,	value,	flags,	cond
+      43                                	aaaa = 0
+      44                                	.if	nb	cond
+      45                                	aaaa = 1
+      46                                	.endc
+      47                                	;.if ndf	cond	; this assembler can assemble for any pdp-11
+      48                                	.rad50	/name/
+      49                                	.byte	flags+aaaa
+      50                                	.globl	opcl'class
+      51                                	.byte	200+opcl'class
+      52                                	.word	value
+      53                                	;.endc
+      54                                	.endm
+      55                                
+      56                                	.macro	dirdef	name,	flags,	cond
+      57                                	.rad50	/.'name/
+      58                                	.byte	flags+0,	0
+      59                                	.if df	cond
+      60                                	.globl	opcerr
+      61                                	.word	opcerr
+      62                                	.iff
+      63                                	.globl	name
+      64                                	.word	name
+      65                                	.endc
+      66                                	.endm
+      67                                
+      68                                	;.psect	pstsec	con, shr	;pst is shareable
+      69 000000                         	.psect	pstsec	con		; << not in v7 unix it aint!
+      70                                
+      71 000000                         	entsec	pstsec
+       1 000000                         	.psect	pstsec	con
+      72 000000                         	opcdef	<absd  >,	01,	170600,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000000 003243  014400          	.rad50	/absd  /
+       7 000004    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000005    200G                 	.byte	200+opcl01
+      10 000006 170600                  	.word	170600
+      11                                	;.endc
+      73 000010                         	opcdef	<absf  >,	01,	170600,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000010 003243  022600          	.rad50	/absf  /
+       7 000014    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000015    200G                 	.byte	200+opcl01
+      10 000016 170600                  	.word	170600
+      11                                	;.endc
+      74 000020                         	opcdef	<adc   >,	01,	005500,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000020 003343  000000          	.rad50	/adc   /
+       7 000024    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000025    200G                 	.byte	200+opcl01
+      10 000026 005500                  	.word	005500
+      11                                	;.endc
+      75 000030                         	opcdef	<adcb  >,	01,	105500,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000030 003343  006200          	.rad50	/adcb  /
+       7 000034    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000035    200G                 	.byte	200+opcl01
+      10 000036 105500                  	.word	105500
+      11                                	;.endc
+      76 000040                         	opcdef	<add   >,	02,	060000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000040 003344  000000          	.rad50	/add   /
+       7 000044    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 000045    200G                 	.byte	200+opcl02
+      10 000046 060000                  	.word	060000
+      11                                	;.endc
+      77 000050                         	opcdef	<addd  >,	11,	172000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000050 003344  014400          	.rad50	/addd  /
+       7 000054    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 000055    200G                 	.byte	200+opcl11
+      10 000056 172000                  	.word	172000
+      11                                	;.endc
+      78 000060                         	opcdef	<addf  >,	11,	172000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000060 003344  022600          	.rad50	/addf  /
+       7 000064    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 000065    200G                 	.byte	200+opcl11
+      10 000066 172000                  	.word	172000
+      11                                	;.endc
+      79 000070                         	opcdef	<ash   >,	09,	072000,	dr2,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 000070 004500  000000          	.rad50	/ash   /
+       7 000074    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl09
+       9 000075    200G                 	.byte	200+opcl09
+      10 000076 072000                  	.word	072000
+      11                                	;.endc
+      80 000100                         	opcdef	<ashc  >,	09,	073000,	dr2,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 000100 004500  011300          	.rad50	/ashc  /
+       7 000104    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl09
+       9 000105    200G                 	.byte	200+opcl09
+      10 000106 073000                  	.word	073000
+      11                                	;.endc
+      81 000110                         	opcdef	<asl   >,	01,	006300,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000110 004504  000000          	.rad50	/asl   /
+       7 000114    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000115    200G                 	.byte	200+opcl01
+      10 000116 006300                  	.word	006300
+      11                                	;.endc
+      82 000120                         	opcdef	<aslb  >,	01,	106300,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000120 004504  006200          	.rad50	/aslb  /
+       7 000124    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000125    200G                 	.byte	200+opcl01
+      10 000126 106300                  	.word	106300
+      11                                	;.endc
+      83 000130                         	opcdef	<asr   >,	01,	006200,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000130 004512  000000          	.rad50	/asr   /
+       7 000134    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000135    200G                 	.byte	200+opcl01
+      10 000136 006200                  	.word	006200
+      11                                	;.endc
+      84 000140                         	opcdef	<asrb  >,	01,	106200,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000140 004512  006200          	.rad50	/asrb  /
+       7 000144    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000145    200G                 	.byte	200+opcl01
+      10 000146 106200                  	.word	106200
+      11                                	;.endc
+      85 000150                         	opcdef	<bcc   >,	04,	103000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000150 006373  000000          	.rad50	/bcc   /
+       7 000154    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000155    200G                 	.byte	200+opcl04
+      10 000156 103000                  	.word	103000
+      11                                	;.endc
+      86 000160                         	opcdef	<bcs   >,	04,	103400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000160 006413  000000          	.rad50	/bcs   /
+       7 000164    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000165    200G                 	.byte	200+opcl04
+      10 000166 103400                  	.word	103400
+      11                                	;.endc
+      87 000170                         	opcdef	<beq   >,	04,	001400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000170 006531  000000          	.rad50	/beq   /
+       7 000174    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000175    200G                 	.byte	200+opcl04
+      10 000176 001400                  	.word	001400
+      11                                	;.endc
+      88 000200                         	opcdef	<bge   >,	04,	002000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000200 006635  000000          	.rad50	/bge   /
+       7 000204    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000205    200G                 	.byte	200+opcl04
+      10 000206 002000                  	.word	002000
+      11                                	;.endc
+      89 000210                         	opcdef	<bgt   >,	04,	003000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000210 006654  000000          	.rad50	/bgt   /
+       7 000214    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000215    200G                 	.byte	200+opcl04
+      10 000216 003000                  	.word	003000
+      11                                	;.endc
+      90 000220                         	opcdef	<bhi   >,	04,	101000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000220 006711  000000          	.rad50	/bhi   /
+       7 000224    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000225    200G                 	.byte	200+opcl04
+      10 000226 101000                  	.word	101000
+      11                                	;.endc
+      91 000230                         	opcdef	<bhis  >,	04,	103000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000230 006711  073300          	.rad50	/bhis  /
+       7 000234    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000235    200G                 	.byte	200+opcl04
+      10 000236 103000                  	.word	103000
+      11                                	;.endc
+      92 000240                         	opcdef	<bic   >,	02,	040000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000240 006753  000000          	.rad50	/bic   /
+       7 000244    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 000245    200G                 	.byte	200+opcl02
+      10 000246 040000                  	.word	040000
+      11                                	;.endc
+      93 000250                         	opcdef	<bicb  >,	02,	140000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000250 006753  006200          	.rad50	/bicb  /
+       7 000254    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 000255    200G                 	.byte	200+opcl02
+      10 000256 140000                  	.word	140000
+      11                                	;.endc
+      94 000260                         	opcdef	<bis   >,	02,	050000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000260 006773  000000          	.rad50	/bis   /
+       7 000264    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 000265    200G                 	.byte	200+opcl02
+      10 000266 050000                  	.word	050000
+      11                                	;.endc
+      95 000270                         	opcdef	<bisb  >,	02,	150000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000270 006773  006200          	.rad50	/bisb  /
+       7 000274    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 000275    200G                 	.byte	200+opcl02
+      10 000276 150000                  	.word	150000
+      11                                	;.endc
+      96 000300                         	opcdef	<bit   >,	02,	030000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000300 006774  000000          	.rad50	/bit   /
+       7 000304    000                  	.byte	+aaaa
+       8                                	.globl	opcl02
+       9 000305    200G                 	.byte	200+opcl02
+      10 000306 030000                  	.word	030000
+      11                                	;.endc
+      97 000310                         	opcdef	<bitb  >,	02,	130000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000310 006774  006200          	.rad50	/bitb  /
+       7 000314    000                  	.byte	+aaaa
+       8                                	.globl	opcl02
+       9 000315    200G                 	.byte	200+opcl02
+      10 000316 130000                  	.word	130000
+      11                                	;.endc
+      98 000320                         	opcdef	<ble   >,	04,	003400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000320 007145  000000          	.rad50	/ble   /
+       7 000324    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000325    200G                 	.byte	200+opcl04
+      10 000326 003400                  	.word	003400
+      11                                	;.endc
+      99 000330                         	opcdef	<blo   >,	04,	103400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000330 007157  000000          	.rad50	/blo   /
+       7 000334    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000335    200G                 	.byte	200+opcl04
+      10 000336 103400                  	.word	103400
+      11                                	;.endc
+     100 000340                         	opcdef	<blos  >,	04,	101400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000340 007157  073300          	.rad50	/blos  /
+       7 000344    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000345    200G                 	.byte	200+opcl04
+      10 000346 101400                  	.word	101400
+      11                                	;.endc
+     101 000350                         	opcdef	<blt   >,	04,	002400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000350 007164  000000          	.rad50	/blt   /
+       7 000354    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000355    200G                 	.byte	200+opcl04
+      10 000356 002400                  	.word	002400
+      11                                	;.endc
+     102 000360                         	opcdef	<bmi   >,	04,	100400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000360 007221  000000          	.rad50	/bmi   /
+       7 000364    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000365    200G                 	.byte	200+opcl04
+      10 000366 100400                  	.word	100400
+      11                                	;.endc
+     103 000370                         	opcdef	<bne   >,	04,	001000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000370 007265  000000          	.rad50	/bne   /
+       7 000374    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000375    200G                 	.byte	200+opcl04
+      10 000376 001000                  	.word	001000
+      11                                	;.endc
+     104 000400                         	opcdef	<bpl   >,	04,	100000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000400 007414  000000          	.rad50	/bpl   /
+       7 000404    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000405    200G                 	.byte	200+opcl04
+      10 000406 100000                  	.word	100000
+      11                                	;.endc
+     105 000410                         	opcdef	<bpt   >,	00,	000003,	 
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000410 007424  000000          	.rad50	/bpt   /
+       7 000414    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000415    200G                 	.byte	200+opcl00
+      10 000416 000003                  	.word	000003
+      11                                	;.endc
+     106 000420                         	opcdef	<br    >,	04,	000400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000420 007520  000000          	.rad50	/br    /
+       7 000424    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000425    200G                 	.byte	200+opcl04
+      10 000426 000400                  	.word	000400
+      11                                	;.endc
+     107 000430                         	opcdef	<bvc   >,	04,	102000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000430 007763  000000          	.rad50	/bvc   /
+       7 000434    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000435    200G                 	.byte	200+opcl04
+      10 000436 102000                  	.word	102000
+      11                                	;.endc
+     108 000440                         	opcdef	<bvs   >,	04,	102400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000440 010003  000000          	.rad50	/bvs   /
+       7 000444    000                  	.byte	+aaaa
+       8                                	.globl	opcl04
+       9 000445    200G                 	.byte	200+opcl04
+      10 000446 102400                  	.word	102400
+      11                                	;.endc
+     109 000450                         	opcdef	<call  >,	01,	004700,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000450 011364  045400          	.rad50	/call  /
+       7 000454    000                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 000455    200G                 	.byte	200+opcl01
+      10 000456 004700                  	.word	004700
+      11                                	;.endc
+     110 000460                         	opcdef	<ccc   >,	00,	000257,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000460 011473  000000          	.rad50	/ccc   /
+       7 000464    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000465    200G                 	.byte	200+opcl00
+      10 000466 000257                  	.word	000257
+      11                                	;.endc
+     111 000470                         	opcdef	<cfcc  >,	00,	170000,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000470 011663  011300          	.rad50	/cfcc  /
+       7 000474    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000475    200G                 	.byte	200+opcl00
+      10 000476 170000                  	.word	170000
+      11                                	;.endc
+     112 000500                         	opcdef	<clc   >,	00,	000241,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000500 012243  000000          	.rad50	/clc   /
+       7 000504    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000505    200G                 	.byte	200+opcl00
+      10 000506 000241                  	.word	000241
+      11                                	;.endc
+     113 000510                         	opcdef	<cln   >,	00,	000250,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000510 012256  000000          	.rad50	/cln   /
+       7 000514    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000515    200G                 	.byte	200+opcl00
+      10 000516 000250                  	.word	000250
+      11                                	;.endc
+     114 000520                         	opcdef	<clr   >,	01,	005000,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000520 012262  000000          	.rad50	/clr   /
+       7 000524    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000525    200G                 	.byte	200+opcl01
+      10 000526 005000                  	.word	005000
+      11                                	;.endc
+     115 000530                         	opcdef	<clrb  >,	01,	105000,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000530 012262  006200          	.rad50	/clrb  /
+       7 000534    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000535    200G                 	.byte	200+opcl01
+      10 000536 105000                  	.word	105000
+      11                                	;.endc
+     116 000540                         	opcdef	<clrd  >,	01,	170400,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000540 012262  014400          	.rad50	/clrd  /
+       7 000544    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000545    200G                 	.byte	200+opcl01
+      10 000546 170400                  	.word	170400
+      11                                	;.endc
+     117 000550                         	opcdef	<clrf  >,	01,	170400,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000550 012262  022600          	.rad50	/clrf  /
+       7 000554    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000555    200G                 	.byte	200+opcl01
+      10 000556 170400                  	.word	170400
+      11                                	;.endc
+     118 000560                         	opcdef	<clv   >,	00,	000242,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000560 012266  000000          	.rad50	/clv   /
+       7 000564    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000565    200G                 	.byte	200+opcl00
+      10 000566 000242                  	.word	000242
+      11                                	;.endc
+     119 000570                         	opcdef	<clz   >,	00,	000244,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000570 012272  000000          	.rad50	/clz   /
+       7 000574    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000575    200G                 	.byte	200+opcl00
+      10 000576 000244                  	.word	000244
+      11                                	;.endc
+     120 000600                         	opcdef	<cmp   >,	02,	020000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000600 012330  000000          	.rad50	/cmp   /
+       7 000604    000                  	.byte	+aaaa
+       8                                	.globl	opcl02
+       9 000605    200G                 	.byte	200+opcl02
+      10 000606 020000                  	.word	020000
+      11                                	;.endc
+     121 000610                         	opcdef	<cmpb  >,	02,	120000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000610 012330  006200          	.rad50	/cmpb  /
+       7 000614    000                  	.byte	+aaaa
+       8                                	.globl	opcl02
+       9 000615    200G                 	.byte	200+opcl02
+      10 000616 120000                  	.word	120000
+      11                                	;.endc
+     122 000620                         	opcdef	<cmpd  >,	11,	173400,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000620 012330  014400          	.rad50	/cmpd  /
+       7 000624    001                  	.byte	+aaaa
+       8                                	.globl	opcl11
+       9 000625    200G                 	.byte	200+opcl11
+      10 000626 173400                  	.word	173400
+      11                                	;.endc
+     123 000630                         	opcdef	<cmpf  >,	11,	173400,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000630 012330  022600          	.rad50	/cmpf  /
+       7 000634    001                  	.byte	+aaaa
+       8                                	.globl	opcl11
+       9 000635    200G                 	.byte	200+opcl11
+      10 000636 173400                  	.word	173400
+      11                                	;.endc
+     124 000640                         	opcdef	<cnz   >,	00,	000254,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000640 012412  000000          	.rad50	/cnz   /
+       7 000644    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 000645    200G                 	.byte	200+opcl00
+      10 000646 000254                  	.word	000254
+      11                                	;.endc
+     125 000650                         	opcdef	<com   >,	01,	005100,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000650 012445  000000          	.rad50	/com   /
+       7 000654    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000655    200G                 	.byte	200+opcl01
+      10 000656 005100                  	.word	005100
+      11                                	;.endc
+     126 000660                         	opcdef	<comb  >,	01,	105100,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000660 012445  006200          	.rad50	/comb  /
+       7 000664    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000665    200G                 	.byte	200+opcl01
+      10 000666 105100                  	.word	105100
+      11                                	;.endc
+     127 000670                         	opcdef	<dec   >,	01,	005300,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000670 014713  000000          	.rad50	/dec   /
+       7 000674    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000675    200G                 	.byte	200+opcl01
+      10 000676 005300                  	.word	005300
+      11                                	;.endc
+     128 000700                         	opcdef	<decb  >,	01,	105300,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000700 014713  006200          	.rad50	/decb  /
+       7 000704    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 000705    200G                 	.byte	200+opcl01
+      10 000706 105300                  	.word	105300
+      11                                	;.endc
+     129 000710                         	opcdef	<div   >,	07,	071000,	dr2,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 000710 015176  000000          	.rad50	/div   /
+       7 000714    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl07
+       9 000715    200G                 	.byte	200+opcl07
+      10 000716 071000                  	.word	071000
+      11                                	;.endc
+     130 000720                         	opcdef	<divd  >,	11,	174400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000720 015176  014400          	.rad50	/divd  /
+       7 000724    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 000725    200G                 	.byte	200+opcl11
+      10 000726 174400                  	.word	174400
+      11                                	;.endc
+     131 000730                         	opcdef	<divf  >,	11,	174400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 000730 015176  022600          	.rad50	/divf  /
+       7 000734    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 000735    200G                 	.byte	200+opcl11
+      10 000736 174400                  	.word	174400
+      11                                	;.endc
+     132 000740                         	opcdef	<emt   >,	06,	104000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 000740 020534  000000          	.rad50	/emt   /
+       7 000744    000                  	.byte	+aaaa
+       8                                	.globl	opcl06
+       9 000745    200G                 	.byte	200+opcl06
+      10 000746 104000                  	.word	104000
+      11                                	;.endc
+     133 000750                         	opcdef	<fadd  >,	03,	075000,	dr1,	x40flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x40flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x40flt	; this assembler can assemble for any pdp-11
+       6 000750 022654  014400          	.rad50	/fadd  /
+       7 000754    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl03
+       9 000755    200G                 	.byte	200+opcl03
+      10 000756 075000                  	.word	075000
+      11                                	;.endc
+     134 000760                         	opcdef	<fdiv  >,	03,	075030,	dr1,	x40flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x40flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x40flt	; this assembler can assemble for any pdp-11
+       6 000760 023051  104600          	.rad50	/fdiv  /
+       7 000764    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl03
+       9 000765    200G                 	.byte	200+opcl03
+      10 000766 075030                  	.word	075030
+      11                                	;.endc
+     135 000770                         	opcdef	<fmul  >,	03,	075020,	dr1,	x40flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x40flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x40flt	; this assembler can assemble for any pdp-11
+       6 000770 023635  045400          	.rad50	/fmul  /
+       7 000774    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl03
+       9 000775    200G                 	.byte	200+opcl03
+      10 000776 075020                  	.word	075020
+      11                                	;.endc
+     136 001000                         	opcdef	<fsub  >,	03,	075010,	dr1,	x40flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x40flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x40flt	; this assembler can assemble for any pdp-11
+       6 001000 024215  006200          	.rad50	/fsub  /
+       7 001004    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl03
+       9 001005    200G                 	.byte	200+opcl03
+      10 001006 075010                  	.word	075010
+      11                                	;.endc
+     137 001010                         	opcdef	<halt  >,	00,	000000,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001010 031064  076400          	.rad50	/halt  /
+       7 001014    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001015    200G                 	.byte	200+opcl00
+      10 001016 000000                  	.word	000000
+      11                                	;.endc
+     138 001020                         	opcdef	<inc   >,	01,	005200,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001020 035163  000000          	.rad50	/inc   /
+       7 001024    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001025    200G                 	.byte	200+opcl01
+      10 001026 005200                  	.word	005200
+      11                                	;.endc
+     139 001030                         	opcdef	<incb  >,	01,	105200,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001030 035163  006200          	.rad50	/incb  /
+       7 001034    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001035    200G                 	.byte	200+opcl01
+      10 001036 105200                  	.word	105200
+      11                                	;.endc
+     140 001040                         	opcdef	<iot   >,	00,	000004,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001040 035254  000000          	.rad50	/iot   /
+       7 001044    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001045    200G                 	.byte	200+opcl00
+      10 001046 000004                  	.word	000004
+      11                                	;.endc
+     141 001050                         	opcdef	<jmp   >,	01,	000100,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001050 040230  000000          	.rad50	/jmp   /
+       7 001054    000                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 001055    200G                 	.byte	200+opcl01
+      10 001056 000100                  	.word	000100
+      11                                	;.endc
+     142 001060                         	opcdef	<jsr   >,	05,	004000,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001060 040612  000000          	.rad50	/jsr   /
+       7 001064    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl05
+       9 001065    200G                 	.byte	200+opcl05
+      10 001066 004000                  	.word	004000
+      11                                	;.endc
+     143 001070                         	opcdef	<ldcdf >,	11,	177400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001070 045643  014760          	.rad50	/ldcdf /
+       7 001074    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001075    200G                 	.byte	200+opcl11
+      10 001076 177400                  	.word	177400
+      11                                	;.endc
+     144 001100                         	opcdef	<ldcfd >,	11,	177400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001100 045643  023040          	.rad50	/ldcfd /
+       7 001104    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001105    200G                 	.byte	200+opcl11
+      10 001106 177400                  	.word	177400
+      11                                	;.endc
+     145 001110                         	opcdef	<ldcid >,	14,	177000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001110 045643  034340          	.rad50	/ldcid /
+       7 001114    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl14
+       9 001115    200G                 	.byte	200+opcl14
+      10 001116 177000                  	.word	177000
+      11                                	;.endc
+     146 001120                         	opcdef	<ldcif >,	14,	177000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001120 045643  034460          	.rad50	/ldcif /
+       7 001124    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl14
+       9 001125    200G                 	.byte	200+opcl14
+      10 001126 177000                  	.word	177000
+      11                                	;.endc
+     147 001130                         	opcdef	<ldcld >,	14,	177000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001130 045643  045640          	.rad50	/ldcld /
+       7 001134    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl14
+       9 001135    200G                 	.byte	200+opcl14
+      10 001136 177000                  	.word	177000
+      11                                	;.endc
+     148 001140                         	opcdef	<ldclf >,	14,	177000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001140 045643  045760          	.rad50	/ldclf /
+       7 001144    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl14
+       9 001145    200G                 	.byte	200+opcl14
+      10 001146 177000                  	.word	177000
+      11                                	;.endc
+     149 001150                         	opcdef	<ldd   >,	11,	172400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001150 045644  000000          	.rad50	/ldd   /
+       7 001154    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001155    200G                 	.byte	200+opcl11
+      10 001156 172400                  	.word	172400
+      11                                	;.endc
+     150 001160                         	opcdef	<ldexp >,	14,	176400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001160 045645  114200          	.rad50	/ldexp /
+       7 001164    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl14
+       9 001165    200G                 	.byte	200+opcl14
+      10 001166 176400                  	.word	176400
+      11                                	;.endc
+     151 001170                         	opcdef	<ldf   >,	11,	172400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001170 045646  000000          	.rad50	/ldf   /
+       7 001174    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001175    200G                 	.byte	200+opcl11
+      10 001176 172400                  	.word	172400
+      11                                	;.endc
+     152 001200                         	opcdef	<ldfps >,	01,	170100,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001200 045646  063370          	.rad50	/ldfps /
+       7 001204    001                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 001205    200G                 	.byte	200+opcl01
+      10 001206 170100                  	.word	170100
+      11                                	;.endc
+     153 001210                         	opcdef	<ldsc  >,	00,	170004,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001210 045663  011300          	.rad50	/ldsc  /
+       7 001214    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001215    200G                 	.byte	200+opcl00
+      10 001216 170004                  	.word	170004
+      11                                	;.endc
+     154 001220                         	opcdef	<ldub  >,	00,	170003,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001220 045665  006200          	.rad50	/ldub  /
+       7 001224    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001225    200G                 	.byte	200+opcl00
+      10 001226 170003                  	.word	170003
+      11                                	;.endc
+     155 001230                         	opcdef	<mark  >,	10,	006400,	   ,	x45
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45	; this assembler can assemble for any pdp-11
+       6 001230 050572  042300          	.rad50	/mark  /
+       7 001234    001                  	.byte	+aaaa
+       8                                	.globl	opcl10
+       9 001235    200G                 	.byte	200+opcl10
+      10 001236 006400                  	.word	006400
+      11                                	;.endc
+     156 001240                         	opcdef	<mfpd  >,	01,	106500,	   ,	x45
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45	; this assembler can assemble for any pdp-11
+       6 001240 051100  014400          	.rad50	/mfpd  /
+       7 001244    001                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 001245    200G                 	.byte	200+opcl01
+      10 001246 106500                  	.word	106500
+      11                                	;.endc
+     157 001250                         	opcdef	<mfpi  >,	01,	006500,	   ,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 001250 051100  034100          	.rad50	/mfpi  /
+       7 001254    001                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 001255    200G                 	.byte	200+opcl01
+      10 001256 006500                  	.word	006500
+      11                                	;.endc
+     158 001260                         	opcdef	<modd  >,	11,	171400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001260 051634  014400          	.rad50	/modd  /
+       7 001264    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001265    200G                 	.byte	200+opcl11
+      10 001266 171400                  	.word	171400
+      11                                	;.endc
+     159 001270                         	opcdef	<modf  >,	11,	171400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001270 051634  022600          	.rad50	/modf  /
+       7 001274    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001275    200G                 	.byte	200+opcl11
+      10 001276 171400                  	.word	171400
+      11                                	;.endc
+     160 001300                         	opcdef	<mov   >,	02,	010000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001300 051656  000000          	.rad50	/mov   /
+       7 001304    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 001305    200G                 	.byte	200+opcl02
+      10 001306 010000                  	.word	010000
+      11                                	;.endc
+     161 001310                         	opcdef	<movb  >,	02,	110000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001310 051656  006200          	.rad50	/movb  /
+       7 001314    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 001315    200G                 	.byte	200+opcl02
+      10 001316 110000                  	.word	110000
+      11                                	;.endc
+     162 001320                         	opcdef	<mtpd  >,	01,	106600,	dr1,	x45
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45	; this assembler can assemble for any pdp-11
+       6 001320 052160  014400          	.rad50	/mtpd  /
+       7 001324    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001325    200G                 	.byte	200+opcl01
+      10 001326 106600                  	.word	106600
+      11                                	;.endc
+     163 001330                         	opcdef	<mtpi  >,	01,	006600,	dr1,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 001330 052160  034100          	.rad50	/mtpi  /
+       7 001334    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001335    200G                 	.byte	200+opcl01
+      10 001336 006600                  	.word	006600
+      11                                	;.endc
+     164 001340                         	opcdef	<mul   >,	07,	070000,	dr2,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 001340 052224  000000          	.rad50	/mul   /
+       7 001344    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl07
+       9 001345    200G                 	.byte	200+opcl07
+      10 001346 070000                  	.word	070000
+      11                                	;.endc
+     165 001350                         	opcdef	<muld  >,	11,	171000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001350 052224  014400          	.rad50	/muld  /
+       7 001354    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001355    200G                 	.byte	200+opcl11
+      10 001356 171000                  	.word	171000
+      11                                	;.endc
+     166 001360                         	opcdef	<mulf  >,	11,	171000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001360 052224  022600          	.rad50	/mulf  /
+       7 001364    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 001365    200G                 	.byte	200+opcl11
+      10 001366 171000                  	.word	171000
+      11                                	;.endc
+     167 001370                         	opcdef	<neg   >,	01,	005400,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001370 054117  000000          	.rad50	/neg   /
+       7 001374    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001375    200G                 	.byte	200+opcl01
+      10 001376 005400                  	.word	005400
+      11                                	;.endc
+     168 001400                         	opcdef	<negb  >,	01,	105400,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001400 054117  006200          	.rad50	/negb  /
+       7 001404    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001405    200G                 	.byte	200+opcl01
+      10 001406 105400                  	.word	105400
+      11                                	;.endc
+     169 001410                         	opcdef	<negd  >,	01,	170700,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001410 054117  014400          	.rad50	/negd  /
+       7 001414    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001415    200G                 	.byte	200+opcl01
+      10 001416 170700                  	.word	170700
+      11                                	;.endc
+     170 001420                         	opcdef	<negf  >,	01,	170700,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001420 054117  022600          	.rad50	/negf  /
+       7 001424    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001425    200G                 	.byte	200+opcl01
+      10 001426 170700                  	.word	170700
+      11                                	;.endc
+     171 001430                         	opcdef	<nop   >,	00,	000240,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001430 054750  000000          	.rad50	/nop   /
+       7 001434    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001435    200G                 	.byte	200+opcl00
+      10 001436 000240                  	.word	000240
+      11                                	;.endc
+     172 001440                         	opcdef	<reset >,	00,	000005,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001440 070533  021140          	.rad50	/reset /
+       7 001444    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001445    200G                 	.byte	200+opcl00
+      10 001446 000005                  	.word	000005
+      11                                	;.endc
+     173 001450                         	opcdef	<return>,	00,	000207,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001450 070534  103036          	.rad50	/return/
+       7 001454    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001455    200G                 	.byte	200+opcl00
+      10 001456 000207                  	.word	000207
+      11                                	;.endc
+     174 001460                         	opcdef	<rol   >,	01,	006100,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001460 071344  000000          	.rad50	/rol   /
+       7 001464    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001465    200G                 	.byte	200+opcl01
+      10 001466 006100                  	.word	006100
+      11                                	;.endc
+     175 001470                         	opcdef	<rolb  >,	01,	106100,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001470 071344  006200          	.rad50	/rolb  /
+       7 001474    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001475    200G                 	.byte	200+opcl01
+      10 001476 106100                  	.word	106100
+      11                                	;.endc
+     176 001500                         	opcdef	<ror   >,	01,	006000,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001500 071352  000000          	.rad50	/ror   /
+       7 001504    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001505    200G                 	.byte	200+opcl01
+      10 001506 006000                  	.word	006000
+      11                                	;.endc
+     177 001510                         	opcdef	<rorb  >,	01,	106000,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001510 071352  006200          	.rad50	/rorb  /
+       7 001514    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001515    200G                 	.byte	200+opcl01
+      10 001516 106000                  	.word	106000
+      11                                	;.endc
+     178 001520                         	opcdef	<rti   >,	00,	000002,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001520 071651  000000          	.rad50	/rti   /
+       7 001524    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001525    200G                 	.byte	200+opcl00
+      10 001526 000002                  	.word	000002
+      11                                	;.endc
+     179 001530                         	opcdef	<rts   >,	03,	000200,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001530 071663  000000          	.rad50	/rts   /
+       7 001534    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl03
+       9 001535    200G                 	.byte	200+opcl03
+      10 001536 000200                  	.word	000200
+      11                                	;.endc
+     180 001540                         	opcdef	<rtt   >,	00,	000006,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001540 071664  000000          	.rad50	/rtt   /
+       7 001544    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001545    200G                 	.byte	200+opcl00
+      10 001546 000006                  	.word	000006
+      11                                	;.endc
+     181 001550                         	opcdef	<sbc   >,	01,	005600,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001550 073423  000000          	.rad50	/sbc   /
+       7 001554    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001555    200G                 	.byte	200+opcl01
+      10 001556 005600                  	.word	005600
+      11                                	;.endc
+     182 001560                         	opcdef	<sbcb  >,	01,	105600,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001560 073423  006200          	.rad50	/sbcb  /
+       7 001564    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 001565    200G                 	.byte	200+opcl01
+      10 001566 105600                  	.word	105600
+      11                                	;.endc
+     183 001570                         	opcdef	<scc   >,	00,	000277,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001570 073473  000000          	.rad50	/scc   /
+       7 001574    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001575    200G                 	.byte	200+opcl00
+      10 001576 000277                  	.word	000277
+      11                                	;.endc
+     184 001600                         	opcdef	<sec   >,	00,	000261,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001600 073613  000000          	.rad50	/sec   /
+       7 001604    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001605    200G                 	.byte	200+opcl00
+      10 001606 000261                  	.word	000261
+      11                                	;.endc
+     185 001610                         	opcdef	<sen   >,	00,	000270,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001610 073626  000000          	.rad50	/sen   /
+       7 001614    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001615    200G                 	.byte	200+opcl00
+      10 001616 000270                  	.word	000270
+      11                                	;.endc
+     186 001620                         	opcdef	<setd  >,	00,	170011,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001620 073634  014400          	.rad50	/setd  /
+       7 001624    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001625    200G                 	.byte	200+opcl00
+      10 001626 170011                  	.word	170011
+      11                                	;.endc
+     187 001630                         	opcdef	<setf  >,	00,	170001,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001630 073634  022600          	.rad50	/setf  /
+       7 001634    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001635    200G                 	.byte	200+opcl00
+      10 001636 170001                  	.word	170001
+      11                                	;.endc
+     188 001640                         	opcdef	<seti  >,	00,	170002,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001640 073634  034100          	.rad50	/seti  /
+       7 001644    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001645    200G                 	.byte	200+opcl00
+      10 001646 170002                  	.word	170002
+      11                                	;.endc
+     189 001650                         	opcdef	<setl  >,	00,	170012,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001650 073634  045400          	.rad50	/setl  /
+       7 001654    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001655    200G                 	.byte	200+opcl00
+      10 001656 170012                  	.word	170012
+      11                                	;.endc
+     190 001660                         	opcdef	<sev   >,	00,	000262,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001660 073636  000000          	.rad50	/sev   /
+       7 001664    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001665    200G                 	.byte	200+opcl00
+      10 001666 000262                  	.word	000262
+      11                                	;.endc
+     191 001670                         	opcdef	<sez   >,	00,	000264,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 001670 073642  000000          	.rad50	/sez   /
+       7 001674    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001675    200G                 	.byte	200+opcl00
+      10 001676 000264                  	.word	000264
+      11                                	;.endc
+     192 001700                         	opcdef	<sob   >,	08,	077000,	dr1,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 001700 074432  000000          	.rad50	/sob   /
+       7 001704    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl08
+       9 001705    200G                 	.byte	200+opcl08
+      10 001706 077000                  	.word	077000
+      11                                	;.endc
+     193 001710                         	opcdef	<spl   >,	13,	000230,	   ,	x45
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45	; this assembler can assemble for any pdp-11
+       6 001710 074514  000000          	.rad50	/spl   /
+       7 001714    001                  	.byte	+aaaa
+       8                                	.globl	opcl13
+       9 001715    200G                 	.byte	200+opcl13
+      10 001716 000230                  	.word	000230
+      11                                	;.endc
+     194 001720                         	opcdef	<sta0  >,	00,	170005,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001720 074741  135600          	.rad50	/sta0  /
+       7 001724    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001725    200G                 	.byte	200+opcl00
+      10 001726 170005                  	.word	170005
+      11                                	;.endc
+     195 001730                         	opcdef	<stb0  >,	00,	170006,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001730 074742  135600          	.rad50	/stb0  /
+       7 001734    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 001735    200G                 	.byte	200+opcl00
+      10 001736 170006                  	.word	170006
+      11                                	;.endc
+     196 001740                         	opcdef	<stcdf >,	12,	176000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001740 074743  014760          	.rad50	/stcdf /
+       7 001744    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 001745    200G                 	.byte	200+opcl12
+      10 001746 176000                  	.word	176000
+      11                                	;.endc
+     197 001750                         	opcdef	<stcdi >,	12,	175400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001750 074743  015150          	.rad50	/stcdi /
+       7 001754    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 001755    200G                 	.byte	200+opcl12
+      10 001756 175400                  	.word	175400
+      11                                	;.endc
+     198 001760                         	opcdef	<stcdl >,	12,	175400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001760 074743  015340          	.rad50	/stcdl /
+       7 001764    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 001765    200G                 	.byte	200+opcl12
+      10 001766 175400                  	.word	175400
+      11                                	;.endc
+     199 001770                         	opcdef	<stcfd >,	12,	176000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 001770 074743  023040          	.rad50	/stcfd /
+       7 001774    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 001775    200G                 	.byte	200+opcl12
+      10 001776 176000                  	.word	176000
+      11                                	;.endc
+     200 002000                         	opcdef	<stcfi >,	12,	175400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002000 074743  023350          	.rad50	/stcfi /
+       7 002004    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 002005    200G                 	.byte	200+opcl12
+      10 002006 175400                  	.word	175400
+      11                                	;.endc
+     201 002010                         	opcdef	<stcfl >,	12,	175400,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002010 074743  023540          	.rad50	/stcfl /
+       7 002014    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 002015    200G                 	.byte	200+opcl12
+      10 002016 175400                  	.word	175400
+      11                                	;.endc
+     202 002020                         	opcdef	<std   >,	12,	174000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002020 074744  000000          	.rad50	/std   /
+       7 002024    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 002025    200G                 	.byte	200+opcl12
+      10 002026 174000                  	.word	174000
+      11                                	;.endc
+     203 002030                         	opcdef	<stexp >,	12,	175000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002030 074745  114200          	.rad50	/stexp /
+       7 002034    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 002035    200G                 	.byte	200+opcl12
+      10 002036 175000                  	.word	175000
+      11                                	;.endc
+     204 002040                         	opcdef	<stf   >,	12,	174000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002040 074746  000000          	.rad50	/stf   /
+       7 002044    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl12
+       9 002045    200G                 	.byte	200+opcl12
+      10 002046 174000                  	.word	174000
+      11                                	;.endc
+     205 002050                         	opcdef	<stfps >,	01,	170200,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002050 074746  063370          	.rad50	/stfps /
+       7 002054    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 002055    200G                 	.byte	200+opcl01
+      10 002056 170200                  	.word	170200
+      11                                	;.endc
+     206 002060                         	opcdef	<stq0  >,	00,	170007,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002060 074761  135600          	.rad50	/stq0  /
+       7 002064    001                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 002065    200G                 	.byte	200+opcl00
+      10 002066 170007                  	.word	170007
+      11                                	;.endc
+     207 002070                         	opcdef	<stst  >,	01,	170300,	dr1,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002070 074763  076400          	.rad50	/stst  /
+       7 002074    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 002075    200G                 	.byte	200+opcl01
+      10 002076 170300                  	.word	170300
+      11                                	;.endc
+     208 002100                         	opcdef	<sub   >,	02,	160000,	dr2
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 002100 075012  000000          	.rad50	/sub   /
+       7 002104    100                  	.byte	dr2+aaaa
+       8                                	.globl	opcl02
+       9 002105    200G                 	.byte	200+opcl02
+      10 002106 160000                  	.word	160000
+      11                                	;.endc
+     209 002110                         	opcdef	<subd  >,	11,	173000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002110 075012  014400          	.rad50	/subd  /
+       7 002114    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 002115    200G                 	.byte	200+opcl11
+      10 002116 173000                  	.word	173000
+      11                                	;.endc
+     210 002120                         	opcdef	<subf  >,	11,	173000,	dr2,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002120 075012  022600          	.rad50	/subf  /
+       7 002124    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl11
+       9 002125    200G                 	.byte	200+opcl11
+      10 002126 173000                  	.word	173000
+      11                                	;.endc
+     211 002130                         	opcdef	<swab  >,	01,	000300,	dr1
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 002130 075131  006200          	.rad50	/swab  /
+       7 002134    200                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 002135    200G                 	.byte	200+opcl01
+      10 002136 000300                  	.word	000300
+      11                                	;.endc
+     212 002140                         	opcdef	<sxt   >,	01,	006700,	dr1,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 002140 075224  000000          	.rad50	/sxt   /
+       7 002144    201                  	.byte	dr1+aaaa
+       8                                	.globl	opcl01
+       9 002145    200G                 	.byte	200+opcl01
+      10 002146 006700                  	.word	006700
+      11                                	;.endc
+     213 002150                         	opcdef	<trap  >,	06,	104400,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 002150 077721  062000          	.rad50	/trap  /
+       7 002154    000                  	.byte	+aaaa
+       8                                	.globl	opcl06
+       9 002155    200G                 	.byte	200+opcl06
+      10 002156 104400                  	.word	104400
+      11                                	;.endc
+     214 002160                         	opcdef	<tst   >,	01,	005700,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 002160 100014  000000          	.rad50	/tst   /
+       7 002164    000                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 002165    200G                 	.byte	200+opcl01
+      10 002166 005700                  	.word	005700
+      11                                	;.endc
+     215 002170                         	opcdef	<tstb  >,	01,	105700,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 002170 100014  006200          	.rad50	/tstb  /
+       7 002174    000                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 002175    200G                 	.byte	200+opcl01
+      10 002176 105700                  	.word	105700
+      11                                	;.endc
+     216 002200                         	opcdef	<tstd  >,	01,	170500,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002200 100014  014400          	.rad50	/tstd  /
+       7 002204    001                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 002205    200G                 	.byte	200+opcl01
+      10 002206 170500                  	.word	170500
+      11                                	;.endc
+     217 002210                         	opcdef	<tstf  >,	01,	170500,	   ,	x45flt
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x45flt
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x45flt	; this assembler can assemble for any pdp-11
+       6 002210 100014  022600          	.rad50	/tstf  /
+       7 002214    001                  	.byte	+aaaa
+       8                                	.globl	opcl01
+       9 002215    200G                 	.byte	200+opcl01
+      10 002216 170500                  	.word	170500
+      11                                	;.endc
+     218 002220                         	opcdef	<wait  >,	00,	000001,
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	
+       3                                	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf		; this assembler can assemble for any pdp-11
+       6 002220 107761  076400          	.rad50	/wait  /
+       7 002224    000                  	.byte	+aaaa
+       8                                	.globl	opcl00
+       9 002225    200G                 	.byte	200+opcl00
+      10 002226 000001                  	.word	000001
+      11                                	;.endc
+     219 002230                         	opcdef	<xor   >,	05,	074000,	dr2,	x4045
+       1        000000                  	aaaa = 0
+       2                                	.if	nb	x4045
+       3        000001                  	aaaa = 1
+       4                                	.endc
+       5                                	;.if ndf	x4045	; this assembler can assemble for any pdp-11
+       6 002230 114152  000000          	.rad50	/xor   /
+       7 002234    101                  	.byte	dr2+aaaa
+       8                                	.globl	opcl05
+       9 002235    200G                 	.byte	200+opcl05
+      10 002236 074000                  	.word	074000
+      11                                	;.endc
+     220                                	
+     221 002240                         	dirdef	<ascii>,	dflgbm
+       1 002240 127473  012061          	.rad50	/.ascii/
+       2 002244    010     000          	.byte	dflgbm+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ascii
+       8 002246 000000G                 	.word	ascii
+       9                                	.endc
+     222 002250                         	dirdef	<asciz>,	dflgbm!dflgdg
+       1 002250 127473  012102          	.rad50	/.asciz/
+       2 002254    050     000          	.byte	dflgbm!dflgdg+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	asciz
+       8 002256 000000G                 	.word	asciz
+       9                                	.endc
+     223 002260                         	dirdef	<asect>,	,	xrel
+       1 002260 127473  017714          	.rad50	/.asect/
+       2 002264    000     000          	.byte	+0,	0
+       3                                	.if df	xrel
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	asect
+       8 002266 000000G                 	.word	asect
+       9                                	.endc
+     224 002270                         	dirdef	<blkb >
+       1 002270 127534  042420          	.rad50	/.blkb /
+       2 002274    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	blkb 
+       8 002276 000000G                 	.word	blkb 
+       9                                	.endc
+     225 002300                         	dirdef	<blkw >,	dflgev
+       1 002300 127534  044130          	.rad50	/.blkw /
+       2 002304    020     000          	.byte	dflgev+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	blkw 
+       8 002306 000000G                 	.word	blkw 
+       9                                	.endc
+     226 002310                         	dirdef	<byte >,	dflgbm!dflgdg
+       1 002310 127551  076710          	.rad50	/.byte /
+       2 002314    050     000          	.byte	dflgbm!dflgdg+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	byte 
+       8 002316 000000G                 	.word	byte 
+       9                                	.endc
+     227 002320                         	dirdef	<csect>,	,	xrel
+       1 002320 127613  017714          	.rad50	/.csect/
+       2 002324    000     000          	.byte	+0,	0
+       3                                	.if df	xrel
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	csect
+       8 002326 000000G                 	.word	csect
+       9                                	.endc
+     228 002330                         	dirdef	<dsabl>
+       1 002330 127663  003234          	.rad50	/.dsabl/
+       2 002334    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	dsabl
+       8 002336 000000G                 	.word	dsabl
+       9                                	.endc
+     229 002340                         	dirdef	<enabl>
+       1 002340 127726  003234          	.rad50	/.enabl/
+       2 002344    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	enabl
+       8 002346 000000G                 	.word	enabl
+       9                                	.endc
+     230 002350                         	dirdef	<end  >
+       1 002350 127726  014400          	.rad50	/.end  /
+       2 002354    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	end  
+       8 002356 000000G                 	.word	end  
+       9                                	.endc
+     231 002360                         	dirdef	<endc >,	dflcnd
+       1 002360 127726  014570          	.rad50	/.endc /
+       2 002364    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	endc 
+       8 002366 000000G                 	.word	endc 
+       9                                	.endc
+     232 002370                         	dirdef	<endm >,	dflmac,	xmacro
+       1 002370 127726  015410          	.rad50	/.endm /
+       2 002374    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	endm 
+       8 002376 000000G                 	.word	endm 
+       9                                	.endc
+     233 002400                         	dirdef	<endr >,	dflmac,	xmacro
+       1 002400 127726  015720          	.rad50	/.endr /
+       2 002404    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	endr 
+       8 002406 000000G                 	.word	endr 
+       9                                	.endc
+     234 002410                         	dirdef	<eot  >
+       1 002410 127727  076400          	.rad50	/.eot  /
+       2 002414    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	eot  
+       8 002416 000000G                 	.word	eot  
+       9                                	.endc
+     235 002420                         	dirdef	<error>
+       1 002420 127732  071352          	.rad50	/.error/
+       2 002424    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	error
+       8 002426 000000G                 	.word	error
+       9                                	.endc
+     236 002430                         	dirdef	<even >
+       1 002430 127736  020560          	.rad50	/.even /
+       2 002434    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	even 
+       8 002436 000000G                 	.word	even 
+       9                                	.endc
+     237 002440                         	dirdef	<flt2 >,	dflgev!dflgdg,	xfltg
+       1 002440 127774  101000          	.rad50	/.flt2 /
+       2 002444    060     000          	.byte	dflgev!dflgdg+0,	0
+       3                                	.if df	xfltg
+       4                                	.globl	opcerr
+       5 002446 000000G                 	.word	opcerr
+       6                                	.iff
+       7                                	.globl	flt2 
+       8                                	.word	flt2 
+       9                                	.endc
+     238 002450                         	dirdef	<flt4 >,	dflgev!dflgdg,	xfltg
+       1 002450 127774  101120          	.rad50	/.flt4 /
+       2 002454    060     000          	.byte	dflgev!dflgdg+0,	0
+       3                                	.if df	xfltg
+       4                                	.globl	opcerr
+       5 002456 000000G                 	.word	opcerr
+       6                                	.iff
+       7                                	.globl	flt4 
+       8                                	.word	flt4 
+       9                                	.endc
+     239 002460                         	dirdef	<globl>,	,	xrel
+       1 002460 130044  057034          	.rad50	/.globl/
+       2 002464    000     000          	.byte	+0,	0
+       3                                	.if df	xrel
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	globl
+       8 002466 000000G                 	.word	globl
+       9                                	.endc
+     240 002470                         	dirdef	<ident>
+       1 002470 130154  020604          	.rad50	/.ident/
+       2 002474    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ident
+       8 002476 000000G                 	.word	ident
+       9                                	.endc
+     241 002500                         	dirdef	<if   >,	dflcnd
+       1 002500 130156  000000          	.rad50	/.if   /
+       2 002504    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	if   
+       8 002506 000000G                 	.word	if   
+       9                                	.endc
+     242 002510                         	dirdef	<ifdf >,	dflcnd
+       1 002510 130156  014760          	.rad50	/.ifdf /
+       2 002514    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifdf 
+       8 002516 000000G                 	.word	ifdf 
+       9                                	.endc
+     243 002520                         	dirdef	<ifeq >,	dflcnd
+       1 002520 130156  020750          	.rad50	/.ifeq /
+       2 002524    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifeq 
+       8 002526 000000G                 	.word	ifeq 
+       9                                	.endc
+     244 002530                         	dirdef	<iff  >,	dflcnd
+       1 002530 130156  022600          	.rad50	/.iff  /
+       2 002534    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	iff  
+       8 002536 000000G                 	.word	iff  
+       9                                	.endc
+     245 002540                         	dirdef	<ifg  >,	dflcnd
+       1 002540 130156  025700          	.rad50	/.ifg  /
+       2 002544    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifg  
+       8 002546 000000G                 	.word	ifg  
+       9                                	.endc
+     246 002550                         	dirdef	<ifge >,	dflcnd
+       1 002550 130156  026210          	.rad50	/.ifge /
+       2 002554    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifge 
+       8 002556 000000G                 	.word	ifge 
+       9                                	.endc
+     247 002560                         	dirdef	<ifgt >,	dflcnd
+       1 002560 130156  027340          	.rad50	/.ifgt /
+       2 002564    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifgt 
+       8 002566 000000G                 	.word	ifgt 
+       9                                	.endc
+     248 002570                         	dirdef	<ifl  >,	dflcnd
+       1 002570 130156  045400          	.rad50	/.ifl  /
+       2 002574    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifl  
+       8 002576 000000G                 	.word	ifl  
+       9                                	.endc
+     249 002600                         	dirdef	<ifle >,	dflcnd
+       1 002600 130156  045710          	.rad50	/.ifle /
+       2 002604    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifle 
+       8 002606 000000G                 	.word	ifle 
+       9                                	.endc
+     250 002610                         	dirdef	<iflt >,	dflcnd
+       1 002610 130156  047040          	.rad50	/.iflt /
+       2 002614    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	iflt 
+       8 002616 000000G                 	.word	iflt 
+       9                                	.endc
+     251 002620                         	dirdef	<ifndf>,	dflcnd
+       1 002620 130156  054046          	.rad50	/.ifndf/
+       2 002624    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifndf
+       8 002626 000000G                 	.word	ifndf
+       9                                	.endc
+     252 002630                         	dirdef	<ifne >,	dflcnd
+       1 002630 130156  054110          	.rad50	/.ifne /
+       2 002634    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifne 
+       8 002636 000000G                 	.word	ifne 
+       9                                	.endc
+     253 002640                         	dirdef	<ifnz >,	dflcnd
+       1 002640 130156  055620          	.rad50	/.ifnz /
+       2 002644    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifnz 
+       8 002646 000000G                 	.word	ifnz 
+       9                                	.endc
+     254 002650                         	dirdef	<ift  >,	dflcnd
+       1 002650 130156  076400          	.rad50	/.ift  /
+       2 002654    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ift  
+       8 002656 000000G                 	.word	ift  
+       9                                	.endc
+     255 002660                         	dirdef	<iftf >,	dflcnd
+       1 002660 130156  076760          	.rad50	/.iftf /
+       2 002664    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	iftf 
+       8 002666 000000G                 	.word	iftf 
+       9                                	.endc
+     256 002670                         	dirdef	<ifz  >,	dflcnd
+       1 002670 130156  121200          	.rad50	/.ifz  /
+       2 002674    004     000          	.byte	dflcnd+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ifz  
+       8 002676 000000G                 	.word	ifz  
+       9                                	.endc
+     257 002700                         	dirdef	<iif  >
+       1 002700 130161  022600          	.rad50	/.iif  /
+       2 002704    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	iif  
+       8 002706 000000G                 	.word	iif  
+       9                                	.endc
+     258 002710                         	dirdef	<irp  >,	dflmac,	xmacro
+       1 002710 130172  062000          	.rad50	/.irp  /
+       2 002714    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	irp  
+       8 002716 000000G                 	.word	irp  
+       9                                	.endc
+     259 002720                         	dirdef	<irpc >,	dflmac,	xmacro
+       1 002720 130172  062170          	.rad50	/.irpc /
+       2 002724    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	irpc 
+       8 002726 000000G                 	.word	irpc 
+       9                                	.endc
+     260 002730                         	dirdef	<limit>,	dflgev!dflgdg,	xrel
+       1 002730 130351  051274          	.rad50	/.limit/
+       2 002734    060     000          	.byte	dflgev!dflgdg+0,	0
+       3                                	.if df	xrel
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	limit
+       8 002736 000000G                 	.word	limit
+       9                                	.endc
+     261 002740                         	dirdef	<list >
+       1 002740 130351  074740          	.rad50	/.list /
+       2 002744    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	list 
+       8 002746 000000G                 	.word	list 
+       9                                	.endc
+     262 002750                         	dirdef	<macr >,	dflmac, xmacro
+       1 002750 130411  012620          	.rad50	/.macr /
+       2 002754    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	macr 
+       8 002756 000000G                 	.word	macr 
+       9                                	.endc
+     263 002760                         	dirdef	<macro>,	dflmac,	xmacro
+       1 002760 130411  012637          	.rad50	/.macro/
+       2 002764    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	macro
+       8 002766 000000G                 	.word	macro
+       9                                	.endc
+     264 002770                         	dirdef	<mcall>,	dflsmc,	xsml
+       1 002770 130413  004054          	.rad50	/.mcall/
+       2 002774    001     000          	.byte	dflsmc+0,	0
+       3                                	.if df	xsml
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	mcall
+       8 002776 000000G                 	.word	mcall
+       9                                	.endc
+     265 003000                         	dirdef	<mexit>	,	,	xmacro
+       1 003000 130415  113574          	.rad50	/.mexit/
+       2 003004    000     000          	.byte	+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	mexit
+       8 003006 000000G                 	.word	mexit
+       9                                	.endc
+     266 003010                         	dirdef	<narg >	,	,	xmacro
+       1 003010 130461  070630          	.rad50	/.narg /
+       2 003014    000     000          	.byte	+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	narg 
+       8 003016 000000G                 	.word	narg 
+       9                                	.endc
+     267 003020                         	dirdef	<nchr >	,	,	xmacro
+       1 003020 130463  032320          	.rad50	/.nchr /
+       2 003024    000     000          	.byte	+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	nchr 
+       8 003026 000000G                 	.word	nchr 
+       9                                	.endc
+     268 003030                         	dirdef	<nlist>
+       1 003030 130474  035514          	.rad50	/.nlist/
+       2 003034    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	nlist
+       8 003036 000000G                 	.word	nlist
+       9                                	.endc
+     269 003040                         	dirdef	<ntype>	,	,	xmacro
+       1 003040 130504  117305          	.rad50	/.ntype/
+       2 003044    000     000          	.byte	+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	ntype
+       8 003046 000000G                 	.word	ntype
+       9                                	.endc
+     270 003050                         	dirdef	<odd  >
+       1 003050 130534  014400          	.rad50	/.odd  /
+       2 003054    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	odd  
+       8 003056 000000G                 	.word	odd  
+       9                                	.endc
+     271 003060                         	dirdef	<page >
+       1 003060 130601  026210          	.rad50	/.page /
+       2 003064    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	page 
+       8 003066 000000G                 	.word	page 
+       9                                	.endc
+     272 003070                         	dirdef	<print>
+       1 003070 130622  035204          	.rad50	/.print/
+       2 003074    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	print
+       8 003076 000000G                 	.word	print
+       9                                	.endc
+     273 003100                         	dirdef	<psect>
+       1 003100 130623  017714          	.rad50	/.psect/
+       2 003104    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	psect
+       8 003106 000000G                 	.word	psect
+       9                                	.endc
+     274 003110                         	dirdef	<radix>
+       1 003110 130721  015200          	.rad50	/.radix/
+       2 003114    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	radix
+       8 003116 000000G                 	.word	radix
+       9                                	.endc
+     275 003120                         	dirdef	<rad50>,	dflgev!dflgdg
+       1 003120 130721  017226          	.rad50	/.rad50/
+       2 003124    060     000          	.byte	dflgev!dflgdg+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	rad50
+       8 003126 000000G                 	.word	rad50
+       9                                	.endc
+     276 003130                         	dirdef	<rem  >
+       1 003130 130725  050500          	.rad50	/.rem  /
+       2 003134    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	rem  
+       8 003136 000000G                 	.word	rem  
+       9                                	.endc
+     277 003140                         	dirdef	<rept >,	dflmac,	xmacro
+       1 003140 130725  063440          	.rad50	/.rept /
+       2 003144    002     000          	.byte	dflmac+0,	0
+       3                                	.if df	xmacro
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	rept 
+       8 003146 000000G                 	.word	rept 
+       9                                	.endc
+     278 003150                         	dirdef	<sbttl>
+       1 003150 130772  100054          	.rad50	/.sbttl/
+       2 003154    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	sbttl
+       8 003156 000000G                 	.word	sbttl
+       9                                	.endc
+     279 003160                         	dirdef	<title>
+       1 003160 131051  077345          	.rad50	/.title/
+       2 003164    000     000          	.byte	+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	title
+       8 003166 000000G                 	.word	title
+       9                                	.endc
+     280                                wrdsym:
+     281 003170                         	dirdef	<word >,	dflgev!dflgdg
+       1 003170 131247  070440          	.rad50	/.word /
+       2 003174    060     000          	.byte	dflgev!dflgdg+0,	0
+       3                                	.if df	
+       4                                	.globl	opcerr
+       5                                	.word	opcerr
+       6                                	.iff
+       7                                	.globl	word 
+       8 003176 000000G                 	.word	word 
+       9                                	.endc
+     282                                
+     283                                
+     284 003200                         	xitsec
+       1 003200                         	entsec	.text
+       1 000000                         	.psect	.text	con
+     285                                
+     286                                	.end
+     286                                
+       7                                
+
+
+Symbol table
+
+$TIMDF= 000007           DSABL = ****** G         IFL   = ****** G         NCHR  = ****** G         PDPV45= 000000           
+.       ******R      002 ENABL = ****** G         IFLE  = ****** G         NLIST = ****** G         PRINT = ****** G         
+AAAA  = 000001           END   = ****** G         IFLT  = ****** G         NTYPE = ****** G         PSECT = ****** G         
+ASCII = ****** G         ENDC  = ****** G         IFNDF = ****** G         ODD   = ****** G         RAD50 = ****** G         
+ASCIZ = ****** G         ENDM  = ****** G         IFNE  = ****** G         OPCERR= ****** G         RADIX = ****** G         
+ASECT = ****** G         ENDR  = ****** G         IFNZ  = ****** G         OPCL00= ****** G         REM   = ****** G         
+BLKB  = ****** G         EOT   = ****** G         IFT   = ****** G         OPCL01= ****** G         REPT  = ****** G         
+BLKW  = ****** G         ERROR = ****** G         IFTF  = ****** G         OPCL02= ****** G         RSX11D= 000000           
+BPMB  = 000020           EVEN  = ****** G         IFZ   = ****** G         OPCL03= ****** G         SBTTL = ****** G         
+BYTE  = ****** G         FF    = 000014           IIF   = ****** G         OPCL04= ****** G         SPACE = 000040           
+CR    = 000015           FT.ID = 000001           IRP   = ****** G         OPCL05= ****** G         TAB   = 000011           
+CSECT = ****** G         FT.UNX= 000001           IRPC  = ****** G         OPCL06= ****** G         TITLE = ****** G         
+DEBUG = 000000           GLOBL = ****** G         LF    = 000012           OPCL07= ****** G         VT    = 000013           
+DFLCND= 000004 G         IDENT = ****** G         LIMIT = ****** G         OPCL08= ****** G         WORD  = ****** G         
+DFLGBM= 000010 G         IF    = ****** G         LIST  = ****** G         OPCL09= ****** G         WRDSYM  003170RG     017 
+DFLGDG= 000040 G         IFDF  = ****** G         MACR  = ****** G         OPCL10= ****** G         X40   = 000000           
+DFLGEV= 000020 G         IFEQ  = ****** G         MACRO = ****** G         OPCL11= ****** G         X4045 = 000000           
+DFLMAC= 000002 G         IFF   = ****** G         MCALL = ****** G         OPCL12= ****** G         X40FLT= 000000           
+DFLSMC= 000001 G         IFG   = ****** G         MEXIT = ****** G         OPCL13= ****** G         XFLTG = 000000           
+DR1   = 000200           IFGE  = ****** G         MK.SYM= 000001           OPCL14= ****** G         
+DR2   = 000100           IFGT  = ****** G         NARG  = ****** G         PAGE  = ****** G         
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+.TEXT   000000    002   (RW,I,LCL,REL,CON,NOSAV)
+.DATA   000000    003   (RW,I,LCL,REL,CON,NOSAV)
+.BSS    000000    004   (RW,I,LCL,REL,CON,NOSAV)
+DPURE   000000    005   (RW,I,LCL,REL,CON,NOSAV)
+MIXED   000000    006   (RW,I,LCL,REL,CON,NOSAV)
+ERRMES  000000    007   (RW,I,LCL,REL,CON,NOSAV)
+IMPURE  000000    008   (RW,I,LCL,REL,CON,NOSAV)
+IMPPAS  000000    009   (RW,I,LCL,REL,CON,NOSAV)
+IMPLIN  000000    010   (RW,I,LCL,REL,CON,NOSAV)
+SWTSEC  000000    011   (RW,I,LCL,REL,CON,NOSAV)
+CNDSEC  000000    012   (RW,I,LCL,REL,CON,NOSAV)
+CRFSEC  000000    013   (RW,I,LCL,REL,CON,NOSAV)
+EDTSEC  000000    014   (RW,I,LCL,REL,CON,NOSAV)
+LCTSEC  000000    015   (RW,I,LCL,REL,CON,NOSAV)
+PSASEC  000000    016   (RW,I,LCL,REL,CON,NOSAV)
+PSTSEC  003200    017   (RW,I,LCL,REL,CON,NOSAV)
+ROLBAS  000000    018   (RW,I,LCL,REL,CON,NOSAV)
+ROLSIZ  000000    019   (RW,I,LCL,REL,CON,NOSAV)
+ROLTOP  000000    020   (RW,I,LCL,REL,CON,NOSAV)
+XPCOR   000000    021   (RW,I,LCL,REL,CON,NOSAV)

@@ -1,0 +1,89 @@
+       1                                	.TITLE  Test references that need (no) relocation
+       2                                
+       3 000000                         	.PSECT  FOO,I,RW
+       4                                
+       5 000000 000042                  	.WORD	42
+       6 000002 000000                  Y:	.WORD	0
+       7                                
+       8                                	; absolute expression since the offset to the pc is a
+       9                                	; subtraction of the relative address of Y from the current
+      10                                	; position, both in the same psect. Such an operation renders
+      11                                	; an absolute value.
+      12 000004 005067  177772          	CLR	Y	
+      13                                
+      14                                	; relocatable, since the absolute address of Y is unknown because
+      15                                	; it's in a psect that can be moved around at link time.
+      16 000010 005037  000002'         	CLR	@#Y
+      17                                
+      18                                	; relocatable because even though X is at a known address, the
+      19                                	; address of the instruction is unknown and subject to the location
+      20                                	; of the psect, which is only decided at link time.
+      21 000014 005067  001234'         	CLR	X
+      22                                
+      23                                	; absolute since it is an expression only dependent on an
+      24                                	; absolute value.
+      25 000020 005037  001234          	CLR	@#X
+      26                                
+      27                                	; Test AMA (uses absolute addresses rather than pc-relative)
+      28                                
+      29                                	.enabl AMA
+      30                                
+      31                                	; Could be relative, as above, but AMA forces it to @#Y and
+      32                                	; then it needs relocation again, weirdly enough.
+      33 000024 005037  000002'         	clr	Y
+      34                                	; Same as @#X.
+      35 000030 005037  001234          	clr	X
+      36                                
+      37                                	.dsabl AMA
+      38                                
+      39 000000                         	.ASECT
+      40        001000                  	.=1000
+      41                                
+      42        001234                  X=1234
+      43                                	; relocatable because the address of Y is in another psect, and
+      44                                	; the subtraction of a relative address from an absolute renders
+      45                                	; a relative value.
+      46 001000 005067  000002'         	CLR	Y
+      47                                
+      48                                	; relocatable because the absolute address of Y is unknown.
+      49                                	; MACRO-11 only have a relative value of Y.
+      50 001004 005037  000002'         	CLR	@#Y
+      51                                
+      52                                	; absolute since the offset to the pc is an expression subtracting
+      53                                	; two absolute values which obviously have an absolute result.
+      54 001010 005067  000220          	CLR	X
+      55                                
+      56                                	; absolute since it is an expression only dependent on an
+      57                                	; absolute value.
+      58 001014 005037  001234          	CLR	@#X
+      59                                
+      60                                	; Note that all references to Y contains 000002. This is because
+      61                                	; that is the offset of Y within the psect. This is added to the
+      62                                	; base of the psect (the part that comes from this object file),
+      63                                	; which is all the linker will know about.
+      64                                
+      65                                	; Test AMA
+      66                                
+      67                                	.enabl AMA
+      68                                
+      69                                	; Same as @#Y.
+      70 001020 005037  000002'         	clr	Y
+      71                                	; Same as @#X.
+      72 001024 005037  001234          	clr	X
+      73                                
+      74                                	.dsabl AMA
+      75                                
+      76                                	.END
+      76                                
+
+
+Symbol table
+
+.     = ******           X     = 001234           Y       000002R      002 
+
+
+Program sections:
+
+. ABS.  001030    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000000    001   (RW,I,LCL,REL,CON,NOSAV)
+FOO     000034    002   (RW,I,LCL,REL,CON,NOSAV)
