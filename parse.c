@@ -831,12 +831,18 @@ int brackrange(
         return FALSE;
     }
 
+    /*
+     * If we see a newline here, the proper terminator must be missing.
+     * Don't use EOL() to check: it recognizes ';' too.
+     * Unfortunately we can't issue a diagnostic here.
+     */
+    if (!cp[len] || cp[len] == '\n') {
+        return FALSE;
+    }
+
     *length = len;
     if (endp) {
-        *endp = cp + len;
-        if (**endp && **endp != '\n') {
-            ++*endp;            /* skip over ending delimiter */
-        }
+        *endp = cp + len + 1;   /* skip over ending delimiter */
     }
 
     return 1;

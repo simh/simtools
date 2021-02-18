@@ -1,3 +1,7 @@
+;;;;;
+;
+; Test that commas create empty macro arguments.
+;
         .macro  tstarg a1,a2,a3,a4
         .narg   label
         .endm
@@ -12,3 +16,20 @@ start:  tstarg          ; 0 args
         tstarg   ,,3    ; 3 args
         tstarg   1,,3   ; 3 args
         tstarg   1,2,3  ; 3 args
+
+;;;;;
+;
+; Test what happens if we have invalid bracketed strings.
+; For now we fall back to treating them like unbracketed strings,
+; that will hopefully alert the user the best.
+;
+        .macro  braket  arg
+        ; arg
+        .endm
+
+        braket  <plain>
+        braket  ^/simple/
+        braket  <broken
+        braket  ^/broken
+        braket  <bro<ken>
+        braket  <bro<ken> string
