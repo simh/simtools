@@ -794,58 +794,50 @@ int brackrange(
     int *length,
     char **endp)
 {
-    char            endstr[6];
-    int             endlen;
+    char            endstr[] = "x\n";
+    int             len = 0;
     int             nest;
-    int             len;
 
     switch (*cp) {
-    case '^':
+    case '^':                   /* ^/text/ */
         endstr[0] = cp[1];
-        strcpy(endstr + 1, "\n");
         *start = 2;
-        endlen = 1;
+        cp += *start;
+        len = strcspn(cp, endstr);
         break;
-    case '<':
-        strcpy(endstr, "<>\n");
-        endlen = 1;
+    case '<':                   /* <may<be>nested> */
         *start = 1;
-        break;
-    default:
-        return FALSE;
-    }
-
-    cp += *start;
-
-    len = 0;
-    if (endstr[1] == '>') { /* <>\n */
+        cp += *start;
         nest = 1;
-        while (nest) {
+
+        while (nest > 0) {
             int             sublen;
 
-            sublen = strcspn(cp + len, endstr);
+            sublen = strcspn(cp + len, "<>\n");
             if (cp[len + sublen] == '<') {
                 nest++;
-                sublen++;  /* avoid infinite loop when sublen == 0 */
+                sublen++;       /* include nested starting delimiter */
             } else {
                 nest--;
                 if (nest > 0 && cp[len + sublen] == '>')
-                    sublen++;  /* avoid infinite loop when sublen == 0 */
+                    sublen++;   /* include nested ending delimiter */
             }
             len += sublen;
             if (sublen == 0)
                 break;
         }
-    } else {
-        int             sublen;
-
-        sublen = strcspn(cp + len, endstr);
-        len += sublen;
+        break;
+    default:
+        return FALSE;
     }
 
     *length = len;
-    if (endp)
-        *endp = cp + len + endlen;
+    if (endp) {
+        *endp = cp + len;
+        if (**endp && **endp != '\n') {
+            ++*endp;            /* skip over ending delimiter */
+        }
+    }
 
     return 1;
 }
