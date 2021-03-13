@@ -1326,6 +1326,7 @@ static int assemble(
                                 cp++;  /* Allow the hash, but
                                           don't require it */
                             value = parse_expr(cp, 0);
+                            cp = value->cp;
                             if (value->type != EX_LIT) {
                                 report(stack->top, "Instruction requires simple literal operand\n");
                                 word = op->value;
