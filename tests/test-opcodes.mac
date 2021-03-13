@@ -10,8 +10,9 @@
         iot
         reset
         rtt
+        mfpt
 
-        ; 00 00 07 ... 00 00 77 unused
+        ; 00 00 10 ... 00 00 77 unused
 
         jmp     .
         rts     pc
@@ -63,7 +64,12 @@
         mtpi    @(r3)+
         sxt     @(r3)+
 
-        ; 00 70 00 ... 00 77 77 unused
+        csm     @(r3)+          ; only some models
+        ; 00 71 00 ... 00 71 77 unused
+        tstset  @(r3)+          ; only some models
+        wrtlck  @(r3)+          ; only some models
+
+        ; 00 74 00 ... 00 77 77 unused
 
         mov     (r1),(r2)+
         cmp     (r1),(r2)+
@@ -177,7 +183,7 @@
         cvtpli
         mulpi
         divpi
-        ASHPI
+        ashpi
         ; 7?
 
         ; 07 62 00 ... 07 67 77 unused
@@ -213,12 +219,10 @@
         asrb    @(r3)+
         aslb    @(r3)+
 
-        ; 10 64 00 ... 10 64 77 unused
-
+        mtps    @(r3)+
         mfpd    (r1)
         mtpd    (r1)
-
-        ; 10 67 00 ... 10 67 77 unused
+        mfps    @(r3)+
 
         movb    (r1),(r2)+
         cmpb    (r1),(r2)+

@@ -413,6 +413,9 @@ void add_symbols(
     add_sym("XFC", I_XFC, OC_NONE, &instruction_section, &system_st);
     add_sym("XOR", I_XOR, OC_JSR, &instruction_section, &system_st);
     add_sym("MFPT", I_MFPT, OC_NONE, &instruction_section, &system_st);
+    add_sym("CSM", I_CSM, OC_1GEN, &instruction_section, &system_st);
+    add_sym("TSTSET", I_TSTSET, OC_1GEN, &instruction_section, &system_st);
+    add_sym("WRTLCK", I_WRTLCK, OC_1GEN, &instruction_section, &system_st);
 
     /* FPP instructions */
     add_sym("ABSD", I_ABSD, OC_FPPDST, &instruction_section, &system_st);

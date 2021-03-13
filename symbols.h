@@ -104,7 +104,8 @@ enum pseudo_ops { P_ASCII,
     P_IFDF
 };
 
-enum instruction_ops { I_ADC = 0005500,
+enum instruction_ops {
+    I_ADC = 0005500,
     I_ADCB = 0105500,
     I_ADD = 0060000,
     I_ASH = 0072000,
@@ -154,10 +155,10 @@ enum instruction_ops { I_ADC = 0005500,
     I_DECB = 0105300,
     I_DIV = 0071000,
     I_EMT = 0104000,
-    I_FADD = 0075000,
-    I_FDIV = 0075030,
-    I_FMUL = 0075020,
-    I_FSUB = 0075010,
+    I_FADD = 0075000,           /* FIS */
+    I_FDIV = 0075030,           /* FIS */
+    I_FMUL = 0075020,           /* FIS */
+    I_FSUB = 0075010,           /* FIS */
     I_HALT = 0000000,
     I_INC = 0005200,
     I_INCB = 0105200,
@@ -207,6 +208,9 @@ enum instruction_ops { I_ADC = 0005500,
     I_XFC = 0076700,
     I_XOR = 0074000,
     I_MFPT = 0000007,
+    I_CSM = 0007000,
+    I_TSTSET = 0007200,
+    I_WRTLCK = 0007300,
     /* CIS - Commercial Instruction Set */
     I_CIS_I = 0000100,          /* Inline arguments */
     I_CIS_P = 0000020,          /* Packed instead of Numeric */
