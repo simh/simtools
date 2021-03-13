@@ -1605,7 +1605,6 @@ static int assemble(
                             reg = get_register(value);
                             if (reg == NO_REG) {
                                 report(stack->top, "Illegal addressing mode\n");
-                                free_tree(value);
                                 reg = 0;
                             }
 
