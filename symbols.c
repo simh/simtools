@@ -427,6 +427,7 @@ void add_symbols(
     add_sym("DIVD", I_DIVD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("DIVF", I_DIVF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCDF", I_LDCDF, OC_FPPGENAC, &instruction_section, &system_st);
+    add_sym("LDCFD", I_LDCFD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCID", I_LDCID, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCIF", I_LDCIF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCLD", I_LDCLD, OC_FPPGENAC, &instruction_section, &system_st);
