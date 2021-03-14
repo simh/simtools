@@ -25,6 +25,7 @@ TESTS="test-asciz \
     test-macro-comma \
     test-mcall-file \
     test-opcodes \
+    test-operands \
     test-prec \
     test-psect \
     test-rad50 \

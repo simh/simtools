@@ -51,6 +51,8 @@ EX_TREE        *parse_expr(
 EX_TREE        *parse_unary_expr(
     char *cp,
     int undef);
+int             expr_ok(
+    EX_TREE *expr);
 int             parse_float(
     char *cp,
     char **endp,

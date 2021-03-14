@@ -1,6 +1,6 @@
 ;;;;;
 ;
-; Tests the addressing modes for JMP.
+; Tests various operand types for JMP, XOR, RTS.
 ; JMP Rx is not allowed, all other modes are.
 ;
 ; XOR shares the instruction format with JSR
@@ -24,6 +24,7 @@ start:  jmp     label           ; rel(pc)       jumps to label
         jmp     @1234(r1)
 
 secnd:  jsr     r0,label        ; rel(pc)       jumps to label
+        jsr     0,label         ; rel(pc)       yes MACRO11 accepts this
         jsr     r0,@label       ; @rel(pc)      does something else!
         jsr     r0,#label       ; (pc)+         does something else!
         jsr     r0,@#label      ; @(pc)+        jumps to label
@@ -38,6 +39,7 @@ secnd:  jsr     r0,label        ; rel(pc)       jumps to label
         jsr     r5,@1234(r1)
 
 third:  xor     r0,label        ; rel(pc)
+        xor     0,label         ; rel(pc)  yes MACRO11 accepts this
         xor     r0,@label       ; @rel(pc)
         xor     r0,#label       ; (pc)+
         xor     r0,@#label      ; @(pc)+
@@ -59,4 +61,26 @@ third:  xor     r0,label        ; rel(pc)
         xor     1234(r2),r1     ; must fail
         xor     @1234(r2),r1    ; must fail
 
+three = 3
 label:  rts     pc
+        rts     r1
+        rts     3               ; yes MACRO11 accepts this
+        rts     three
+        rts                     ; must fail
+        rts     .               ; must fail
+        rts     (r1)            ; must fail
+
+        .psect  abssec,abs
+        . = 0
+zero:   rts     zero            ; dubious but ok
+two:    rts     two             ; dubious but ok
+four:   rts     four            ; dubious but ok
+six:    rts     six             ; dubious but ok
+eight:  rts     eight           ; bad
+
+        .psect  relsec,rel
+rzero:  rts     rzero           ; bad
+rtwo:   rts     rtwo            ; bad
+rfour:  rts     rfour           ; bad
+rsix:   rts     rsix            ; bad
+reight: rts     reight          ; bad

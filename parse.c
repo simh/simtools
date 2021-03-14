@@ -211,7 +211,7 @@ int get_mode(
         mode->offset = parse_expr(cp, 0);
         if (endp)
             *endp = mode->offset->cp;
-        return TRUE;
+        return expr_ok(mode->offset);
     }
 
     /* Check for -(Rn) */
@@ -280,6 +280,9 @@ int get_mode(
     /* Modes with an offset */
 
     mode->offset = parse_expr(cp, 0);
+
+    if (!expr_ok(mode->offset))
+        return FALSE;
 
     cp = skipwhite(mode->offset->cp);
 
@@ -1176,4 +1179,14 @@ EX_TREE        *parse_unary_expr(
                                           evaluation */
 
     return value;
+}
+
+/*
+ * expr_ok  Returns TRUE if there was a valid expression parsed.
+ */
+
+int             expr_ok(
+    EX_TREE *expr)
+{
+    return expr != NULL && expr->type != EX_ERR;
 }

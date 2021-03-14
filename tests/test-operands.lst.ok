@@ -1,0 +1,259 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test operand checking for various instructions and try to exercise
+       4                                ; all operand parsing error messages.
+       5                                ; Some cases are checked elsewhere (e.g. test-jmp.mac).
+       6                                ;
+       7                                
+       8                                ; OC_MARK
+       9                                
+      10 000000 006400                          mark    0
+      11 000002 006401                          mark    1
+      12 000004 006477                          mark    77
+test-operands.mac:13: ***ERROR Literal operand too large (64. > 63.)
+      13 000006 006477                          mark    100             ; too large
+test-operands.mac:14: ***ERROR Instruction requires simple literal operand
+      14 000010 006400                          mark    .               ; must be literal
+test-operands.mac:15: ***ERROR Junk at end of line (',0             ; bad')
+      15 000012 006400                          mark    0,0             ; bad
+      16                                
+      17 000014 104000                          emt     0
+      18 000016 104001                          emt     1
+      19 000020 104377                          emt     255.
+test-operands.mac:20: ***ERROR Literal operand too large (256. > 255.)
+      20 000022 104377                          emt     256.            ; too large
+test-operands.mac:21: ***ERROR Instruction requires simple literal operand
+      21 000024 104000                          emt     .               ; must be literal
+      22                                
+      23 000026 104400                          trap    0
+      24 000030 104401                          trap    1
+      25 000032 104777                          trap    255.
+test-operands.mac:26: ***ERROR Literal operand too large (256. > 255.)
+      26 000034 104777                          trap    256.            ; too large
+test-operands.mac:27: ***ERROR Instruction requires simple literal operand
+      27 000036 104400                          trap    .               ; must be literal
+      28                                
+      29                                ; OC_1GEN
+      30                                
+      31 000040 005700                          tst     r0
+test-operands.mac:32: ***ERROR Junk at end of line (',(r0)         ; bad
+')
+      32 000042 005700                          tst     r0,(r0)         ; bad
+test-operands.mac:33: ***ERROR Invalid addressing mode
+      33                                        tst     @               ; bad
+test-operands.mac:34: ***ERROR Invalid addressing mode
+      34                                        tst     %77             ; bad
+test-operands.mac:35: ***ERROR Invalid addressing mode
+      35                                        tst     <>              ; bad
+      36                                
+      37                                ; OC_2GEN
+      38                                
+      39 000044 060001                          add     r0,r1
+test-operands.mac:40: ***ERROR Junk at end of line (',r2        ; bad
+')
+      40 000046 060001                          add     r0,r1,r2        ; bad
+test-operands.mac:41: ***ERROR Invalid addressing mode (1st operand)
+      41                                        add     @               ; bad
+test-operands.mac:42: ***ERROR Invalid syntax (comma expected)
+      42                                        add     r0 r1           ; bad
+test-operands.mac:43: ***ERROR Invalid addressing mode (2nd operand)
+      43                                        add     r0,@            ; bad
+      44                                
+      45                                ; OC_BR
+      46                                
+      47                                        ; branch offset is counted in words
+      48                                        ; from the address after instruction (. + 2)
+      49                                
+test-operands.mac:50: ***ERROR Branch target out of range (distance=-402)
+      50 000050 000400                          br      .+2-258.        ; bad
+      51 000052 000600                          br      .+2-256.
+      52 000054 000400                          br      .+2
+      53 000056 000577                          br      .+2+254.
+test-operands.mac:54: ***ERROR Branch target out of range (distance=400)
+      54 000060 000400                          br      .+2+256.        ; bad
+      55                                
+      56                                ; OC_SOB
+      57                                
+      58 000062 077001                          sob     r0,.
+      59 000064 077001                          sob     0,.             ; yes MACRO11 accepts this
+test-operands.mac:60: ***ERROR Junk at end of line (',3          ; bad
+')
+      60 000066 077001                          sob     r0,.,3          ; bad
+test-operands.mac:61: ***ERROR Invalid addressing mode (register expected)
+      61                                        sob                     ; bad
+test-operands.mac:62: ***ERROR Invalid syntax (comma expected)
+      62                                        sob     r0              ; bad
+test-operands.mac:63: ***ERROR Invalid syntax (comma expected)
+      63                                        sob     r0 .            ; bad
+test-operands.mac:64: ***ERROR Invalid addressing mode (register expected)
+      64                                        sob     10,.            ; bad
+      65                                
+      66                                ; OC_ASH
+      67                                
+      68 000070 072027  000003                  ash     #3,r0
+      69 000074 072027  000003                  ash     #3,0            ; yes MACRO11 accepts this
+test-operands.mac:70: ***ERROR Junk at end of line (',r1        ; bad
+')
+      70 000100 072027  000003                  ash     #3,r0,r1        ; bad
+test-operands.mac:71: ***ERROR Invalid addressing mode (1st operand)
+      71                                        ash                     ; bad
+test-operands.mac:72: ***ERROR Invalid syntax (comma expected)
+      72                                        ash     #3              ; bad
+test-operands.mac:73: ***ERROR Invalid syntax (comma expected)
+      73                                        ash     #3 r0           ; bad
+test-operands.mac:74: ***ERROR Invalid addressing mode (2nd operand: register expected)
+      74                                        ash     #3,#0           ; bad
+      75                                
+      76                                ; OC_JSR        tested in test-jmp.mac
+      77                                
+      78                                ; OC_FPPGENAC
+      79                                
+      80        000001                  ac1 = %1
+      81        000005                  ac5 = %5
+      82                                
+      83 000104 171111                          mulf    (r1),ac1
+      84 000106 171111                          mulf    (r1),1
+test-operands.mac:85: ***ERROR Junk at end of line (',ac1    ; bad
+')
+      85 000110 171111                          mulf    (r1),ac1,ac1    ; bad
+test-operands.mac:86: ***ERROR Invalid addressing mode (1st operand)
+      86                                        mulf                    ; bad
+test-operands.mac:87: ***ERROR Invalid addressing mode (1st operand)
+      87                                        mulf    (               ; bad
+test-operands.mac:88: ***ERROR Invalid syntax (comma expected)
+      88                                        mulf    (r1)            ; bad
+test-operands.mac:89: ***ERROR Invalid syntax (comma expected)
+      89                                        mulf    (r1) ac1        ; bad
+test-operands.mac:90: ***ERROR Invalid destination fp register
+      90 000112 171011                          mulf    (r1),ac5        ; bad
+      91                                
+      92                                ; OC_FPPACGEN
+      93                                
+      94 000114 174115                          stf     ac1,(r5)
+      95 000116 174115                          stf     1,(r5)
+test-operands.mac:96: ***ERROR Invalid source fp register
+test-operands.mac:96: ***ERROR Invalid syntax (comma expected)
+      96                                        stf                     ; bad
+test-operands.mac:97: ***ERROR Invalid syntax (comma expected)
+      97                                        stf     ac1             ; bad
+test-operands.mac:98: ***ERROR Invalid syntax (comma expected)
+      98                                        stf     ac1 (r5)        ; bad
+test-operands.mac:99: ***ERROR Invalid source fp register
+      99 000120 174015                          stf     ac5,(r5)        ; bad
+     100                                
+     101                                ; OC_CIS2       operands are optional and an extension
+     102                                
+     103 000122 076152                          cmpni
+     104 000124 076152  000001  000002          cmpni   1,2
+test-operands.mac:105: ***ERROR Junk at end of line (',3           ; bad
+')
+     105 000132 076152  000001  000002          cmpni   1,2,3           ; bad
+test-operands.mac:106: ***ERROR Invalid syntax (operand 2: comma expected)
+test-operands.mac:106: ***ERROR Invalid expression (operand 2)
+test-operands.mac:106: ***ERROR Invalid expression
+     106 000140 076152  000003  000000          cmpni   3               ; bad
+test-operands.mac:107: ***ERROR Invalid syntax (operand 2: comma expected)
+     107 000146 076152  000004  000005          cmpni   4 5             ; bad
+test-operands.mac:108: ***ERROR Invalid expression (operand 1)
+test-operands.mac:108: ***ERROR Invalid expression (operand 2)
+test-operands.mac:108: ***ERROR Invalid expression
+test-operands.mac:108: ***ERROR Invalid expression
+     108 000154 076152  000000  000000          cmpni   <>,<>           ; bad
+     109                                
+     110                                ; OC_CIS3       operands are optional and an extension
+     111                                
+     112 000162 076150                          addni
+     113 000164 076150  000001  000002          addni   1,2,3
+         000172 000003                  
+     114 000174 076150  000001  000002          addni   1,2,3,4         ; bad
+test-operands.mac:114: ***ERROR Junk at end of line (',4         ; bad
+')
+         000202 000003                  
+test-operands.mac:115: ***ERROR Invalid syntax (operand 2: comma expected)
+test-operands.mac:115: ***ERROR Invalid expression (operand 2)
+test-operands.mac:115: ***ERROR Invalid syntax (operand 3: comma expected)
+test-operands.mac:115: ***ERROR Invalid expression (operand 3)
+test-operands.mac:115: ***ERROR Invalid expression
+test-operands.mac:115: ***ERROR Invalid expression
+     115 000204 076150  000001  000000          addni   1               ; bad
+         000212 000000                  
+test-operands.mac:116: ***ERROR Invalid syntax (operand 3: comma expected)
+test-operands.mac:116: ***ERROR Invalid expression (operand 3)
+test-operands.mac:116: ***ERROR Invalid expression
+     116 000214 076150  000001  000002          addni   1,2             ; bad
+         000222 000000                  
+test-operands.mac:117: ***ERROR Invalid syntax (operand 2: comma expected)
+test-operands.mac:117: ***ERROR Invalid syntax (operand 3: comma expected)
+     117 000224 076150  000001  000002          addni   1 2 3           ; bad
+         000232 000003                  
+test-operands.mac:118: ***ERROR Invalid expression (operand 1)
+test-operands.mac:118: ***ERROR Invalid expression (operand 2)
+test-operands.mac:118: ***ERROR Invalid expression (operand 3)
+test-operands.mac:118: ***ERROR Invalid expression
+test-operands.mac:118: ***ERROR Invalid expression
+test-operands.mac:118: ***ERROR Invalid expression
+     118 000234 076150  000000  000000          addni   <>,<>,<>        ; bad
+         000242 000000                  
+     119                                
+     120                                ; OC_CIS4       operands are optional and an extension
+     121                                
+     122 000244 076132                          movtci
+     123 000246 076132  000001  000002          movtci  1,2,3,4
+         000254 000003  000004          
+     124 000260 076132  000001  000002          movtci  1,2,3,4,5
+test-operands.mac:124: ***ERROR Junk at end of line (',5
+')
+         000266 000003  000004          
+test-operands.mac:125: ***ERROR Invalid syntax (operand 2: comma expected)
+test-operands.mac:125: ***ERROR Invalid expression (operand 2)
+test-operands.mac:125: ***ERROR Invalid syntax (operand 3: comma expected)
+test-operands.mac:125: ***ERROR Invalid expression (operand 3)
+test-operands.mac:125: ***ERROR Invalid syntax (operand 4: comma expected)
+test-operands.mac:125: ***ERROR Invalid expression (operand 4)
+test-operands.mac:125: ***ERROR Invalid expression
+test-operands.mac:125: ***ERROR Invalid expression
+     125 000272 076132  000001  000000          movtci  1               ; bad
+test-operands.mac:125: ***ERROR Invalid expression
+         000300 000000  000000          
+test-operands.mac:126: ***ERROR Invalid syntax (operand 3: comma expected)
+test-operands.mac:126: ***ERROR Invalid expression (operand 3)
+test-operands.mac:126: ***ERROR Invalid syntax (operand 4: comma expected)
+test-operands.mac:126: ***ERROR Invalid expression (operand 4)
+test-operands.mac:126: ***ERROR Invalid expression
+     126 000304 076132  000001  000002          movtci  1,2             ; bad
+test-operands.mac:126: ***ERROR Invalid expression
+         000312 000000  000000          
+test-operands.mac:127: ***ERROR Invalid syntax (operand 4: comma expected)
+test-operands.mac:127: ***ERROR Invalid expression (operand 4)
+     127 000316 076132  000001  000002          movtci  1,2,3           ; bad
+test-operands.mac:127: ***ERROR Invalid expression
+         000324 000003  000000          
+test-operands.mac:128: ***ERROR Invalid syntax (operand 2: comma expected)
+test-operands.mac:128: ***ERROR Invalid syntax (operand 3: comma expected)
+test-operands.mac:128: ***ERROR Invalid syntax (operand 4: comma expected)
+     128 000330 076132  000001  000002          movtci  1 2 3 4         ; bad
+         000336 000003  000004          
+test-operands.mac:129: ***ERROR Invalid expression (operand 1)
+test-operands.mac:129: ***ERROR Invalid expression (operand 2)
+test-operands.mac:129: ***ERROR Invalid expression (operand 3)
+test-operands.mac:129: ***ERROR Invalid expression (operand 4)
+test-operands.mac:129: ***ERROR Invalid expression
+test-operands.mac:129: ***ERROR Invalid expression
+test-operands.mac:129: ***ERROR Invalid expression
+     129 000342 076132  000000  000000          movtci  <>,<>,<>,<>     ; bad
+test-operands.mac:129: ***ERROR Invalid expression
+         000350 000000  000000          
+     130                                
+     131                                        .end
+     131                                
+
+
+Symbol table
+
+.       ******R      001 AC1   =%000001           AC5   =%000005           
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000354    001   (RW,I,LCL,REL,CON,NOSAV)
