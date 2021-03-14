@@ -693,6 +693,10 @@ int check_branch(
 {
     int             s_offset;
 
+    if (offset & 1) {
+        report(stack->top, "Bad branch target (odd address)\n");
+    }
+
     /* Sign-extend */
     if (offset & 0100000)
         s_offset = offset | ~0177777;

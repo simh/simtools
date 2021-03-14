@@ -52,6 +52,7 @@
         br      .+2
         br      .+2+254.
         br      .+2+256.        ; bad
+        br      .+2+1           ; bad (odd)
 
 ; OC_SOB
 
