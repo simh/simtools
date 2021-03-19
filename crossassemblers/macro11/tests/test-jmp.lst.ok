@@ -1,6 +1,6 @@
        1                                ;;;;;
        2                                ;
-       3                                ; Tests the addressing modes for JMP.
+       3                                ; Tests various operand types for JMP, XOR, RTS.
        4                                ; JMP Rx is not allowed, all other modes are.
        5                                ;
        6                                ; XOR shares the instruction format with JSR
@@ -8,10 +8,10 @@
        8                                ; but XOR Rx,Ry is allowed whereas JSR Rx,Ry is not.
        9                                ;
       10                                
-      11 000000 000167  000152          start:  jmp     label           ; rel(pc)       jumps to label
-      12 000004 000177  000146                  jmp     @label          ; @rel(pc)      does something else!
-      13 000010 000127  000156'                 jmp     #label          ; (pc)+         does something else!
-      14 000014 000137  000156'                 jmp     @#label         ; @(pc)+        jumps to label
+      11 000000 000167  000162          start:  jmp     label           ; rel(pc)       jumps to label
+      12 000004 000177  000156                  jmp     @label          ; @rel(pc)      does something else!
+      13 000010 000127  000166'                 jmp     #label          ; (pc)+         does something else!
+      14 000014 000137  000166'                 jmp     @#label         ; @(pc)+        jumps to label
       15                                
 test-jmp.mac:16: ***ERROR JMP Rn is illegal
       16 000020 000101                          jmp     r1              ; must fail
@@ -24,60 +24,99 @@ test-jmp.mac:16: ***ERROR JMP Rn is illegal
       23 000036 000161  001234                  jmp     1234(r1)
       24 000042 000171  001234                  jmp     @1234(r1)
       25                                
-      26 000046 004067  000104          secnd:  jsr     r0,label        ; rel(pc)       jumps to label
-      27 000052 004077  000100                  jsr     r0,@label       ; @rel(pc)      does something else!
-      28 000056 004027  000156'                 jsr     r0,#label       ; (pc)+         does something else!
-      29 000062 004037  000156'                 jsr     r0,@#label      ; @(pc)+        jumps to label
-      30                                
-test-jmp.mac:31: ***ERROR JSR Rn,Rm is illegal
-      31 000066 004201                          jsr     r2,r1           ; must fail
-      32 000070 004312                          jsr     r3,(r2)
-      33 000072 004421                          jsr     r4,(r1)+
-      34 000074 004531                          jsr     r5,@(r1)+
-      35 000076 004241                          jsr     r2,-(r1)
-      36 000100 004351                          jsr     r3,@-(r1)
-      37 000102 004461  001234                  jsr     r4,1234(r1)
-      38 000106 004571  001234                  jsr     r5,@1234(r1)
-      39                                
-      40 000112 074067  000040          third:  xor     r0,label        ; rel(pc)
-      41 000116 074077  000034                  xor     r0,@label       ; @rel(pc)
-      42 000122 074027  000156'                 xor     r0,#label       ; (pc)+
-      43 000126 074037  000156'                 xor     r0,@#label      ; @(pc)+
-      44                                
-      45 000132 074201                          xor     r2,r1           ; must succeed
-      46 000134 074312                          xor     r3,(r2)         ; must succeed
-      47 000136 074421                          xor     r4,(r1)+        ; must succeed
-      48 000140 074531                          xor     r5,@(r1)+       ; must succeed
-      49 000142 074241                          xor     r2,-(r1)        ; must succeed
-      50 000144 074351                          xor     r3,@-(r1)       ; must succeed
-      51 000146 074461  001234                  xor     r4,1234(r1)     ; must succeed
-      52 000152 074571  001234                  xor     r5,@1234(r1)    ; must succeed
-      53                                
-test-jmp.mac:54: ***ERROR Illegal addressing mode
-      54                                        xor     (r2),r1         ; must fail
-test-jmp.mac:55: ***ERROR Illegal addressing mode
-      55                                        xor     (r2)+,r1        ; must fail
-test-jmp.mac:56: ***ERROR Illegal addressing mode
-      56                                        xor     @(r2)+,r1       ; must fail
-test-jmp.mac:57: ***ERROR Illegal addressing mode
-      57                                        xor     -(r2),r1        ; must fail
-test-jmp.mac:58: ***ERROR Illegal addressing mode
-      58                                        xor     @-(r2),r1       ; must fail
-test-jmp.mac:59: ***ERROR Illegal addressing mode
-      59                                        xor     1234(r2),r1     ; must fail
-test-jmp.mac:60: ***ERROR Illegal addressing mode
-      60                                        xor     @1234(r2),r1    ; must fail
-      61                                
-      62 000156 000207                  label:  rts     pc
-      62                                
+      26 000046 004067  000114          secnd:  jsr     r0,label        ; rel(pc)       jumps to label
+      27 000052 004067  000110                  jsr     0,label         ; rel(pc)       yes MACRO11 accepts this
+      28 000056 004077  000104                  jsr     r0,@label       ; @rel(pc)      does something else!
+      29 000062 004027  000166'                 jsr     r0,#label       ; (pc)+         does something else!
+      30 000066 004037  000166'                 jsr     r0,@#label      ; @(pc)+        jumps to label
+      31                                
+test-jmp.mac:32: ***ERROR JSR Rn,Rm is illegal
+      32 000072 004201                          jsr     r2,r1           ; must fail
+      33 000074 004312                          jsr     r3,(r2)
+      34 000076 004421                          jsr     r4,(r1)+
+      35 000100 004531                          jsr     r5,@(r1)+
+      36 000102 004241                          jsr     r2,-(r1)
+      37 000104 004351                          jsr     r3,@-(r1)
+      38 000106 004461  001234                  jsr     r4,1234(r1)
+      39 000112 004571  001234                  jsr     r5,@1234(r1)
+      40                                
+      41 000116 074067  000044          third:  xor     r0,label        ; rel(pc)
+      42 000122 074067  000040                  xor     0,label         ; rel(pc)  yes MACRO11 accepts this
+      43 000126 074077  000034                  xor     r0,@label       ; @rel(pc)
+      44 000132 074027  000166'                 xor     r0,#label       ; (pc)+
+      45 000136 074037  000166'                 xor     r0,@#label      ; @(pc)+
+      46                                
+      47 000142 074201                          xor     r2,r1           ; must succeed
+      48 000144 074312                          xor     r3,(r2)         ; must succeed
+      49 000146 074421                          xor     r4,(r1)+        ; must succeed
+      50 000150 074531                          xor     r5,@(r1)+       ; must succeed
+      51 000152 074241                          xor     r2,-(r1)        ; must succeed
+      52 000154 074351                          xor     r3,@-(r1)       ; must succeed
+      53 000156 074461  001234                  xor     r4,1234(r1)     ; must succeed
+      54 000162 074571  001234                  xor     r5,@1234(r1)    ; must succeed
+      55                                
+test-jmp.mac:56: ***ERROR Invalid addressing mode (1st operand: register exected)
+      56                                        xor     (r2),r1         ; must fail
+test-jmp.mac:57: ***ERROR Invalid addressing mode (1st operand: register exected)
+      57                                        xor     (r2)+,r1        ; must fail
+test-jmp.mac:58: ***ERROR Invalid addressing mode (1st operand: register exected)
+      58                                        xor     @(r2)+,r1       ; must fail
+test-jmp.mac:59: ***ERROR Invalid addressing mode (1st operand: register exected)
+      59                                        xor     -(r2),r1        ; must fail
+test-jmp.mac:60: ***ERROR Invalid addressing mode (1st operand: register exected)
+      60                                        xor     @-(r2),r1       ; must fail
+test-jmp.mac:61: ***ERROR Invalid addressing mode (1st operand: register exected)
+      61                                        xor     1234(r2),r1     ; must fail
+test-jmp.mac:62: ***ERROR Invalid addressing mode (1st operand: register exected)
+      62                                        xor     @1234(r2),r1    ; must fail
+      63                                
+      64        000003                  three = 3
+      65 000166 000207                  label:  rts     pc
+      66 000170 000201                          rts     r1
+      67 000172 000203                          rts     3               ; yes MACRO11 accepts this
+      68 000174 000203                          rts     three
+test-jmp.mac:69: ***ERROR Invalid addressing mode (register expected)
+      69 000176 000200                          rts                     ; must fail
+test-jmp.mac:70: ***ERROR Invalid addressing mode (register expected)
+      70 000200 000200                          rts     .               ; must fail
+test-jmp.mac:71: ***ERROR Invalid addressing mode (register expected)
+test-jmp.mac:71: ***ERROR Junk at end of line ('(r1)            ; mu')
+      71 000202 000200                          rts     (r1)            ; must fail
+      72                                
+      73 000000                                 .psect  abssec,abs
+      74        000000                          . = 0
+      75 000000 000200                  zero:   rts     zero            ; dubious but ok
+      76 000002 000202                  two:    rts     two             ; dubious but ok
+      77 000004 000204                  four:   rts     four            ; dubious but ok
+      78 000006 000206                  six:    rts     six             ; dubious but ok
+test-jmp.mac:79: ***ERROR Invalid addressing mode (register expected)
+      79 000010 000200                  eight:  rts     eight           ; bad
+      80                                
+      81 000000                                 .psect  relsec,rel
+test-jmp.mac:82: ***ERROR Invalid addressing mode (register expected)
+      82 000000 000200                  rzero:  rts     rzero           ; bad
+test-jmp.mac:83: ***ERROR Invalid addressing mode (register expected)
+      83 000002 000200                  rtwo:   rts     rtwo            ; bad
+test-jmp.mac:84: ***ERROR Invalid addressing mode (register expected)
+      84 000004 000200                  rfour:  rts     rfour           ; bad
+test-jmp.mac:85: ***ERROR Invalid addressing mode (register expected)
+      85 000006 000200                  rsix:   rts     rsix            ; bad
+test-jmp.mac:86: ***ERROR Invalid addressing mode (register expected)
+      86 000010 000200                  reight: rts     reight          ; bad
+      86                                
 
 
 Symbol table
 
-.       ******R      001 LABEL   000156R      001 SECND   000046R      001 START   000000R      001 THIRD   000112R      001 
+.       ******R      003 REIGHT  000010R      003 RZERO   000000R      003 THIRD   000116R      001 
+EIGHT = 000010       002 RFOUR   000004R      003 SECND   000046R      001 THREE = 000003           
+FOUR  = 000004       002 RSIX    000006R      003 SIX   = 000006       002 TWO   = 000002       002 
+LABEL   000166R      001 RTWO    000002R      003 START   000000R      001 ZERO  = 000000       002 
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000160    001   (RW,I,LCL,REL,CON,NOSAV)
+        000204    001   (RW,I,LCL,REL,CON,NOSAV)
+ABSSEC  000012    002   (RW,I,LCL,ABS,OVR,NOSAV)
+RELSEC  000012    003   (RW,I,LCL,REL,CON,NOSAV)

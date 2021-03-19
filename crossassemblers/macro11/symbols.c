@@ -413,6 +413,9 @@ void add_symbols(
     add_sym("XFC", I_XFC, OC_NONE, &instruction_section, &system_st);
     add_sym("XOR", I_XOR, OC_JSR, &instruction_section, &system_st);
     add_sym("MFPT", I_MFPT, OC_NONE, &instruction_section, &system_st);
+    add_sym("CSM", I_CSM, OC_1GEN, &instruction_section, &system_st);
+    add_sym("TSTSET", I_TSTSET, OC_1GEN, &instruction_section, &system_st);
+    add_sym("WRTLCK", I_WRTLCK, OC_1GEN, &instruction_section, &system_st);
 
     /* FPP instructions */
     add_sym("ABSD", I_ABSD, OC_FPPDST, &instruction_section, &system_st);
@@ -427,6 +430,7 @@ void add_symbols(
     add_sym("DIVD", I_DIVD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("DIVF", I_DIVF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCDF", I_LDCDF, OC_FPPGENAC, &instruction_section, &system_st);
+    add_sym("LDCFD", I_LDCFD, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCID", I_LDCID, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCIF", I_LDCIF, OC_FPPGENAC, &instruction_section, &system_st);
     add_sym("LDCLD", I_LDCLD, OC_FPPGENAC, &instruction_section, &system_st);

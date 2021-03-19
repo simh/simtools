@@ -1326,10 +1326,17 @@ static int assemble(
                                 cp++;  /* Allow the hash, but
                                           don't require it */
                             value = parse_expr(cp, 0);
+                            cp = value->cp;
                             if (value->type != EX_LIT) {
                                 report(stack->top, "Instruction requires simple literal operand\n");
                                 word = op->value;
                             } else {
+                                unsigned int max = (op->value == I_MARK)? 077 : 0377;
+
+                                if (value->data.lit > max) {
+                                    report(stack->top, "Literal operand too large (%d. > %d.)\n", value->data.lit, max);
+                                    value->data.lit = max;
+                                }
                                 word = op->value | value->data.lit;
                             }
 
@@ -1344,7 +1351,7 @@ static int assemble(
                             unsigned        word;
 
                             if (!get_mode(cp, &cp, &mode)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode\n");
                                 return 0;
                             }
 
@@ -1367,19 +1374,19 @@ static int assemble(
                             unsigned        word;
 
                             if (!get_mode(cp, &cp, &left)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (1st operand)\n");
                                 return 0;
                             }
 
                             cp = skipwhite(cp);
                             if (*cp++ != ',') {
-                                report(stack->top, "Illegal syntax\n");
+                                report(stack->top, "Invalid syntax (comma expected)\n");
                                 free_addr_mode(&left);
                                 return 0;
                             }
 
                             if (!get_mode(cp, &cp, &right)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (2nd operand)\n");
                                 free_addr_mode(&left);
                                 return 0;
                             }
@@ -1464,13 +1471,13 @@ static int assemble(
                             reg = get_register(value);
                             free_tree(value);
                             if (reg == NO_REG) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (register expected)\n");
                                 return 0;
                             }
 
                             cp = skipwhite(cp);
                             if (*cp++ != ',') {
-                                report(stack->top, "Illegal syntax\n");
+                                report(stack->top, "Invalid syntax (comma expected)\n");
                                 return 0;
                             }
 
@@ -1524,13 +1531,13 @@ static int assemble(
                             unsigned        word;
 
                             if (!get_mode(cp, &cp, &mode)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (1st operand)\n");
                                 return 0;
                             }
 
                             cp = skipwhite(cp);
                             if (*cp++ != ',') {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid syntax (comma expected)\n");
                                 free_addr_mode(&mode);
                                 return 0;
                             }
@@ -1539,7 +1546,7 @@ static int assemble(
 
                             reg = get_register(value);
                             if (reg == NO_REG) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (2nd operand: register expected)\n");
                                 free_tree(value);
                                 free_addr_mode(&mode);
                                 return 0;
@@ -1565,19 +1572,19 @@ static int assemble(
 
                             reg = get_register(value);
                             if (reg == NO_REG) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (1st operand: register exected)\n");
                                 free_tree(value);
                                 return 0;
                             }
 
                             cp = skipwhite(cp);
                             if (*cp++ != ',') {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid syntax (comma expected)\n");
                                 return 0;
                             }
 
                             if (!get_mode(cp, &cp, &mode)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (2nd operand)\n");
                                 free_tree(value);
                                 return 0;
                             }
@@ -1603,8 +1610,7 @@ static int assemble(
                             cp = value->cp;
                             reg = get_register(value);
                             if (reg == NO_REG) {
-                                report(stack->top, "Illegal addressing mode\n");
-                                free_tree(value);
+                                report(stack->top, "Invalid addressing mode (register expected)\n");
                                 reg = 0;
                             }
 
@@ -1646,13 +1652,13 @@ static int assemble(
                             unsigned        word;
 
                             if (!get_fp_src_mode(cp, &cp, &mode)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (1st operand)\n");
                                 return 0;
                             }
 
                             cp = skipwhite(cp);
                             if (*cp++ != ',') {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid syntax (comma expected)\n");
                                 free_addr_mode(&mode);
                                 return 0;
                             }
@@ -1690,19 +1696,19 @@ static int assemble(
 
                             reg = get_register(value);
                             if (reg == NO_REG || reg > 3) {
-                                report(stack->top, "Illegal source fp register\n");
+                                report(stack->top, "Invalid source fp register\n");
                                 reg = 0;
                             }
 
                             cp = skipwhite(cp);
                             if (*cp++ != ',') {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid syntax (comma expected)\n");
                                 free_tree(value);
                                 return 0;
                             }
 
                             if (!get_mode(cp, &cp, &mode)) {
-                                report(stack->top, "Illegal addressing mode\n");
+                                report(stack->top, "Invalid addressing mode (2nd operand)\n");
                                 free_tree(value);
                                 return 0;
                             }
@@ -1741,9 +1747,17 @@ static int assemble(
                     cis_common:
                             if (!EOL(*cp)) {
                                 for (int i = 0; i < nwords; i++) {
-                                    if (i > 0)
-                                        cp = skipdelim(cp);
+                                    if (i > 0) {
+                                        cp = skipwhite(cp);
+                                        if (*cp++ != ',') {
+                                            report(stack->top, "Invalid syntax (operand %d: comma expected)\n", i+1);
+                                            cp--;
+                                        }
+                                    }
                                     EX_TREE *ex = parse_expr(cp, 0);
+                                    if (!expr_ok(ex)) {
+                                        report(stack->top, "Invalid expression (operand %d)\n", i+1);
+                                    }
                                     cp = ex->cp;
                                     expr[i] = ex;
                                 }
