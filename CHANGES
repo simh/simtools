@@ -1,4 +1,4 @@
-??.??.20??: Rhialto
+19.03.2021: Rhialto
         version 0.7:
         - Fixed the end-of-line check for MARK, EMT, TRAP.
         - Left/right shift operator _; disabled when the -yus option is used.
