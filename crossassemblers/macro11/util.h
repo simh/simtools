@@ -55,13 +55,11 @@ void            my_searchenv(
 /* Cover a few platform-dependencies */
 
 #ifdef WIN32
-typedef unsigned __int64 ulong64;
 
 #define strdup _strdup
 #define putenv _putenv
 #define PATHSEP ";"
 #else
-typedef unsigned long long ulong64;
 
 #define PATHSEP ":"
 #endif

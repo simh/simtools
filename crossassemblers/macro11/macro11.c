@@ -53,9 +53,6 @@ DAMAGE.
 #include "object.h"
 #include "symbols.h"
 
-#define stricmp strcasecmp
-
-
 /* enable_tf is called by command argument parsing to enable and
    disable named options. */
 
@@ -64,9 +61,9 @@ static void enable_tf(
     int tf)
 {
     if (strcmp(opt, "AMA") == 0)
-        enabl_ama = tf;
+        opt_enabl_ama = tf;
     else if (strcmp(opt, "GBL") == 0)
-        enabl_gbl = tf;
+        enabl_gbl = tf;         /* Unused in pass 2 */
     else if (strcmp(opt, "ME") == 0)
         list_me = tf;
     else if (strcmp(opt, "BEX") == 0)
@@ -83,7 +80,7 @@ static void print_version(
     fprintf(strm, "  Version %s\n", VERSIONSTR);
     fprintf(strm, "  Copyright 2001 Richard Krehbiel,\n");
     fprintf(strm, "  modified 2009 by Joerg Hoppe,\n");
-    fprintf(strm, "  modified 2015 by Olaf 'Rhialto' Seibert.\n");
+    fprintf(strm, "  modified 2015-2017,2020 by Olaf 'Rhialto' Seibert.\n");
 }
 
 static void append_env(
@@ -133,7 +130,7 @@ static void print_help(
     printf("-h  print this help\n");
     printf("-l  gives the listing file name (.LST)\n");
     printf("    -l - enables listing to stdout.\n");
-    printf("-m  load RT-11 compatible macro library from which\n");
+    printf("-m  load RSX-11 or RT-11 compatible macro library from which\n");
     printf("    .MCALLed macros can be found.\n");
     printf("    Multiple allowed.\n");
     printf("-o  gives the object file name (.OBJ)\n");
@@ -148,6 +145,10 @@ static void print_help(
     printf("    libraries (see -m) into individual .MAC files in the current\n");
     printf("    directory.  No assembly of input is done.\n");
     printf("    This must be the last command line option!\n");
+    printf("-rsx Generate RSX style object files%s.\n",
+            (rt11 ? "": " (default)"));
+    printf("-rt11 Generate RT11 style object files.%s\n",
+            (rt11 ? " (default)": ""));
     printf("-ysl Syntax extension: change length of symbols from \n");
     printf("     default = %d to larger values, max %d.\n", SYMMAX_DEFAULT, SYMMAX_MAX);
     printf("-yus Syntax extension: allow underscore \"_\" in symbols.\n");
@@ -168,6 +169,41 @@ static void print_help(
 void usage(char *message) {
     fputs(message, stderr);
     exit(EXIT_FAILURE);
+}
+
+void prepare_pass(int this_pass, STACK *stack, int nr_files, char **fnames)
+{
+    int i;
+
+    stack_init(stack);
+
+    /* Push the files onto the input stream in reverse order */
+    for (i = nr_files - 1; i >= 0; --i) {
+        STREAM         *str = new_file_stream(fnames[i]);
+
+        if (str == NULL) {
+            report(NULL, "Unable to open file %s\n", fnames[i]);
+            exit(EXIT_FAILURE);
+        }
+        stack_push(stack, str);
+    }
+
+    DOT = 0;
+    current_pc->section = &blank_section;
+    last_dot_section = NULL;
+    pass = this_pass;
+    stmtno = 0;
+    lsb = 0;
+    next_lsb = 1;
+    lsb_used = 0;
+    last_macro_lsb = -1;
+    last_locsym = 32767;
+    last_cond = -1;
+    sect_sp = -1;
+    suppressed = 0;
+    enabl_lc = 1;
+    enabl_lcm = 0;
+    enabl_ama = opt_enabl_ama;
 }
 
 int main(
@@ -195,11 +231,11 @@ int main(
             char           *cp;
 
             cp = argv[arg] + 1;
-            if (!stricmp(cp, "h")) {
+            if (!strcasecmp(cp, "h")) {
                 print_help();
-            } else if (!stricmp(cp, "v")) {
+            } else if (!strcasecmp(cp, "v")) {
                 print_version(stderr);
-            } else if (!stricmp(cp, "e")) {
+            } else if (!strcasecmp(cp, "e")) {
                 /* Followed by options to enable */
                 /* Since /SHOW and /ENABL option names don't overlap,
                    I consolidate. */
@@ -208,14 +244,14 @@ int main(
                 }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 1);
-            } else if (!stricmp(cp, "d")) {
+            } else if (!strcasecmp(cp, "d")) {
                 /* Followed by an option to disable */
                 if(arg >= argc-1 || !isalpha((unsigned char)*argv[arg+1])) {
                     usage("-d must be followed by an option to disable\n");
                 }
                 upcase(argv[++arg]);
                 enable_tf(argv[arg], 0);
-            } else if (!stricmp(cp, "m")) {
+            } else if (!strcasecmp(cp, "m")) {
                 /* Macro library */
                 /* This option gives the name of an RT-11 compatible
                    macro library from which .MCALLed macros can be
@@ -231,7 +267,7 @@ int main(
                     exit(EXIT_FAILURE);
                 }
                 nr_mlbs++;
-            } else if (!stricmp(cp, "p")) {
+            } else if (!strcasecmp(cp, "p")) {
                 /* P for search path */
                 /* The -p option gives the name of a directory in
                    which .MCALLed macros may be found.  */  {
@@ -243,7 +279,7 @@ int main(
                     append_env("MCALL", argv[arg+1]);
                     arg++;
                 }
-            } else if (!stricmp(cp, "I")) {
+            } else if (!strcasecmp(cp, "I")) {
                 /* I for include path */
                 /* The -I option gives the name of a directory in
                    which .included files may be found.  */  {
@@ -255,14 +291,14 @@ int main(
 
                     arg++;
                 }
-            } else if (!stricmp(cp, "o")) {
+            } else if (!strcasecmp(cp, "o")) {
                 /* The -o option gives the object file name (.OBJ) */
                 if(arg >= argc-1 || *argv[arg+1] == '-') {
                     usage("-o must be followed by the object file name\n");
                 }
                 ++arg;
                 objname = argv[arg];
-            } else if (!stricmp(cp, "l")) {
+            } else if (!strcasecmp(cp, "l")) {
                 /* The option -l gives the listing file name (.LST) */
                 /* -l - enables listing to stdout. */
                 if(arg >= argc-1 ||
@@ -274,7 +310,7 @@ int main(
                     lstfile = stdout;
                 else
                     lstfile = fopen(lstname, "w");
-            } else if (!stricmp(cp, "x")) {
+            } else if (!strcasecmp(cp, "x")) {
                 /* The -x option invokes macro11 to expand the
                    contents of the registered macro libraries (see -m)
                    into individual .MAC files in the current
@@ -288,7 +324,7 @@ int main(
                 for (m = 0; m < nr_mlbs; m++)
                     mlb_extract(mlbs[m]);
                 return EXIT_SUCCESS;
-            } else if (!stricmp(cp, "ysl")) {
+            } else if (!strcasecmp(cp, "ysl")) {
                 /* set symbol_len */
                 if (arg >= argc-1) {
                     usage("-s must be followed by a number\n");
@@ -302,14 +338,18 @@ int main(
                     }
                     symbol_len = sl;
                 }
-            } else if (!stricmp(cp, "yus")) {
+            } else if (!strcasecmp(cp, "yus")) {
                 /* allow underscores */
                 symbol_allow_underscores = 1;
-            } else if (!stricmp(cp, "yl1")) {
+            } else if (!strcasecmp(cp, "yl1")) {
                 /* list the first pass, in addition to the second */
                 list_pass_0++;
-            } else if (!stricmp(cp, "yd")) {
+            } else if (!strcasecmp(cp, "yd")) {
                 enabl_debug++;
+            } else if (!strcasecmp(cp, "rt11")) {
+                rt11 = 1;
+            } else if (!strcasecmp(cp, "rsx")) {
+                rt11 = 0;
             } else {
                 fprintf(stderr, "Unknown option %s\n", argv[arg]);
                 print_help();
@@ -326,39 +366,11 @@ int main(
     }
 
     add_symbols(&blank_section);
-
-    text_init(&tr, NULL, 0);
-
     module_name = memcheck(strdup(".MAIN."));
-
     xfer_address = new_ex_lit(1);      /* The undefined transfer address */
 
-    stack_init(&stack);
-    /* Push the files onto the input stream in reverse order */
-    for (i = nr_files - 1; i >= 0; --i) {
-        STREAM         *str = new_file_stream(fnames[i]);
-
-        if (str == NULL) {
-            report(NULL, "Unable to open file %s\n", fnames[i]);
-            exit(EXIT_FAILURE);
-        }
-        stack_push(&stack, str);
-    }
-
-    DOT = 0;
-    current_pc->section = &blank_section;
-    last_dot_section = NULL;
-    pass = 0;
-    stmtno = 0;
-    lsb = 0;
-    next_lsb = 1;
-    lsb_used = 0;
-    last_macro_lsb = -1;
-    last_locsym = 32767;
-    last_cond = -1;
-    sect_sp = -1;
-    suppressed = 0;
-
+    text_init(&tr, NULL, 0);
+    prepare_pass(0, &stack, nr_files, fnames);
     assemble_stack(&stack, &tr);
 
     if (list_pass_0 && lstfile) {
@@ -378,37 +390,9 @@ int main(
     sym_hist(&symbol_st, "symbol_st"); /* Draw a symbol table histogram */
 #endif
 
-
-    text_init(&tr, obj, 0);
-
-    stack_init(&stack);                /* Superfluous... */
-    /* Re-push the files onto the input stream in reverse order */
-    for (i = nr_files - 1; i >= 0; --i) {
-        STREAM         *str = new_file_stream(fnames[i]);
-
-        if (str == NULL) {
-            report(NULL, "Unable to open file %s\n", fnames[i]);
-            exit(EXIT_FAILURE);
-        }
-        stack_push(&stack, str);
-    }
-
-    DOT = 0;
-
-    current_pc->section = &blank_section;
-    last_dot_section = NULL;
-
-    pass = 1;
-    stmtno = 0;
-    lsb = 0;
-    next_lsb = 1;
-    lsb_used = 0;
-    last_macro_lsb = -1;
-    last_locsym = 32767;
     pop_cond(-1);
-    sect_sp = -1;
-    suppressed = 0;
-
+    text_init(&tr, obj, 0);
+    prepare_pass(1, &stack, nr_files, fnames);
     errcount = assemble_stack(&stack, &tr);
 
     text_flush(&tr);

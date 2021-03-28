@@ -1,0 +1,26 @@
+       1                                        ; test complex relocations
+       2                                
+       3                                        ; .globl  IE.ITS,IE.MON ; implicit
+       4 000000 012767  000000C 000000          mov     #-IE.ITS, space
+       5                                
+       6 000006 000000G                 space:  .word   IE.ITS    ; the only simple relocation
+       7 000010 000000C                         .word   -IE.ITS   ; all others are complex relocations
+       8 000012 000000C                         .word   ^C<IE.ITS>
+       9 000014 000000C                         .word   IE.ITS + IE.MON
+      10 000016 000000C                         .word   IE.ITS - IE.MON
+      11 000020 000000C                         .word   IE.ITS * IE.MON
+      12 000022 000000C                         .word   IE.ITS / IE.MON
+      13 000024 000000C                         .word   IE.ITS & IE.MON
+      14 000026 000000C                         .word   IE.ITS ! IE.MON
+      14                                
+
+
+Symbol table
+
+.       ******R      001 IE.ITS= ****** GX        IE.MON= ****** GX        SPACE   000006R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000030    001   (RW,I,LCL,REL,CON,NOSAV)

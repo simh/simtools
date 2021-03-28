@@ -1,0 +1,28 @@
+GSD:
+	MODNAME TEST  =0 flags=0
+	PSECT       =0  CON RW REL LCL I flags=40
+	PSECT . ABS.=1030  OVR RW ABS GBL I flags=104
+	PSECT FOO   =34  CON RW REL LCL I flags=40
+	XFER . ABS.=1 flags=10
+ENDGSD
+RLD
+	Location counter definition FOO+0
+TEXT ADDR=0 LEN=34
+	000000: 000042 000000 005067 177772 "...7...
+	000010: 005037 000002 005067 001234 ....7...
+	000020: 005037 001234 005037 000002 ........
+	000030: 005037 001234               ....
+RLD
+	Internal 12=2
+	Internal displaced 16=1234
+	Internal 26=2
+	Location counter definition . ABS.+1000
+TEXT ADDR=1000 LEN=30
+	001000: 005067 000002 005037 000002 7.......
+	001010: 005067 000220 005037 001234 7.......
+	001020: 005037 000002 005037 001234 ........
+RLD
+	PSECT plus offset displaced 1002=FOO+2
+	PSECT plus offset 1006=FOO+2
+	PSECT plus offset 1022=FOO+2
+ENDMOD

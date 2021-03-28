@@ -24,9 +24,10 @@ int             last_locsym = 32768;    /* The last local symbol number generate
 
 int             enabl_debug = 0;        /* Whether assembler debugging is enabled */
 
-int             enabl_ama = 0;  /* When set, chooses absolute (037) versus
+int             opt_enabl_ama = 0;      /* May be changed by command line */
+int             enabl_ama;      /* When set, chooses absolute (037) versus
                                    PC-relative */
-/* (067) addressing mode */
+                                /* (067) addressing mode */
 int             enabl_lsb = 0;  /* When set, stops non-local symbol
                                    definitions from delimiting local
                                    symbol sections. */
@@ -35,6 +36,9 @@ int             enabl_gbl = 1;  /* Implicit definition of global symbols */
 
 int             enabl_lc = 1;   /* If lowercase disabled, convert assembler
                                    source to upper case. */
+
+int             enabl_lcm = 0;  /* If lowercase disabled, .IF IDN/DIF are
+                                   case-sensitive. */
 
 int             suppressed = 0; /* Assembly suppressed by failed conditional */
 
@@ -59,7 +63,7 @@ EX_TREE        *xfer_address = NULL;    /* The transfer address */
 SYMBOL         *current_pc;     /* The current program counter */
 
 unsigned        last_dot_addr;  /* Last coded PC... */
-SECTION        *last_dot_section;       /* ...and it's program section */
+SECTION        *last_dot_section;       /* ...and its program section */
 
 /* The following are dummy psects for symbols which have meaning to
 the assembler: */

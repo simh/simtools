@@ -1,8 +1,8 @@
-#define PARSE__C
-
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 #include <ctype.h>
 
 #include "parse.h"                     /* my own definitions */
@@ -48,6 +48,25 @@ char           *skipdelim_comma(
         cp = skipwhite(cp + 1);
     }
     return cp;
+}
+
+/*
+ * check_eol - check that we're at the end of a line.
+ * Complain if not.
+ */
+int check_eol(
+    STACK *stack,
+    char *cp)
+{
+    cp = skipwhite(cp);
+
+    if (EOL(*cp)) {
+        return 1;
+    }
+
+    report(stack->top, "Junk at end of line ('%.20s')\n", cp);
+
+    return 0;
 }
 
 /* Parses a string from the input stream. */
@@ -192,7 +211,7 @@ int get_mode(
         mode->offset = parse_expr(cp, 0);
         if (endp)
             *endp = mode->offset->cp;
-        return TRUE;
+        return expr_ok(mode->offset);
     }
 
     /* Check for -(Rn) */
@@ -262,6 +281,9 @@ int get_mode(
 
     mode->offset = parse_expr(cp, 0);
 
+    if (!expr_ok(mode->offset))
+        return FALSE;
+
     cp = skipwhite(mode->offset->cp);
 
     if (*cp == '(') {
@@ -318,12 +340,106 @@ int get_mode(
     return TRUE;
 }
 
+/* get_fp_src_mode - parse an immediate fp literal or a general mode */
+
+int get_fp_src_mode(
+    char *cp,
+    char **endp,
+    ADDR_MODE *mode)
+{
+    cp = skipwhite(cp);
+
+    char *savecp = cp;
+
+    if (cp[0] == '#') {
+        unsigned flt[1];
+        char *fltendp = NULL;
+
+        cp = skipwhite(cp + 1);
+
+        int ret = parse_float(cp, &fltendp, 1, flt);
+
+        if (ret) {
+            mode->type = 027;
+            mode->rel = 0;
+            mode->offset = new_ex_lit(flt[0]);
+            mode->offset->cp = fltendp;
+
+            if (endp)
+                *endp = mode->offset->cp;
+
+            return TRUE;
+        } else if (fltendp) {
+            /* it looked like a fp number but something was wrong with it */
+        }
+    }
+
+    int ret = get_mode(savecp, endp, mode);
+
+    return ret;
+}
+
+#define DEBUG_FLOAT     0
+#if DEBUG_FLOAT
+
+void
+printflt(unsigned *flt, int size)
+{
+    printf("%06o: ",        flt[0]);
+    printf("sign:  %d ",   (flt[0] & 0x8000) >> 15);
+    printf("uexp:  %x ",   (flt[0] & 0x7F80) >>  7);
+    printf("ufrac: %02x",   flt[0] & 0x007F);
+
+    for (int i = 1; i < size; i++) {
+        printf(" %04x", flt[i]);
+    }
+
+    printf("\n");
+}
+
+#define DF(x)   printf x
+#else
+#define DF(x)
+#endif
+
+/*
+ * We need 56 bits of mantissa.
+ *
+ * Try to detect if it is needed, possible and useful to use
+ * long double instead of double, when parsing floating point numbers.
+ */
+
+#if DBL_MANT_DIG >= 56
+/* plain double seems big enough */
+# define USE_LONG_DOUBLE        0
+/* long double exists and seems big enough */
+#elif LDBL_MANT_DIG >= 56
+# define USE_LONG_DOUBLE        1
+#elif defined(LDBL_MANT_DIG)
+/* long double exists but is probably still too small */
+# define USE_LONG_DOUBLE        1
+#else
+/* long double does not exist and plain double is too small */
+# define USE_LONG_DOUBLE        0
+#endif
+
+#if USE_LONG_DOUBLE
+# define DOUBLE                 long double
+# define SCANF_FMT              "%Lf"
+# define FREXP                  frexpl
+#else
+# define DOUBLE                 double
+# define SCANF_FMT              "%lf"
+# define FREXP                  frexp
+#endif
+
+
 /* Parse PDP-11 64-bit floating point format. */
 /* Give a pointer to "size" words to receive the result. */
 /* Note: there are probably degenerate cases that store incorrect
    results.  For example, I think rounding up a FLT2 might cause
    exponent overflow.  Sorry. */
-/* Note also that the full 49 bits of precision probably aren't
+/* Note also that the full 56 bits of precision probably aren't always
    available on the source platform, given the widespread application
    of IEEE floating point formats, so expect some differences.  Sorry
    again. */
@@ -334,54 +450,130 @@ int parse_float(
     int size,
     unsigned *flt)
 {
-    double          d;          /* value */
-    double          frac;       /* fractional value */
-    ulong64         ufrac;      /* fraction converted to 49 bit
+    DOUBLE          d;          /* value */
+    DOUBLE          frac;       /* fractional value */
+    uint64_t        ufrac;      /* fraction converted to 56 bit
                                    unsigned integer */
+    uint64_t        onehalf;    /* one half of the smallest bit
+                                   (used for rounding) */
     int             i;          /* Number of fields converted by sscanf */
     int             n;          /* Number of characters converted by sscanf */
     int             sexp;       /* Signed exponent */
     unsigned        uexp;       /* Unsigned excess-128 exponent */
     unsigned        sign = 0;   /* Sign mask */
 
-    i = sscanf(cp, "%lf%n", &d, &n);
+    i = sscanf(cp, SCANF_FMT "%n", &d, &n);
     if (i == 0)
         return 0;                      /* Wasn't able to convert */
+    DF(("LDBL_MANT_DIG: %d\n", LDBL_MANT_DIG));
+    DF(("%Lf input: %s", d, cp));
 
     cp += n;
     if (endp)
         *endp = cp;
 
     if (d == 0.0) {
-        flt[0] = flt[1] = flt[2] = flt[3] = 0;  /* All-bits-zero equals zero */
+        for (i = 0; i < size; i++) {
+            flt[i] = 0; /* All-bits-zero equals zero */
+        }
         return 1;                      /* Good job. */
     }
 
-    frac = frexp(d, &sexp);            /* Separate into exponent and mantissa */
-    if (sexp < -128 || sexp > 127)
+    frac = FREXP(d, &sexp);            /* Separate into exponent and mantissa */
+    DF(("frac: %Lf %La sexp: %d\n", frac, frac, sexp));
+    if (sexp < -127 || sexp > 127)
         return 0;                      /* Exponent out of range. */
 
     uexp = sexp + 128;                  /* Make excess-128 mode */
     uexp &= 0xff;                       /* express in 8 bits */
+    DF(("uexp: %02x\n", uexp));
+
+    /*
+     * frexp guarantees its fractional return value is
+     *   abs(frac) >= 0.5    and  abs(frac) < 1.0
+     * Another way to think of this is that:
+     *   abs(frac) >= 2**-1  and  abs(frac) < 2**0
+     */
 
     if (frac < 0) {
-        sign = 0100000;                /* Negative sign */
+        sign = (1 << 15);              /* Negative sign */
         frac = -frac;                  /* fix the mantissa */
     }
 
-    /* The following big literal is 2 to the 49th power: */
-    ufrac = (ulong64) (frac * 72057594037927936.0);     /* Align fraction bits */
+    /*
+     * For the PDP-11 floating point representation the
+     *  fractional part is 7 bits (for 16-bit floating point
+     *  literals), 23 bits (for 32-bit floating point values),
+     *  or 55 bits (for 64-bit floating point values).
+     * However the bit immediately above the MSB is always 1
+     *  because the value is normalized.  So it's actually
+     *  8 bits, 24 bits, or 56 bits.
+     * We effectively multiply the fractional part of our value by
+     *  2**56 to fully expose all of those bits (including
+     *  the MSB which is 1).
+     * However as an intermediate step, we really multiply by
+     *  2**57, so we get one lsb for possible later rounding
+     *  purposes. After that, we divide by 2 again.
+     */
 
-    /* Round from FLT4 to FLT2 */
-    if (size < 4) {
-        ufrac += 0x80000000;           /* Round to nearest 32-bit
-                                          representation */
+    /* The following big literal is 2 to the 57th power: */
+    ufrac = (uint64_t) (frac * 144115188075855872.0); /* Align fraction bits */
+    DF(("ufrac: %016lx\n", ufrac));
+    DF(("56   : %016lx\n", (1UL<<57) - 2));
 
-        if (ufrac > 0x200000000000) {  /* Overflow? */
+    /*
+     * ufrac is now >= 2**56 and < 2**57.
+     *  This means it's normalized: bit [56] is 1
+     *  and all higher bits are 0.
+     */
+
+    /* Round from 57-bits to 56, 24, or 8.
+     * We do this by:
+     * + first adding a value equal to one half of the
+     *   least significant bit (the value 'onehalf')
+     * + (possibly) dealing with any carrying that
+     *   causes the value to no longer be normalized
+     *   (with bit [56] = 1 and all higher bits = 0)
+     * + shifting right by 1 bit (which throws away
+     *   the 0 bit).  Note this step could be rolled
+     *   into the next step.
+     * + taking the remaining highest order 8,
+     *   24, or 56 bits.
+     *
+     * +--+--------+-------+ +--------+--------+
+     * |15|14     7|6     0| |15      |       0|
+     * +--+--------+-------+ +--------+--------+
+     * | S|EEEEEEEE|MMMMMMM| |MMMMMMMM|MMMMMMMM| ...maybe 2 more words...
+     * +--+--------+-------+ +--------+--------+
+     *  Sign (1 bit)
+     *     Exponent (8 bits)
+     *              Mantissa (7 bits)
+     */
+
+    onehalf = 1ULL << (16 * (4-size));
+    ufrac += onehalf;
+    DF(("onehalf=%016lx, ufrac+onehalf: %016lx\n", onehalf, ufrac));
+
+    /* Did it roll up to a value 2**56? */
+    if ((ufrac >> 57) > 0) {           /* Overflow? */
+        if (uexp < 0xFF) {
             ufrac >>= 1;               /* Normalize */
-            uexp--;
+            uexp++;
+            DF(("ufrac: %016lx  uexp: %02x (normalized)\n", ufrac, uexp));
+        } else {
+            /*
+             * If rounding and then normalisation would cause the exponent to
+             * overflow, just don't round: the cure is worse than the disease.
+             * We could detect ahead of time but the conditions for all size
+             * values may be a bit complicated, and so rare, that it is more
+             * readable to just undo it here.
+             */
+            ufrac -= onehalf;
+            DF(("don't round: exponent overflow"));
         }
     }
+
+    ufrac >>= 1;                       /* Go from 57 bits to 56 */
 
     flt[0] = (unsigned) (sign | (uexp << 7) | ((ufrac >> 48) & 0x7F));
     if (size > 1) {
@@ -407,6 +599,7 @@ int parse_float(
 #define MUL_PREC 1
 #define AND_PREC 1
 #define OR_PREC 1
+#define LSH_PREC 1
 
 EX_TREE        *parse_unary(
     char *cp);                  /* Prototype for forward calls */
@@ -485,6 +678,16 @@ EX_TREE        *parse_binary(
 
             rightp = parse_binary(cp + 1, term, AND_PREC);
             tp = new_ex_bin(EX_AND, leftp, rightp);
+            tp->cp = rightp->cp;
+            leftp = tp;
+            break;
+
+        case '_':
+            if (symbol_allow_underscores || depth >= LSH_PREC)
+                return leftp;
+
+            rightp = parse_binary(cp + 1, term, LSH_PREC);
+            tp = new_ex_bin(EX_LSH, leftp, rightp);
             tp->cp = rightp->cp;
             leftp = tp;
             break;
@@ -594,58 +797,56 @@ int brackrange(
     int *length,
     char **endp)
 {
-    char            endstr[6];
-    int             endlen;
+    char            endstr[] = "x\n";
+    int             len = 0;
     int             nest;
-    int             len;
 
     switch (*cp) {
-    case '^':
+    case '^':                   /* ^/text/ */
         endstr[0] = cp[1];
-        strcpy(endstr + 1, "\n");
         *start = 2;
-        endlen = 1;
+        cp += *start;
+        len = strcspn(cp, endstr);
         break;
-    case '<':
-        strcpy(endstr, "<>\n");
-        endlen = 1;
+    case '<':                   /* <may<be>nested> */
         *start = 1;
-        break;
-    default:
-        return FALSE;
-    }
-
-    cp += *start;
-
-    len = 0;
-    if (endstr[1] == '>') { /* <>\n */
+        cp += *start;
         nest = 1;
-        while (nest) {
+
+        while (nest > 0) {
             int             sublen;
 
-            sublen = strcspn(cp + len, endstr);
+            sublen = strcspn(cp + len, "<>\n");
             if (cp[len + sublen] == '<') {
                 nest++;
-                sublen++;  /* avoid infinite loop when sublen == 0 */
+                sublen++;       /* include nested starting delimiter */
             } else {
                 nest--;
                 if (nest > 0 && cp[len + sublen] == '>')
-                    sublen++;  /* avoid infinite loop when sublen == 0 */
+                    sublen++;   /* include nested ending delimiter */
             }
             len += sublen;
             if (sublen == 0)
                 break;
         }
-    } else {
-        int             sublen;
+        break;
+    default:
+        return FALSE;
+    }
 
-        sublen = strcspn(cp + len, endstr);
-        len += sublen;
+    /*
+     * If we see a newline here, the proper terminator must be missing.
+     * Don't use EOL() to check: it recognizes ';' too.
+     * Unfortunately we can't issue a diagnostic here.
+     */
+    if (!cp[len] || cp[len] == '\n') {
+        return FALSE;
     }
 
     *length = len;
-    if (endp)
-        *endp = cp + len + endlen;
+    if (endp) {
+        *endp = cp + len + 1;   /* skip over ending delimiter */
+    }
 
     return 1;
 }
@@ -757,6 +958,54 @@ EX_TREE        *parse_unary(
                 }
                 return tp;
             }
+        case 'p':
+            /* psect limits, low or high */ {
+                char bound = tolower((unsigned char)cp[2]);
+                char *cp2 = skipwhite(cp + 3);
+                int islocal = 0;
+                char *endcp = NULL;
+                char *psectname = get_symbol(cp2, &endcp, &islocal);
+                SYMBOL *sectsym = psectname ? lookup_sym(psectname, &section_st) : NULL;
+
+                if (sectsym && !islocal) {
+                    SECTION *psect = sectsym->section;
+
+                    tp = new_ex_tree();
+                    tp->type = EX_SYM;
+                    tp->data.symbol = sectsym;
+                    tp->cp = cp;
+
+                    if (bound == 'l') {
+                        ; /* that's it */
+                    } else if (bound == 'h') {
+                        EX_TREE *rightp = new_ex_lit(psect->size);
+                        tp = new_ex_bin(EX_ADD, tp, rightp);
+                    } else {
+                        tp = ex_err(tp, endcp);
+                        /* report(stack->top, "^p: %c not recognized\n", bound); */
+                    }
+                } else {
+                    /* report(stack->top, "psect name %s not found\n", psectname); */
+                    if (!endcp) {
+                        endcp = cp;
+                    }
+                    if (pass == 0) {
+                        /*
+                         * During the first pass it is expected that the psect is not
+                         * found. Return a dummy value of the expected size, so that
+                         * the size of the psect keeps in sync.
+                         */
+                        tp = new_ex_lit(0);
+                    } else {
+                        tp = ex_err(new_ex_lit(0), endcp);
+                    }
+                }
+                free(psectname);
+                tp->cp = endcp;
+                cp = endcp;
+
+                return tp;
+            }
         }
 
         if (ispunct((unsigned char)cp[1])) {
@@ -847,7 +1096,6 @@ EX_TREE        *parse_unary(
            get_symbol a second time. */
 
         if (!(label = get_symbol(cp, &cp, &local))) {
-            cp++;                      /*JH: eat first char of illegal label, else endless loop on implied .WORD */
             tp = ex_err(NULL, cp);     /* Not a valid label. */
             return tp;
         }
@@ -931,4 +1179,14 @@ EX_TREE        *parse_unary_expr(
                                           evaluation */
 
     return value;
+}
+
+/*
+ * expr_ok  Returns TRUE if there was a valid expression parsed.
+ */
+
+int             expr_ok(
+    EX_TREE *expr)
+{
+    return expr != NULL && expr->type != EX_ERR;
 }

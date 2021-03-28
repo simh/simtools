@@ -1,7 +1,11 @@
 ;;;;;
 ;
-; Tests the addressing modes for JMP.
+; Tests various operand types for JMP, XOR, RTS.
 ; JMP Rx is not allowed, all other modes are.
+;
+; XOR shares the instruction format with JSR
+; (their source operand can only be a register),
+; but XOR Rx,Ry is allowed whereas JSR Rx,Ry is not.
 ;
 
 start:  jmp     label           ; rel(pc)       jumps to label
@@ -10,6 +14,7 @@ start:  jmp     label           ; rel(pc)       jumps to label
         jmp     @#label         ; @(pc)+        jumps to label
 
         jmp     r1              ; must fail
+        jmp     (r0)            ; must succeed (failed before a24e3ba3)
         jmp     (r2)
         jmp     (r1)+
         jmp     @(r1)+
@@ -19,6 +24,7 @@ start:  jmp     label           ; rel(pc)       jumps to label
         jmp     @1234(r1)
 
 secnd:  jsr     r0,label        ; rel(pc)       jumps to label
+        jsr     0,label         ; rel(pc)       yes MACRO11 accepts this
         jsr     r0,@label       ; @rel(pc)      does something else!
         jsr     r0,#label       ; (pc)+         does something else!
         jsr     r0,@#label      ; @(pc)+        jumps to label
@@ -32,4 +38,49 @@ secnd:  jsr     r0,label        ; rel(pc)       jumps to label
         jsr     r4,1234(r1)
         jsr     r5,@1234(r1)
 
+third:  xor     r0,label        ; rel(pc)
+        xor     0,label         ; rel(pc)  yes MACRO11 accepts this
+        xor     r0,@label       ; @rel(pc)
+        xor     r0,#label       ; (pc)+
+        xor     r0,@#label      ; @(pc)+
+
+        xor     r2,r1           ; must succeed
+        xor     r3,(r2)         ; must succeed
+        xor     r4,(r1)+        ; must succeed
+        xor     r5,@(r1)+       ; must succeed
+        xor     r2,-(r1)        ; must succeed
+        xor     r3,@-(r1)       ; must succeed
+        xor     r4,1234(r1)     ; must succeed
+        xor     r5,@1234(r1)    ; must succeed
+
+        xor     (r2),r1         ; must fail
+        xor     (r2)+,r1        ; must fail
+        xor     @(r2)+,r1       ; must fail
+        xor     -(r2),r1        ; must fail
+        xor     @-(r2),r1       ; must fail
+        xor     1234(r2),r1     ; must fail
+        xor     @1234(r2),r1    ; must fail
+
+three = 3
 label:  rts     pc
+        rts     r1
+        rts     3               ; yes MACRO11 accepts this
+        rts     three
+        rts                     ; must fail
+        rts     .               ; must fail
+        rts     (r1)            ; must fail
+
+        .psect  abssec,abs
+        . = 0
+zero:   rts     zero            ; dubious but ok
+two:    rts     two             ; dubious but ok
+four:   rts     four            ; dubious but ok
+six:    rts     six             ; dubious but ok
+eight:  rts     eight           ; bad
+
+        .psect  relsec,rel
+rzero:  rts     rzero           ; bad
+rtwo:   rts     rtwo            ; bad
+rfour:  rts     rfour           ; bad
+rsix:   rts     rsix            ; bad
+reight: rts     reight          ; bad

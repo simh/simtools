@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
 modified 2009 by Joerg Hoppe,
-modified 2015 by Olaf 'Rhialto' Seibert.
+modified 2015-2017,2020,2021 by Olaf 'Rhialto' Seibert.
 
 Files:
     macro11.c       Command line parsing and driving the passes.
@@ -46,7 +46,8 @@ Files:
     rept_irpc.c     stream2 subclass for processing .REPT and .IREPT.
     object.c        Functions for writing RSX-11 compatible .OBJ files.
     mlb-rsx.c       Classes (!) for reading RSX-11 macro libraries.
-    mlb.c           Classes (!) for reading RT-11 macro libraries.
+    mlb-rt11.c      Classes (!) for reading RT-11 macro libraries.
+    mlb2.c          Glue functions for macro libraries in general.
     stream2.c       Functions for managing input streams and buffers.
     rad50.c         Functions for converting text to and from RAD50.
     util.c          A few general utility fuctions.
@@ -149,6 +150,11 @@ Options:
                     This also works for extracting an object library
                     (.OLB) file.
 
+    -rsx            Tells macro11 to generate rsx style object files.
+                    This is the default.
+
+    -rt11           Tells macro11 to generate rt11 style object files.
+
     Various options starting with -y enable extensions:
 
     -ysl <num>      Allow longer symbols up to the given length.
@@ -167,3 +173,11 @@ Options:
 You may define the MCALL and INCLUDE environment variable prior to
 invoking macro11, as a path to directories containing macros or files to
 be included, respectively.
+
+=======================================================================
+
+Included in subdirectory obj2bin is a Perl script from Don North,
+copied from https://github.com/AK6DN/obj2bin. The copied version may
+get out of date; when in doubt check the original.
+
+=======================================================================

@@ -1,0 +1,32 @@
+# Minimized from https://about.gitlab.com/2016/10/12/automated-debian-package-build-with-gitlab-ci/
+# https://github.com/gitlabhq/gitlabhq/blob/master/vendor/gitlab-ci-yml/C%2B%2B.gitlab-ci.yml
+
+# use the official gcc image, based on debian
+# can use verions as well, like gcc:5.2
+# see https://hub.docker.com/_/gcc/
+#image: gcc
+
+before_script:
+  - apt-get update
+
+# Defines stages which are to be executed
+stages:
+  - build-gcc
+  - build-clang
+
+# Stage "build"
+run-build-gcc:
+  stage: build-gcc
+  script:
+    - apt-get install -y gcc
+    - make
+    - cd tests && ./RunTests
+
+# Stage "build-clang"
+run-build-clang:
+  stage: build-clang
+  script:
+    - apt-get install -y clang
+    - CC=clang make
+    - cd tests && ./RunTests
+

@@ -35,9 +35,11 @@ extern int      last_locsym;    /* The last local symbol number generated */
 
 extern int      enabl_debug;    /* Whether assembler debugging is enabled */
 
+extern int      opt_enabl_ama;  /* May be changed by command line */
+
 extern int      enabl_ama;      /* When set, chooses absolute (037) versus
                                    PC-relative */
-/* (067) addressing mode */
+                                /* (067) addressing mode */
 extern int      enabl_lsb;      /* When set, stops non-local symbol
                                    definitions from delimiting local
                                    symbol sections. */
@@ -46,6 +48,8 @@ extern int      enabl_gbl;      /* Implicit definition of global symbols */
 
 extern int      enabl_lc;       /* If lowercase disabled, convert assembler
                                    source to upper case. */
+extern int      enabl_lcm;      /* If lowercase disabled, .IF IDN/DIF are
+                                   case-sensitive. */
 extern int      suppressed;     /* Assembly suppressed by failed conditional */
 
 extern MLB     *mlbs[MAX_MLBS]; /* macro libraries specified on the command line */
@@ -67,7 +71,7 @@ extern EX_TREE *xfer_address;   /* The transfer address */
 extern SYMBOL  *current_pc;     /* The current program counter */
 
 extern unsigned last_dot_addr;  /* Last coded PC... */
-extern SECTION *last_dot_section;       /* ...and it's program section */
+extern SECTION *last_dot_section;       /* ...and its program section */
 
 /* The following are dummy psects for symbols which have meaning to
    the assembler: */

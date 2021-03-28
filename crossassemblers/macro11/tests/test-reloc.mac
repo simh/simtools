@@ -1,0 +1,76 @@
+	.TITLE  Test references that need (no) relocation
+
+	.PSECT  FOO,I,RW
+
+	.WORD	42
+Y:	.WORD	0
+
+	; absolute expression since the offset to the pc is a
+	; subtraction of the relative address of Y from the current
+	; position, both in the same psect. Such an operation renders
+	; an absolute value.
+	CLR	Y	
+
+	; relocatable, since the absolute address of Y is unknown because
+	; it's in a psect that can be moved around at link time.
+	CLR	@#Y
+
+	; relocatable because even though X is at a known address, the
+	; address of the instruction is unknown and subject to the location
+	; of the psect, which is only decided at link time.
+	CLR	X
+
+	; absolute since it is an expression only dependent on an
+	; absolute value.
+	CLR	@#X
+
+	; Test AMA (uses absolute addresses rather than pc-relative)
+
+	.enabl AMA
+
+	; Could be relative, as above, but AMA forces it to @#Y and
+	; then it needs relocation again, weirdly enough.
+	clr	Y
+	; Same as @#X.
+	clr	X
+
+	.dsabl AMA
+
+	.ASECT
+	.=1000
+
+X=1234
+	; relocatable because the address of Y is in another psect, and
+	; the subtraction of a relative address from an absolute renders
+	; a relative value.
+	CLR	Y
+
+	; relocatable because the absolute address of Y is unknown.
+	; MACRO-11 only have a relative value of Y.
+	CLR	@#Y
+
+	; absolute since the offset to the pc is an expression subtracting
+	; two absolute values which obviously have an absolute result.
+	CLR	X
+
+	; absolute since it is an expression only dependent on an
+	; absolute value.
+	CLR	@#X
+
+	; Note that all references to Y contains 000002. This is because
+	; that is the offset of Y within the psect. This is added to the
+	; base of the psect (the part that comes from this object file),
+	; which is all the linker will know about.
+
+	; Test AMA
+
+	.enabl AMA
+
+	; Same as @#Y.
+	clr	Y
+	; Same as @#X.
+	clr	X
+
+	.dsabl AMA
+
+	.END

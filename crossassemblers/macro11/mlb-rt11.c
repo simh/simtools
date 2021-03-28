@@ -2,6 +2,7 @@
 
 /*
 Copyright (c) 2001, Richard Krehbiel
+Copyright (c) 2017, Olaf Seibert
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,9 +45,25 @@ DAMAGE.
 
 #include "mlb.h"
 
-#include "macro11.h"
-
 #include "util.h"
+
+static MLB     *mlb_rt11_open(
+    char *name,
+    int allow_object_library);
+static BUFFER  *mlb_rt11_entry(
+    MLB *mlb,
+    char *name);
+static void     mlb_rt11_close(
+    MLB *mlb);
+static void     mlb_rt11_extract(
+    MLB *mlb);
+
+struct mlb_vtbl mlb_rt11_vtbl = {
+    mlb_rt11_open,
+    mlb_rt11_entry,
+    mlb_rt11_extract,
+    mlb_rt11_close,
+};
 
 #define WORD(cp) ((*(cp) & 0xff) + ((*((cp)+1) & 0xff) << 8))
 
@@ -84,11 +101,13 @@ static void trim(
         *cp = 0;
 }
 
-/* mlb_open opens a file which is given to be a macro library. */
+/* mlb_rt11_open opens a file which is given to be a macro library. */
 /* Returns NULL on failure. */
 
-MLB            *mlb_open(
-    char *name)
+static
+MLB            *mlb_rt11_open(
+    char *name,
+    int allow_object_library)
 {
     MLB            *mlb = memcheck(malloc(sizeof(MLB)));
     char           *buff;
@@ -97,24 +116,26 @@ MLB            *mlb_open(
     unsigned        start_block;
     int             i;
 
+    (void)allow_object_library;         /* This parameter is not supported */
+    mlb->vtbl = &mlb_rt11_vtbl;
     mlb->directory = NULL;
 
     mlb->fp = fopen(name, "rb");
     if (mlb->fp == NULL) {
-        mlb_close(mlb);
+        mlb_rt11_close(mlb);
         return NULL;
     }
 
     buff = memcheck(malloc(044));      /* Size of MLB library header */
 
     if (fread(buff, 1, 044, mlb->fp) < 044) {
-        mlb_close(mlb);
+        mlb_rt11_close(mlb);
         free(buff);
         return NULL;
     }
 
     if (WORD(buff) != 01001) {         /* Is this really a macro library? */
-        mlb_close(mlb);                /* Nope. */
+        mlb_rt11_close(mlb);           /* Nope. */
         return NULL;
     }
 
@@ -132,7 +153,7 @@ MLB            *mlb_open(
 
     /* Read the disk directory */
     if (fread(buff, entsize, nr_entries, mlb->fp) < nr_entries) {
-        mlb_close(mlb);                /* Sorry, read error. */
+        mlb_rt11_close(mlb);           /* Sorry, read error. */
         free(buff);
         return NULL;
     }
@@ -214,8 +235,9 @@ MLB            *mlb_open(
     return mlb;
 }
 
-/* mlb_close discards MLB and closes the file. */
-void mlb_close(
+/* mlb_rt11_close discards MLB and closes the file. */
+static
+void mlb_rt11_close(
     MLB *mlb)
 {
     if (mlb) {
@@ -234,15 +256,16 @@ void mlb_close(
     }
 }
 
-/* mlb_entry returns a BUFFER containing the specified entry from the
+/* mlb_rt11_entry returns a BUFFER containing the specified entry from the
    macro library, or NULL if not found. */
 
-BUFFER         *mlb_entry(
+static
+BUFFER         *mlb_rt11_entry(
     MLB *mlb,
     char *name)
 {
     int             i;
-    MLBENT         *ent;
+    MLBENT         *ent = NULL;
     BUFFER         *buf;
     char           *bp;
     int             c;
@@ -278,7 +301,7 @@ BUFFER         *mlb_entry(
     return buf;
 }
 
-/* mlb_extract - walk thru a macro library and store it's contents
+/* mlb_rt11_extract - walk thru a macro library and store its contents
    into files in the current directory.
 
    See, I had decided not to bother writing macro library maintenance
@@ -288,7 +311,8 @@ BUFFER         *mlb_entry(
    in the file system from thence forward.
 */
 
-void mlb_extract(
+static
+void mlb_rt11_extract(
     MLB *mlb)
 {
     int             i;

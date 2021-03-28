@@ -14,8 +14,10 @@ SOH = 1
         .asciz ;ABC;/DEF/               ; ABCDEF, not recommended practice
         .asciz /ABC/;DEF;               ; ABC, not recommended practice
         .asciz /ABC/=DEF=               ; ABCDEF, not recommended practice
+        .asciz &###&                    ; another weird delimiter
         .asciz =DEF=                    ; syntax error: assignment
         .asciz =###=                    ; syntax error: assignment
+	.even
         .asciz :SOH:                    ; syntax error: colon not allowed
         .asciz :###:                    ; syntax error: colon not allowed
         .asciz ^###^                    ; previous versions of this macro11

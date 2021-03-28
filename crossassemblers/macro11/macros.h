@@ -46,6 +46,10 @@ MACRO          *defmacro(
     STACK *stack,
     int called);
 
+#define CALLED_NORMAL           0
+#define CALLED_NOLIST           1
+#define CALLED_NODEFINE         2
+
 STREAM         *expandmacro(
     STREAM *refstr,
     MACRO *mac,

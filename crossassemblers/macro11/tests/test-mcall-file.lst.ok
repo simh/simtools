@@ -1,0 +1,34 @@
+       1                                ;;;;;
+       2                                ;
+       3                                ; Test using .MCALL and pulling in the macro definition from a file.
+       4                                ;
+       5                                
+       6                                        .mcall  (ignored)mafile
+       7                                
+       8 000000                                 mafile
+       1 000000    124     150     151          .asciz  /This macro definition comes from a file./
+         000003    163     040     155  
+         000006    141     143     162  
+         000011    157     040     144  
+         000014    145     146     151  
+         000017    156     151     164  
+         000022    151     157     156  
+         000025    040     143     157  
+         000030    155     145     163  
+         000033    040     146     162  
+         000036    157     155     040  
+         000041    141     040     146  
+         000044    151     154     145  
+         000047    056     000          
+       8                                
+
+
+Symbol table
+
+.       ******R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000051    001   (RW,I,LCL,REL,CON,NOSAV)

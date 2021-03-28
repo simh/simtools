@@ -1,0 +1,25 @@
+;;;;;
+;
+; Test .BLKB and .BLKW
+;
+label:	.blkb		; not recommended, but default argument is 1
+	.blkb	1
+	.blkb	2
+	.blkb	100.
+	.blkb	label	; error: not an constant expression
+
+	.odd
+
+	.blkw	1	; should maybe be an error: odd address
+
+	.even
+
+label2:	.blkb		; not recommended, but default argument is 1
+	.blkb	1
+	.blkb	2
+	.blkb	100.
+	.blkb	label2	; error: not an constant expression
+
+
+	.even	1	; error: no argument allowed
+	.odd	1	; error: no argument allowed

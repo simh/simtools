@@ -3,7 +3,7 @@
  */
 /*
 Copyright (c) 2001, Richard Krehbiel
-Copyright (c) 2015, Olaf Seibert
+Copyright (c) 2015, 2017, Olaf Seibert
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -156,6 +156,24 @@ DAMAGE.
 #include "mlb.h"
 #include "util.h"
 
+static MLB     *mlb_rsx_open(
+    char *name,
+    int allow_object_library);
+static BUFFER  *mlb_rsx_entry(
+    MLB *mlb,
+    char *name);
+static void     mlb_rsx_close(
+    MLB *mlb);
+static void     mlb_rsx_extract(
+    MLB *mlb);
+
+struct mlb_vtbl mlb_rsx_vtbl = {
+    mlb_rsx_open,
+    mlb_rsx_entry,
+    mlb_rsx_extract,
+    mlb_rsx_close,
+};
+
 #define BLOCKSIZE               512
 
 #define WORD(cp) ((*(cp) & 0xff) + ((*((cp)+1) & 0xff) << 8))
@@ -178,7 +196,7 @@ static void trim(
 /* mlb_open opens a file which is given to be a macro library. */
 /* Returns NULL on failure. */
 
-MLB            *mlb_open(
+MLB            *mlb_rsx_open(
     char *name,
     int allow_objlib)
 {
@@ -189,11 +207,12 @@ MLB            *mlb_open(
     unsigned        start_block;
     int             i;
 
+    mlb->vtbl = &mlb_rsx_vtbl;
     mlb->directory = NULL;
 
     mlb->fp = fopen(name, "rb");
     if (mlb->fp == NULL) {
-        mlb_close(mlb);
+        mlb_rsx_close(mlb);
         return NULL;
     }
 
@@ -201,7 +220,7 @@ MLB            *mlb_open(
 
     if (fread(buff, 1, 060, mlb->fp) < 060) {
         fprintf(stderr, "error: can't read full header\n");
-        mlb_close(mlb);
+        mlb_rsx_close(mlb);
         free(buff);
         return NULL;
     }
@@ -210,8 +229,9 @@ MLB            *mlb_open(
     if (allow_objlib && WORD(buff) == 01000) { /* Is it an object library? */
         mlb->is_objlib = 1;
     } else if (WORD(buff) != 01001) {  /* Is this really a macro library? */
-        fprintf(stderr, "error: first word not correct value\n");
-        mlb_close(mlb);                /* Nope. */
+        /* fprintf(stderr, "error: first word not correct value\n"); */
+        mlb_rsx_close(mlb);            /* Nope. */
+        free(buff);
         return NULL;
     }
 
@@ -222,7 +242,7 @@ MLB            *mlb_open(
                                           directory */
 
     if (entsize < 8) {                 /* Is this really a macro library? */
-        mlb_close(mlb);                /* Nope. */
+        mlb_rsx_close(mlb);            /* Nope. */
         fprintf(stderr, "error: entsize too small: %d\n", entsize);
         return NULL;
     }
@@ -237,7 +257,7 @@ MLB            *mlb_open(
 
     /* Read the disk directory */
     if (fread(buff, entsize, nr_entries, mlb->fp) < nr_entries) {
-        mlb_close(mlb);                /* Sorry, read error. */
+        mlb_rsx_close(mlb);            /* Sorry, read error. */
         free(buff);
         return NULL;
     }
@@ -306,8 +326,8 @@ MLB            *mlb_open(
     return mlb;
 }
 
-/* mlb_close discards MLB and closes the file. */
-void mlb_close(
+/* mlb_rsx_close discards MLB and closes the file. */
+void mlb_rsx_close(
     MLB *mlb)
 {
     if (mlb) {
@@ -326,15 +346,15 @@ void mlb_close(
     }
 }
 
-/* mlb_entry returns a BUFFER containing the specified entry from the
+/* mlb_rsx_entry returns a BUFFER containing the specified entry from the
    macro library, or NULL if not found. */
 
-BUFFER         *mlb_entry(
+BUFFER         *mlb_rsx_entry(
     MLB *mlb,
     char *name)
 {
     int             i;
-    MLBENT         *ent;
+    MLBENT         *ent = NULL;
     BUFFER         *buf;
     char           *bp;
     int             c;
@@ -347,17 +367,17 @@ BUFFER         *mlb_entry(
     }
 
     if (i >= mlb->nentries) {
-//        fprintf(stderr, "mlb_entry: %s not found\n", name);
+//        fprintf(stderr, "mlb_rsx_entry: %s not found\n", name);
         return NULL;
     }
 
     fseek(mlb->fp, ent->position, SEEK_SET);
-//    fprintf(stderr, "mlb_entry: %s at position %ld\n", name, (long)ent->position);
+//    fprintf(stderr, "mlb_rsx_entry: %s at position %ld\n", name, (long)ent->position);
 
 #define MODULE_HEADER_SIZE      022
 
     if (fread(module_header, MODULE_HEADER_SIZE, 1, mlb->fp) < 1) {
-//        fprintf(stderr, "mlb_entry: %s at position %lx can't read 022 bytes\n", name, (long)ent->position);
+//        fprintf(stderr, "mlb_rsx_entry: %s at position %lx can't read 022 bytes\n", name, (long)ent->position);
         return NULL;
     }
 
@@ -368,10 +388,10 @@ BUFFER         *mlb_entry(
     ent->length = (WORD(module_header + 04) << 16) +
                    WORD(module_header + 06);
     ent->length -= MODULE_HEADER_SIZE; /* length is including this header */
-//    fprintf(stderr, "mlb_entry: %s at position %lx length = %d\n", name, (long)ent->position, ent->length);
+//    fprintf(stderr, "mlb_rsx_entry: %s at position %lx length = %d\n", name, (long)ent->position, ent->length);
 
     if (module_header[02] == 1) {
-        fprintf(stderr, "mlb_entry: %s at position %lx deleted entry\n", name, (long)ent->position);
+        fprintf(stderr, "mlb_rsx_entry: %s at position %lx deleted entry\n", name, (long)ent->position);
         /* Deleted Entry */
         return NULL;
     }
@@ -398,7 +418,7 @@ BUFFER         *mlb_entry(
         i = fread(bp, 1, ent->length, mlb->fp);
         bp += i;
     } else if (module_header[0] & 0x10) {
-//        fprintf(stderr, "mlb_entry: %s at position %lx variable length records\n", name, (long)ent->position);
+//        fprintf(stderr, "mlb_rsx_entry: %s at position %lx variable length records\n", name, (long)ent->position);
         /* Variable length records with size before them */
         i = ent->length;
         while (i > 0) {
@@ -437,7 +457,7 @@ BUFFER         *mlb_entry(
             }
         }
     } else {
-//        fprintf(stderr, "mlb_entry: %s at position %lx byte stream records\n", name, (long)ent->position);
+//        fprintf(stderr, "mlb_rsx_entry: %s at position %lx byte stream records\n", name, (long)ent->position);
         for (i = 0; i < ent->length; i++) {
             c = fgetc(mlb->fp);            /* Get macro byte */
             if (c == '\r' || c == 0)       /* If it's a carriage return or 0,
@@ -453,7 +473,7 @@ BUFFER         *mlb_entry(
     return buf;
 }
 
-/* mlb_extract - walk thru a macro library and store its contents
+/* mlb_rsx_extract - walk thru a macro library and store its contents
    into files in the current directory.
 
    See, I had decided not to bother writing macro library maintenance
@@ -463,7 +483,7 @@ BUFFER         *mlb_entry(
    in the file system from thence forward.
 */
 
-void mlb_extract(
+void mlb_rsx_extract(
     MLB *mlb)
 {
     int             i;

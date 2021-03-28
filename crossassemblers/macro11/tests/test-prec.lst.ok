@@ -20,53 +20,117 @@
       20 000022 000003                  	.word	12. / 4		; 000003
       21 000024 000121                  	.word	123 & 771	; 000121
       22 000026 123323                  	.word	123121 ! 322	; 123323
-      23                                
-      24 000030 177401                  	.word	- 377		; 177401
-      25 000032 000377                  	.word	+ 377		; 000377
-      26                                
-      27 000034 177400                  	.word	^C 377		; 177400
-      28 000036 177400                  	.word	^c 377		; 177400
-      29 000040 052525                  	.word	^B 0101010101010101	; 052525
-      30 000042 125252                  	.word	^b 1010101010101010	; 125252
-      31 000044 000144                  	.word	^d 100		; 000144
-      32 000046 000144                  	.word	100.		; 000144
-      33 000050 000400                  	.word	^x 100		; 000400 hexadecimal is an extension
-      34 000052 070254                  	.word	^rRAD		; 070254 up to 3 characters; no leading spaces
-      35 000054 003100                  	.word	^rA		; 003100 up to 3 characters
-      36 000056 000050                  	.word	^r A		; 000050 up to 3 characters
-      37 000060 000001                  	.word	^r  A		; 000001 up to 3 characters
-      38 000062 000051                  	.word	^r AA		; 000051
-      39 000064 003101                  	.word	^rA A		; 003101
-      40 000066 003150                  	.word	^rAA		; 003150
-      41 000070 003151                  	.word	^r^/AAA/	; bracketed strings are an extension
-      42 000072 070254                  	.word	^r<RAD>		; bracketed strings are an extension
-      43 000074 000054                  	.word	^r< AD>		; bracketed strings are an extension
-      44 000076 000004                  	.word	^r<  D>		; bracketed strings are an extension
-      45 000100 070204                  	.word	^r<R D>		; bracketed strings are an extension
-      46 000102 070250                  	.word	^r<RA >		; bracketed strings are an extension
-      47 000104 157614                  	.word	^R50.		; 157614 there is no whitespace in between.
-      48 000106 040140                  	.word	^f 1.5		; 040140
-      49                                
-      50                                ;;;;;
-      51                                ;
-      52                                ; Test bracketing
-      53                                ;
-      54 000110 000007                  	.word	1 + < 2 * 3 >	; 1 + 6 = 7
-      55 000112 000007                  	.word	1 + ^! 2 * 3 !	; 1 + 6 = 7
-      56 000114 000007                  	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
-      57 000116 000007                  	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
-test-prec.mac:58: ***ERROR Invalid expression
-      58 000120 000003  000000  000000G 	.word	1 + ^* 2 * 3 *	; Invalid expression
-         000126 000000G                 
-      58                                
+      23        000005                  five = 5
+      24 000030 001230                  a:	.word	123 _ 3	 	; 001230
+      25 000032 000500                  	.word	five _ 6	; 000500
+      26 000034 004040                  	.word	101_five	; 004040
+      27 000036 000377                  	.word	177400 _ -8.	; 000377
+      28 000040 000000C                 	.word	a _ 3		; Complex relocation
+      29                                
+      30 000042 177401                  	.word	- 377		; 177401
+      31 000044 000377                  	.word	+ 377		; 000377
+      32                                
+      33 000046 177400                  	.word	^C 377		; 177400
+      34 000050 177400                  	.word	^c 377		; 177400
+      35 000052 052525                  	.word	^B 0101010101010101	; 052525
+      36 000054 125252                  	.word	^b 1010101010101010	; 125252
+      37 000056 000144                  	.word	^d 100		; 000144
+      38 000060 000144                  	.word	100.		; 000144
+      39 000062 000400                  	.word	^x 100		; 000400 hexadecimal is an extension
+      40 000064 070254                  	.word	^rRAD		; 070254 up to 3 characters; no leading spaces
+      41 000066 003100                  	.word	^rA		; 003100 up to 3 characters
+      42 000070 000050                  	.word	^r A		; 000050 up to 3 characters
+      43 000072 000001                  	.word	^r  A		; 000001 up to 3 characters
+      44 000074 000051                  	.word	^r AA		; 000051
+      45 000076 003101                  	.word	^rA A		; 003101
+      46 000100 003150                  	.word	^rAA		; 003150
+      47 000102 003151                  	.word	^r^/AAA/	; bracketed strings are an extension
+      48 000104 070254                  	.word	^r<RAD>		; bracketed strings are an extension
+      49 000106 000054                  	.word	^r< AD>		; bracketed strings are an extension
+      50 000110 000004                  	.word	^r<  D>		; bracketed strings are an extension
+      51 000112 070204                  	.word	^r<R D>		; bracketed strings are an extension
+      52 000114 070250                  	.word	^r<RA >		; bracketed strings are an extension
+      53 000116 157614                  	.word	^R50.		; 157614 there is no whitespace in between.
+      54 000120 040300                  	.word	^f 1.5		; 040300
+      55                                
+      56                                ;;;;;
+      57                                ;
+      58                                ; Test bracketing
+      59                                ;
+      60 000122 000007                  	.word	1 + < 2 * 3 >	; 1 + 6 = 7
+      61 000124 000007                  	.word	1 + ^! 2 * 3 !	; 1 + 6 = 7
+      62 000126 000007                  	.word	1 + ^/ 2 * 3 /	; 1 + 6 = 7
+      63 000130 000007                  	.word	1 + ^$ 2 * 3 $	; 1 + 6 = 7
+test-prec.mac:64: ***ERROR Invalid expression
+      64 000132 000003  000000          	.word	1 + ^* 2 * 3 *	; Invalid expression
+      65                                
+      66                                ;;;;;
+      67                                ;
+      68                                ; There was an obscure bug in parse_expr(), used to evaluate 'if df',
+      69                                ; where it could skip past the end of the line marker.
+      70                                ;
+      71                                ; If this happened inside an expanded macro, then after that was the
+      72                                ; next line...
+      73                                ; In other cases it might be worse.
+      74                                ;
+      75                                        .macro  dirdef  name,   flags,  cond
+      76                                        .rad50  /.'name/
+      77                                        .byte   flags+0,        0
+      78                                        .if df  cond
+      79                                        .globl  opcerr
+      80                                        .word   opcerr
+      81                                        .iff
+      82                                        .globl  name
+      83                                        .word   name
+      84                                        .endc
+      85                                        .endm
+      86                                
+      87 000136                                 dirdef name
+       1 000136 130461  051010                  .rad50  /.name/
+       2 000142    000     000                  .byte   +0,        0
+       3                                        .if df  
+       4                                        .globl  opcerr
+       5                                        .word   opcerr
+       6                                        .iff
+       7                                        .globl  name
+       8 000144 000000G                         .word   name
+       9                                        .endc
+      88                                
+test-prec.mac:89: ***ERROR Invalid expression in .WORD
+      89                                        .word   (
+test-prec.mac:90: ***ERROR Invalid expression in .WORD
+      90                                (
+      91                                
+test-prec.mac:92: ***ERROR Invalid expression in .WORD
+      92                                        .word   _,$
+test-prec.mac:93: ***ERROR Invalid expression in .WORD
+      93                                _
+      94 000146 000000G                 $
+test-prec.mac:95: ***ERROR Invalid expression in .WORD
+      95                                        .word   /
+test-prec.mac:96: ***ERROR Invalid expression in .WORD
+      96                                        /
+test-prec.mac:97: ***ERROR Invalid expression in .WORD
+      97                                        .word ^px
+test-prec.mac:98: ***ERROR Invalid expression in .WORD
+      98                                        ^px
+test-prec.mac:99: ***ERROR Invalid expression in .WORD
+      99                                	.word	^px / 256
+test-prec.mac:100: ***ERROR Invalid expression in .WORD
+     100                                	^px / 256
+     101                                
+     102 000150 000001  000002  000003          1,2,3
+     103 000156 000000G 000000G 000000G         .1,.2,.3
+     103                                
 
 
 Symbol table
 
-.      ******R      001 EXPRES=****** GX        INVALI=****** GX        
+$     = ****** GX        .1    = ****** GX        .3    = ****** GX        FIVE  = 000005           
+.       ******R      001 .2    = ****** GX        A       000030R      001 NAME  = ****** G         
 
 
 Program sections:
 
 . ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
-        000130    001   (RW,I,LCL,REL,CON,NOSAV)
+        000164    001   (RW,I,LCL,REL,CON,NOSAV)

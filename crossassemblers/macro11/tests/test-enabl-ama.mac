@@ -1,0 +1,11 @@
+;;;;
+;
+; Test that .ENABL AMA  doesn't survive to the next pass.
+; The default at the start of each pass is set by the command line
+; option -d AMA or -e AMA. It is disabled by default.
+
+	.psect	foo,i,rw
+y:	.word	0
+	clr	y	; should be pc-relative, no relocation
+
+	.enabl ama	; after this, Y would be @#Y

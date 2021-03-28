@@ -1,0 +1,132 @@
+;;;;;
+;
+; Test operand checking for various instructions and try to exercise
+; all operand parsing error messages.
+; Some cases are checked elsewhere (e.g. test-jmp.mac).
+;
+
+; OC_MARK
+
+        mark    0
+        mark    1
+        mark    77
+        mark    100             ; too large
+        mark    .               ; must be literal
+        mark    0,0             ; bad
+
+        emt     0
+        emt     1
+        emt     255.
+        emt     256.            ; too large
+        emt     .               ; must be literal
+
+        trap    0
+        trap    1
+        trap    255.
+        trap    256.            ; too large
+        trap    .               ; must be literal
+
+; OC_1GEN
+
+        tst     r0
+        tst     r0,(r0)         ; bad
+        tst     @               ; bad
+        tst     %77             ; bad
+        tst     <>              ; bad
+
+; OC_2GEN
+
+        add     r0,r1
+        add     r0,r1,r2        ; bad
+        add     @               ; bad
+        add     r0 r1           ; bad
+        add     r0,@            ; bad
+
+; OC_BR
+
+        ; branch offset is counted in words
+        ; from the address after instruction (. + 2)
+
+        br      .+2-258.        ; bad
+        br      .+2-256.
+        br      .+2
+        br      .+2+254.
+        br      .+2+256.        ; bad
+        br      .+2+1           ; bad (odd)
+
+; OC_SOB
+
+        sob     r0,.
+        sob     0,.             ; yes MACRO11 accepts this
+        sob     r0,.,3          ; bad
+        sob                     ; bad
+        sob     r0              ; bad
+        sob     r0 .            ; bad
+        sob     10,.            ; bad
+
+; OC_ASH
+
+        ash     #3,r0
+        ash     #3,0            ; yes MACRO11 accepts this
+        ash     #3,r0,r1        ; bad
+        ash                     ; bad
+        ash     #3              ; bad
+        ash     #3 r0           ; bad
+        ash     #3,#0           ; bad
+
+; OC_JSR        tested in test-jmp.mac
+
+; OC_FPPGENAC
+
+ac1 = %1
+ac5 = %5
+
+        mulf    (r1),ac1
+        mulf    (r1),1
+        mulf    (r1),ac1,ac1    ; bad
+        mulf                    ; bad
+        mulf    (               ; bad
+        mulf    (r1)            ; bad
+        mulf    (r1) ac1        ; bad
+        mulf    (r1),ac5        ; bad
+
+; OC_FPPACGEN
+
+        stf     ac1,(r5)
+        stf     1,(r5)
+        stf                     ; bad
+        stf     ac1             ; bad
+        stf     ac1 (r5)        ; bad
+        stf     ac5,(r5)        ; bad
+
+; OC_CIS2       operands are optional and an extension
+
+        cmpni
+        cmpni   1,2
+        cmpni   1,2,3           ; bad
+        cmpni   3               ; bad
+        cmpni   4 5             ; bad
+        cmpni   <>,<>           ; bad
+
+; OC_CIS3       operands are optional and an extension
+
+        addni
+        addni   1,2,3
+        addni   1,2,3,4         ; bad
+        addni   1               ; bad
+        addni   1,2             ; bad
+        addni   1 2 3           ; bad
+        addni   <>,<>,<>        ; bad
+
+; OC_CIS4       operands are optional and an extension
+
+        movtci
+        movtci  1,2,3,4
+        movtci  1,2,3,4,5
+        movtci  1               ; bad
+        movtci  1,2             ; bad
+        movtci  1,2,3           ; bad
+        movtci  1 2 3 4         ; bad
+        movtci  <>,<>,<>,<>     ; bad
+
+        .end

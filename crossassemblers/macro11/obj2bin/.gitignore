@@ -1,0 +1,4 @@
+# ignore these files:
+# ignore these directories:
+tests/
+# the end

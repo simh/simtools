@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+set_ok() {
+    t="$1"
+
+    if [ -e "$t".lst.ok ]
+    then
+        cp "$t".lst "$t".lst.ok
+    fi
+
+    if [ -e "$t".objd.ok ]
+    then
+        cp "$t".objd "$t".objd.okd
+    fi
+}
+
+for fn in "$@"
+do
+    set_ok "$fn"
+done
+

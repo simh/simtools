@@ -1,0 +1,39 @@
+       1        000000                                 .REPT     0
+       2                                THIS IS A BIG BLOCK OF COMMENTS
+       3                                WE DON'T EXPECT THAT IT WILL EVER BE ASSEMBLED
+       4                                MORE STUFF TO SAY HERE
+       5                                
+       6                                                .ENDR
+       7                                
+       8                                
+       9 000000 005001                                  clr     r1
+      10        000001                                  .rept   1
+      11                                                inc     r1
+      12                                                .endr
+       1 000002 005201                                  inc     r1
+      13                                
+      14 000004 005002                                  clr     r2
+      15        000002                                  .rept   2
+      16                                                inc     r2
+      17                                                .endr
+       1 000006 005202                                  inc     r2
+       1 000010 005202                                  inc     r2
+      18                                
+      19 000012 005000                                  clr     r0
+test-rept.mac:20: ***ERROR .REPT value must be constant
+      20                                                .rept   undefd
+      21 000014 005200                                  inc     r0
+test-rept.mac:22: ***ERROR No repeat block active
+      22                                                .endr
+      22                                
+
+
+Symbol table
+
+.       ******R      001 
+
+
+Program sections:
+
+. ABS.  000000    000   (RW,I,GBL,ABS,OVR,NOSAV)
+        000016    001   (RW,I,LCL,REL,CON,NOSAV)

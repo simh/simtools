@@ -1,0 +1,21 @@
+;;;;;
+;
+; Test ^pl and ^ph
+
+	.PSECT section
+
+	.word	<^pl section>
+	.word	<^ph section>
+	.word	<^pl code>
+	.word	<^ph code>
+	.byte	<^ph code>
+	.byte	<^ph code> / 256
+
+	.PSECT code
+
+	.word	<^pl section>
+	.word	<^ph section>
+	.word	<^pl code>
+	.word	<^ph code>
+
+	.end

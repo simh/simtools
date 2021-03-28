@@ -38,7 +38,7 @@ test-rad50.mac:25: ***ERROR invalid character value 37777777777
 
 Symbol table
 
-.      ******R      001 CHR1  =000001           CHR2  =000002           CHR3  =000003           
+.       ******R      001 CHR1  = 000001           CHR2  = 000002           CHR3  = 000003           
 
 
 Program sections:

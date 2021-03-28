@@ -47,6 +47,12 @@ DAMAGE.
 #include "rad50.h"
 #include "object.h"
 
+#ifndef DEFAULT_OBJECTFORMAT_RT11
+#define DEFAULT_OBJECTFORMAT_RT11       0
+#endif
+
+int rt11 = DEFAULT_OBJECTFORMAT_RT11;
+
 /*
   writerec writes "formatted binary records."
   Each is preceeded by any number of 0 bytes, begins with a 1,0 pair,
@@ -66,24 +72,27 @@ static int writerec(
     int             chksum;     /* Checksum is negative sum of all
                                    bytes including header and length */
     int             i;
-#if RT11
-    unsigned        hdrlen = len + 4;
-#else
-    unsigned        hdrlen = len;
-#endif
+    unsigned        hdrlen;
+
+    if (rt11) {
+        hdrlen = len + 4;
+    } else {
+        hdrlen = len;
+    }
 
     if (fp == NULL)
         return 1;                      /* Silently ignore this attempt to write. */
 
     chksum = 0;
-#if RT11
-    if (fputc(FBR_LEAD1, fp) == EOF)   /* All recs begin with 1,0 */
-        return 0;
-    chksum -= FBR_LEAD1;
-    if (fputc(FBR_LEAD2, fp) == EOF)
-        return 0;
-    chksum -= FBR_LEAD2;
-#endif /* RT11 */
+
+    if (rt11) {
+        if (fputc(FBR_LEAD1, fp) == EOF)   /* All recs begin with 1,0 */
+            return 0;
+        chksum -= FBR_LEAD1;
+        if (fputc(FBR_LEAD2, fp) == EOF)
+            return 0;
+        chksum -= FBR_LEAD2;
+    } /* RT11 */
 
     i = hdrlen & 0xff;                 /* length, lsb */
     chksum -= i;
@@ -106,13 +115,13 @@ static int writerec(
 
     chksum &= 0xff;
 
-#if RT11
-    fputc(chksum, fp);                 /* Followed by the checksum byte */
-#else /* RT11 */
-    if (hdrlen & 1) {
-        fputc(0, fp);                  /* Padding to even boundary */
+    if (rt11) {
+        fputc(chksum, fp);             /* Followed by the checksum byte */
+    } else { /* RT11 */
+        if (hdrlen & 1) {
+            fputc(0, fp);              /* Padding to even boundary */
     }
-#endif /* RT11 */
+} /* RT11 */
 
     return 1;                          /* Worked okay. */
 }
@@ -786,7 +795,7 @@ void text_complex_begin(
 }
 
 /* text_complex_fit checks if a complex expression will fit and
-   returns a pointer to it's location */
+   returns a pointer to its location */
 
 static char    *text_complex_fit(
     TEXT_COMPLEX *tx,

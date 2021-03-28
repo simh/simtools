@@ -49,6 +49,10 @@ DAMAGE.
 
 #define NPSECTS 256
 
+#ifndef DEFAULT_OBJECTFORMAT_RT11
+#define DEFAULT_OBJECTFORMAT_RT11       0
+#endif
+
 int             psectid = 0;
 char           *psects[NPSECTS];
 FILE           *bin = NULL;
@@ -57,7 +61,8 @@ int             xferad = 1;
 
 char           *readrec(
     FILE *fp,
-    int *len)
+    int *len,
+    int rt11)
 {
     int             c,
                     i;
@@ -66,33 +71,33 @@ char           *readrec(
 
     chksum = 0;
 
-#if RT11
-    while (c = fgetc(fp), c != EOF && c == 0) ;
+    if (rt11) {
+        while (c = fgetc(fp), c != EOF && c == 0) ;
 
-    if (c == EOF)
-        return NULL;
+        if (c == EOF)
+            return NULL;
 
-    if (c != 1) {
-        fprintf(stderr, "Improperly formatted OBJ file (1)\n");
-        return NULL;                   /* Not a properly formatted file. */
+        if (c != 1) {
+            fprintf(stderr, "Improperly formatted OBJ file (1)\n");
+            return NULL;               /* Not a properly formatted file. */
+        }
+
+        chksum -= c;
+
+        c = fgetc(fp);
+        if (c != 0) {
+            fprintf(stderr, "Improperly formatted OBJ file (2)\n");
+            return NULL;               /* Not properly formatted */
+        }
+
+        chksum -= c;                   /* even though for 0 the checksum isn't changed... */
     }
-
-    chksum -= c;
-
-    c = fgetc(fp);
-    if (c != 0) {
-        fprintf(stderr, "Improperly formatted OBJ file (2)\n");
-        return NULL;                   /* Not properly formatted */
-    }
-
-    chksum -= c;                       /* even though for 0 the checksum isn't changed... */
-#endif /* RT11 */
 
     c = fgetc(fp);
     if (c == EOF) {
-#if RT11
-        fprintf(stderr, "Improperly formatted OBJ file (3)\n");
-#endif /* RT11 */
+        if (rt11) {
+            fprintf(stderr, "Improperly formatted OBJ file (3)\n");
+        }
         return NULL;
     }
     *len = c;
@@ -109,9 +114,10 @@ char           *readrec(
 
     chksum -= c;
 
-#if RT11
-    *len -= 4;                         /* Subtract header and length bytes from length */
-#endif
+    if (rt11) {
+        *len -= 4;                     /* Subtract header and length bytes from length */
+    }
+
     if (*len < 0) {
         fprintf(stderr, "Improperly formatted OBJ file (5)\n");
         return NULL;
@@ -133,28 +139,28 @@ char           *readrec(
     for (i = 0; i < *len; i++)
         chksum -= (buf[i] & 0xff);
 
-#if RT11
-    c = fgetc(fp);
-    c &= 0xff;
-    chksum &= 0xff;
-
-    if (c != chksum) {
-        free(buf);
-        fprintf(stderr, "Bad record checksum, " "calculated=$%04x, recorded=$%04x\n", chksum, c);
-        return NULL;
-    }
-#else
-    if (*len & 1) {
-        /* skip 1 byte of padding */
+    if (rt11) {
         c = fgetc(fp);
-        if (c == EOF) {
+        c &= 0xff;
+        chksum &= 0xff;
+
+        if (c != chksum) {
             free(buf);
-            fprintf(stderr, "EOF where padding byte should be\n");
+            fprintf(stderr, "Bad record checksum, " "calculated=$%04x, recorded=$%04x\n", chksum, c);
             return NULL;
         }
+    } else {
+        if (*len & 1) {
+            /* skip 1 byte of padding */
+            c = fgetc(fp);
+            if (c == EOF) {
+                free(buf);
+                fprintf(stderr, "EOF where padding byte should be\n");
+                return NULL;
+            }
 
+        }
     }
-#endif /* RT11 */
 
     return buf;
 }
@@ -683,23 +689,58 @@ int main(
 {
     int             len;
     FILE           *fp;
-    char           *cp;
+    int             arg;
+    int             rt11 = DEFAULT_OBJECTFORMAT_RT11;
+    char            *infile = 0;
+    char            *outfile = 0;
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: dumpobj input.obj [ output.obj ]\n");
+    for (arg = 1; arg < argc; arg++) {
+        if (*argv[arg] == '-') {
+            char           *cp;
+
+            cp = argv[arg] + 1;
+            if (!strcasecmp(cp, "rt11")) {
+                rt11 = 1;
+            } else if (!strcasecmp(cp, "rsx")) {
+                rt11 = 0;
+            } else {
+                fprintf(stderr, "Unknown option %s\n", argv[arg]);
+                exit(EXIT_FAILURE);
+            }
+        }
+        else if (infile == 0) {
+            infile = argv[arg];
+        }
+        else if (outfile == 0) {
+            outfile = argv[arg];
+        }
+        else {
+            fprintf(stderr, "Extra parameter %s\n", argv[arg]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (infile == 0) {
+        fprintf(stderr, "Usage: dumpobj [ -rt11 ] [ -rsx ] input.obj [ output.obj ]\n");
         exit(1);
     }
 
-    fp = fopen(argv[1], "rb");
-    if (fp == NULL)
+    fp = fopen(infile, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "Unable to open %s\n", infile);
         return EXIT_FAILURE;
-    if (argc > 2 && argv[2]) {
-        bin = fopen(argv[2], "wb");
-        if (bin == NULL)
+    }
+    if (outfile != 0) {
+        bin = fopen(outfile, "wb");
+        if (bin == NULL) {
+            fprintf(stderr, "Unable to open %s\n", outfile);
             return EXIT_FAILURE;
+        }
     }
 
-    while ((cp = readrec(fp, &len)) != NULL) {
+    char           *cp;
+
+    while ((cp = readrec(fp, &len, rt11)) != NULL) {
         switch (cp[0] & 0xff) {
         case 1:
             got_gsd(cp, len);

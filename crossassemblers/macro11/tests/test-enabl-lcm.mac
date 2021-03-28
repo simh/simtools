@@ -1,0 +1,32 @@
+;;;;;
+;
+; Test case (in)sensitivity of .IF IDN/DIF.
+;
+
+    ; Default: case insensitive.
+
+    .iif idn <hallo> <hallo>	.byte 1
+    .iif idn <HALLO> <hallo>	.byte 1
+    .iif idn <hallo> <HALLO>	.byte 1
+    .iif idn <HAllo> <halLO>	.byte 1
+
+    .iif dif <hallo> <hallo>	.byte 0
+    .iif dif <HALLO> <hallo>	.byte 0
+    .iif dif <hallo> <HALLO>	.byte 0
+    .iif dif <HAllo> <halLO>	.byte 0
+
+    .enabl lcm
+    ; Now: case sensitive
+
+    .iif idn <hallo> <hallo>	.byte 1
+    .iif idn <HALLO> <hallo>	.byte 0
+    .iif idn <hallo> <HALLO>	.byte 0
+    .iif idn <HAllo> <halLO>	.byte 0
+
+    .iif dif <hallo> <hallo>	.byte 0
+    .iif dif <HALLO> <hallo>	.byte 1
+    .iif dif <hallo> <HALLO>	.byte 1
+    .iif dif <HAllo> <halLO>	.byte 1
+
+    ; Setting is now non-default.
+    ; Check if it reverts to default in the next pass.
