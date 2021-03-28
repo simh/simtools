@@ -1,0 +1,292 @@
+;;;;;
+;
+; Use all opcodes once
+;
+
+        halt
+        wait
+        rti
+        bpt
+        iot
+        reset
+        rtt
+        mfpt
+
+        ; 00 00 10 ... 00 00 77 unused
+
+        jmp     .
+        rts     pc
+
+        ; 00 02 10 ... 00 02 27 unused
+
+        spl     3
+        nop             ; = clear NO condition codes
+
+        clc
+        clv
+        clz
+        cln
+        ccc
+
+        sec
+        sev
+        sez
+        sen
+        scc
+
+        swab    @(r3)+
+
+        br      .
+        bne     .
+        beq     .
+        bge     .
+        blt     .
+        bgt     .
+        ble     .
+
+        jsr     pc,.
+
+        clr     @(r3)+
+        com     @(r3)+
+        inc     @(r3)+
+        dec     @(r3)+
+        neg     @(r3)+
+        adc     @(r3)+
+        sbc     @(r3)+
+        tst     @(r3)+
+
+        ror     @(r3)+
+        rol     @(r3)+
+        asr     @(r3)+
+        asl     @(r3)+
+        mark    #33
+        mfpi    @(r3)+
+        mtpi    @(r3)+
+        sxt     @(r3)+
+
+        csm     @(r3)+          ; only some models
+        ; 00 71 00 ... 00 71 77 unused
+        tstset  @(r3)+          ; only some models
+        wrtlck  @(r3)+          ; only some models
+
+        ; 00 74 00 ... 00 77 77 unused
+
+        mov     (r1),(r2)+
+        cmp     (r1),(r2)+
+        bit     (r1),(r2)+
+        bic     (r1),(r2)+
+        bis     (r1),(r2)+
+        add     (r1),(r2)+
+
+        mul     (r1),r2
+        div     (r1),r2
+        ash     (r1),r2
+        ashc    (r1),r2
+        xor     r1,(r2)+
+
+        fadd    r1      ; PDP-11/35, 11/40 floating point unit (FIS)
+        fsub    r1
+        fmul    r1
+        fdiv    r1
+
+        ; 07 50 40 ... 07 60 17 unused
+
+        ; 07 60 20 ... 07 61 77 CIS Commercial Instruction Set
+
+                        ; 07600x unused
+                        ; 07601x unused
+        l2d0            ; 07602x
+        l2d1
+        l2d2
+        l2d3
+        l2d4
+        l2d5
+        l2d6
+        l2d7
+
+        movc            ; 07603x
+        movrc
+        movtc
+        ; 3..7?
+
+        locc            ;07604x
+        skpc
+        scanc
+        spanc
+        cmpc
+        matc
+        ; 6..7?
+
+        addn            ; 07605x
+        subn
+        cmpn
+        cvtnl
+        cvtpn
+        cvtnp
+        ashn
+        cvtln
+
+        l3d0            ; 07606x
+        l3d1
+        l3d2
+        l3d3
+        l3d4
+        l3d5
+        l3d6
+        l3d7
+
+        addp            ; 07607x
+        subp
+        cmpp
+        cvtlp
+        cvtpl
+        mulp
+        divp
+        ashp
+        ; 7?
+                        ; 07610x unused
+                        ; 07611x unused
+                        ; 07612x unused: would be L2D0I
+
+; All the *I instructions need inline operands, which are omitted in this test.
+; This Macro11 (as an extension) allows to specify them as arguments
+; following the opcode, so you don't have to use inline .word directives.
+
+        movci           ; 07613x
+        movrci
+        movtci
+        ; 3..7?
+
+        locci           ; 07614x
+        skpci
+        scanci
+        spanci
+        cmpci
+        matci
+        ; 6..7?
+
+        addni           ; 07615x
+        subni
+        cmpni
+        cvtnli
+        cvtpni
+        cvtnpi
+        ashni
+        cvtlni
+
+                        ; 07616x unused: would be L3D0I
+
+        addpi           ; 07617x
+        subpi
+        cmppi
+        cvtlpi
+        cvtpli
+        mulpi
+        divpi
+        ashpi
+        ; 7?
+
+        ; 07 62 00 ... 07 67 77 unused
+
+        sob     r1,.
+
+        bpl     .
+        bmi     .
+        bhi     .
+        blos    .
+        bvc     .
+        bcc     .
+        bhis    .       ; same
+        bcs     .
+        blo     .       ; same
+
+        emt     #0      ; ...
+        emt     #255.
+        trap    #0      ; ...
+        trap    #255.
+
+        clrb    @(r3)+
+        comb    @(r3)+
+        incb    @(r3)+
+        decb    @(r3)+
+        negb    @(r3)+
+        adcb    @(r3)+
+        sbcb    @(r3)+
+        tstb    @(r3)+
+
+        rorb    @(r3)+
+        rolb    @(r3)+
+        asrb    @(r3)+
+        aslb    @(r3)+
+
+        mtps    @(r3)+
+        mfpd    (r1)
+        mtpd    (r1)
+        mfps    @(r3)+
+
+        movb    (r1),(r2)+
+        cmpb    (r1),(r2)+
+        bitb    (r1),(r2)+
+        bicb    (r1),(r2)+
+        bisb    (r1),(r2)+
+        sub     (r1),(r2)+
+
+        ; 17 00 00 ... 17 77 77 Floating Point Processor (FPP) floating point
+
+        cfcc
+        setf
+        seti
+        setd
+        setl
+
+        ldfps   @(r1)+
+        stfps   @(r1)+
+        stst    @(r1)+
+
+ac1 = %1
+ac5 = %5
+
+        clrf    ac5     ; fdst: fpp register or general mode (not register)
+        clrd    @(r5)+          ; same opcode
+        tstf    ac5
+        tstd    @(r5)+          ; same opcode
+        absf    ac5
+        absd    @(r5)+          ; same opcode
+        negf    ac5
+        negd    @(r5)+          ; same opcode
+
+        mulf    @(r5)+,ac1
+        muld    ac5,ac1         ; same opcode
+        modf    @(r5)+,ac1
+        modd    ac5,ac1         ; same opcode
+        addf    @(r5)+,ac1
+        addd    r5,ac1          ; same opcode
+        ldf     @(r5)+,ac1
+        ldd     r5,ac1          ; same opcode
+        subf    @(r5)+,ac1
+        subd    r5,ac1          ; same opcode
+
+        cmpf    @(r5)+,ac1
+        cmpd    r5,ac1          ; same opcode
+        stf     ac1,@(r5)+
+        std     ac1,r5          ; same opcode
+        divf    @(r5)+,ac1
+        divd    r5,ac1          ; same opcode
+
+        stexp   ac1,@(r5)+
+        stcfi   ac1,@(r5)+
+        stcfl   ac1,@(r5)+      ; same opcode
+        stcdi   ac1,@(r5)+      ; same opcode
+        stcdl   ac1,@(r5)+      ; same opcode
+        stcfd   ac1,@(r5)+
+        stcdf   ac1,@(r5)+      ; same opcode
+
+        ldexp   @(r5)+,ac1
+        ldcif   @(r5)+,ac1      ; same opcode
+        ldcid   @(r5)+,ac1      ; same opcode
+        ldclf   @(r5)+,ac1      ; same opcode
+        ldcld   @(r5)+,ac1      ; same opcode
+        ldcdf   @(r5)+,ac1
+        ldcfd   @(r5)+,ac1      ; same opcode
+
+        .end

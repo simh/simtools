@@ -1,5 +1,3 @@
-#define EXTREE__C
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -114,6 +112,14 @@ void print_tree(
         print_tree(printfile, tp->data.child.right, depth + 4);
         fputc('>', printfile);
         break;
+
+    case EX_LSH:
+        fputc('<', printfile);
+        print_tree(printfile, tp->data.child.left, depth + 4);
+        fputc('_', printfile);
+        print_tree(printfile, tp->data.child.right, depth + 4);
+        fputc('>', printfile);
+        break;
     }
 
     if (depth == 0)
@@ -152,6 +158,7 @@ void free_tree(
     case EX_DIV:
     case EX_AND:
     case EX_OR:
+    case EX_LSH:
         free_tree(tp->data.child.left);
         free_tree(tp->data.child.right);
         break;
@@ -246,6 +253,7 @@ EX_TREE *dup_tree(
     case EX_DIV:
     case EX_AND:
     case EX_OR:
+    case EX_LSH:
         res->data.child.left = dup_tree(tp->data.child.left);
         res->data.child.right = dup_tree(tp->data.child.right);
         break;
@@ -705,6 +713,58 @@ EX_TREE        *evaluate(
             res = new_ex_bin(EX_OR, left, right);
         }
         break;
+
+    case EX_LSH:
+        {
+            EX_TREE        *left,
+                           *right;
+
+            left = evaluate(tp->data.child.left, undef);
+            right = evaluate(tp->data.child.right, undef);
+
+            /* Operate if both are literals */
+            if (left->type == EX_LIT && right->type == EX_LIT) {
+                int shift = right->data.lit;
+                if (shift < 0)
+                    res = new_ex_lit(left->data.lit >> -shift);
+                else
+                    res = new_ex_lit(left->data.lit << shift);
+                free_tree(left);
+                free_tree(right);
+                break;
+            }
+
+            if (right->type == EX_LIT &&        /* Symbol shifted 0 == symbol */
+                right->data.lit == 0) {
+                res = left;
+                free_tree(right);
+                break;
+            }
+
+            if (right->type == EX_LIT &&        /* Anything shifted 16 == 0 */
+                ((int)right->data.lit > 15 ||
+                 (int)right->data.lit < -15)) {
+                res = new_ex_lit(0);
+                free_tree(left);
+                free_tree(right);
+                break;
+            }
+
+            if (right->type == EX_LIT) {        /* Other shifts become * or / */
+                int shift = right->data.lit;
+                if (shift > 0)
+                    res = new_ex_bin(EX_MUL, left, new_ex_lit(1 << shift));
+                else
+                    res = new_ex_bin(EX_DIV, left, new_ex_lit(1 << -shift));
+                free_tree(right);
+                break;
+            }
+
+            /* Anything else returns verbatim */
+            res = new_ex_bin(EX_LSH, left, right);
+        }
+        break;
+
     default:
         fprintf(stderr, "Invalid tree\n");
         return NULL;
@@ -720,7 +780,7 @@ EX_TREE        *evaluate(
 EX_TREE        *new_ex_tree(
     void)
 {
-    EX_TREE        *tr = memcheck(malloc(sizeof(EX_TREE)));
+    EX_TREE        *tr = memcheck(calloc(1, sizeof(EX_TREE)));
 
     return tr;
 }

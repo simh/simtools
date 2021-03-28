@@ -39,3 +39,25 @@
 
     .macro      M6
     .endm       notM6   ; wrong
+
+    .endm               ; end without macro
+    .endr               ; end without repetition
+    .endc               ; end without condition
+
+    ; Test that a macro that is defined inside another macro isn't already
+    ; defined while defining the outer macro.
+    ; This is a bit tricky: macros are kept between passes, so just
+    ; testing M3 before M2 (like above) won't work.
+
+    .macro      M7
+     .word      7
+     .if        p2
+      .macro    M8      ; only defined in pass 2
+       .word    8.
+      .endm     M8      ; ok
+     .endc
+    .endm       M7      ; ok
+
+    M8                  ; not defined yet; will be taken as implied .word.
+    M7                  ; defines M8.
+    M8                  ; which can now be used.

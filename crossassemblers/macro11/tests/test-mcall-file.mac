@@ -1,0 +1,8 @@
+;;;;;
+;
+; Test using .MCALL and pulling in the macro definition from a file.
+;
+
+        .mcall  (ignored)mafile
+
+        mafile

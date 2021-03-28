@@ -1,0 +1,143 @@
+;;;;;
+;
+; Test various conditions of the condition directive
+;
+
+zero	= 0
+one	= 1
+defd	= 2
+defd2   = 3
+min1	= -1
+
+	; defined
+	.iif df defd		.byte 1
+	.iif df undf		.byte 0
+	.iif ndf defd		.byte 0
+	.iif ndf undf		.byte 1
+
+	.ifdf defd
+				.byte 1
+	.endc
+	.ifdf undf
+				.byte 0
+	.endc
+	.ifndf defd
+				.byte 0
+	.endc
+	.ifndf undf
+				.byte 1
+	.endc
+
+	; multiple df and ndf
+	.iif df defd & defd2,   .byte 1
+	.iif df defd & undefd   .byte 0
+	.iif df undefd & defd,  .byte 0
+	.iif df undefd & undefd .byte 0
+
+	.iif ndf defd & defd2    .byte 0
+	.iif ndf defd & undefd,  .byte 0
+	.iif ndf undefd & defd,  .byte 0
+	.iif ndf undefd & undefd .byte 1
+
+	; multiple df or ndf
+	.iif df defd ! defd2,   .byte 1
+	.iif df defd ! undefd   .byte 1
+	.iif df undefd ! defd,  .byte 1
+	.iif df undefd ! undefd .byte 0
+
+	.iif ndf defd ! defd2,   .byte 0
+	.iif ndf defd ! undefd   .byte 1
+	.iif ndf undefd ! defd   .byte 1
+	.iif ndf undefd ! undefd .byte 1
+
+	; blank (string)
+	.iif b ^//		.byte 1
+	.iif b <x>		.byte 0
+	.iif nb <>		.byte 0
+	.iif nb ^/x/		.byte 1
+
+	; identical (strings)
+	.iif idn ^/a/ <a>	.byte 1
+	.iif idn ^/a/ <b>	.byte 0
+	.iif dif ^/a/ <a>	.byte 0
+	.iif dif ^/a/ <b>	.byte 1
+
+	; skip P1 and P2
+	
+	; equal to zero (value)
+	.iif eq	zero		.byte 1
+	.iif eq	one		.byte 0
+	.iif ne	zero		.byte 0
+	.iif ne	one		.byte 1
+
+	.iif z 	zero		.byte 1
+	.iif z 	one		.byte 0
+	.iif nz	zero		.byte 0
+	.iif nz	one		.byte 1
+
+	; greater than zero (value)
+	.iif gt	min1		.byte 0
+	.iif gt	zero		.byte 0
+	.iif gt	one		.byte 1
+
+	.iif g 	min1		.byte 0
+	.iif g 	zero		.byte 0
+	.iif g 	one		.byte 1
+
+	; greater than or equal to zero (value)
+	.iif ge	min1		.byte 0
+	.iif ge	zero		.byte 1
+	.iif ge	one		.byte 1
+
+	; less than zero (value)
+	.iif lt	min1		.byte 1
+	.iif lt	zero		.byte 0
+	.iif lt	one		.byte 0
+
+	.iif l 	min1		.byte 1
+	.iif l 	zero		.byte 0
+	.iif l 	one		.byte 0
+
+	; less than or equal to zero (value)
+	.iif le	min1		.byte 1
+	.iif le	zero		.byte 1
+	.iif le	one		.byte 0
+
+	; expression with separating comma
+	.iif z	one - one,	.byte 1
+	.iif nz	one - one,	.byte 0
+	.iif nz	2 - one,	.byte 1
+
+	; labels
+	.iif z	zero,	lab1:	.byte 1
+	.iif nz	one,	lab2:	.byte 1
+
+	; multiline conditions
+	.if ne one
+	    .byte 1
+	.iff
+	    .byte 0
+	.ift
+	    .byte 1
+	.iftf
+	    .byte 1
+	.endc
+
+	.if eq one
+	    .byte 0
+	.iff
+	    .byte 1
+	.ift
+	    .byte 0
+	.iftf
+	    .byte 1
+	.endc
+
+	; errors
+	.iif
+	.iif 0
+	.iif 1
+	.iif undefd
+	.iif zero
+	.iif one
+	.iif z

@@ -8,32 +8,77 @@
 
 TESTS="test-asciz \
     test-backpatch \
+    test-blkb \
     test-bsl-mac-arg \
+    test-cis \
     test-complex-reloc \
+    test-enabl-ama \
+    test-enabl-lcm \
     test-endm \
+    test-float \
+    test-if \
     test-impword \
     test-include \
     test-jmp \
+    test-listing \
     test-locals \
     test-macro-comma \
+    test-mcall-file \
+    test-opcodes \
+    test-operands \
     test-prec \
     test-psect \
     test-rad50 \
+    test-reloc \
+    test-rept \
+    test-ua-pl \
     test-undef \
     test-word-comma"
 
-for t in $TESTS
-do
+status=0
+
+assemble() {
+    t="$1"
+
     ../macro11 -l "$t".lst -o "$t".obj "$t".mac 2>/dev/null
+
+    # Ignore error status and messages from the assembler.
+    # We check the listing file to see what we expect.
 
     if [ -e "$t".lst.ok ]
     then
         diff -u "$t".lst.ok "$t".lst
+	status=$((status + $?))
     fi
 
     if [ -e "$t".objd.ok ]
     then
         ../dumpobj "$t".obj >"$t".objd
         diff -u "$t".objd.ok "$t".objd
+	status=$((status + $?))
     fi
+}
+
+for t in $TESTS
+do
+    assemble "$t"
 done
+
+for t in 2.11BSD/m11/*.m11
+do
+    fn=$( echo ${t%.m11} | sed 's;/;-;g' )
+
+    cat >${fn}.mac <<EOF
+;;;; Wrapper for $t
+	.list
+	.list
+	.list
+debug	=	1
+	.include "2.11BSD/m11/at.sml"
+	.include "${t}"
+EOF
+    
+    assemble "$fn"
+done
+
+exit $status

@@ -121,6 +121,8 @@ DAMAGE.
                                           number" and two bytes offset */
 #define CPLX_CONST 020                 /* Followed by two bytes constant value */
 
+extern int rt11;                       /* Use RT11 object file format */
+
 typedef struct gsd {
     FILE           *fp;         /* The file assigned for output */
     char            buf[122];   /* space for 15 GSD entries */

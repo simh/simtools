@@ -1,0 +1,22 @@
+               .REPT     0
+THIS IS A BIG BLOCK OF COMMENTS
+WE DON'T EXPECT THAT IT WILL EVER BE ASSEMBLED
+MORE STUFF TO SAY HERE
+
+                .ENDR
+
+
+                clr     r1
+                .rept   1
+                inc     r1
+                .endr
+
+                clr     r2
+                .rept   2
+                inc     r2
+                .endr
+
+                clr     r0
+                .rept   undefd
+                inc     r0
+                .endr

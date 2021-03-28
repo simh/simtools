@@ -225,8 +225,9 @@ void implicit_gbl(
     case EX_DIV:
     case EX_AND:
     case EX_OR:
+    case EX_LSH:
         implicit_gbl(value->data.child.right);
-        /* falls into... */
+        /* FALLS THROUGH */
     case EX_COM:
     case EX_NEG:
         implicit_gbl(value->data.child.left);
@@ -467,12 +468,18 @@ void mode_extension(
     }
 
     if (value->type == EX_LIT) {
-        if (mode->rel)                 /* PC-relative? */
-            store_displaced_word(str, tr, 2, value->data.lit);
-        else
+        if (mode->rel) {              /* PC-relative? */
+            if (current_pc->section->flags & PSECT_REL) {
+                store_displaced_word(str, tr, 2, value->data.lit);
+            } else {
+                /* I can compute this myself. */
+                store_word(str, tr, 2, value->data.lit - DOT - 2);
+            }
+        } else {
             store_word(str, tr, 2, value->data.lit);    /* Just a
                                                            known
                                                            value. */
+        }
     } else if (express_sym_offset(value, &sym, &offset)) {
         if ((sym->flags & (SYMBOLFLAG_GLOBAL | SYMBOLFLAG_DEFINITION)) == SYMBOLFLAG_GLOBAL) {
             /* Reference to a global symbol. */
@@ -553,7 +560,7 @@ int eval_undefined(
 }
 
 /* push_cond - a new conditional (.IF) block has been activated.  Push
-   it's context. */
+   its context. */
 
 void push_cond(
     int ok,
@@ -653,7 +660,7 @@ int do_word(
         } else {
             EX_TREE        *value = parse_expr(cp, 0);
 
-            if (value->cp > cp) {
+            if (value->type != EX_ERR && value->cp > cp) {
                 store_value(stack, tr, size, value);
 
                 cp = value->cp;
@@ -685,6 +692,10 @@ int check_branch(
     int max)
 {
     int             s_offset;
+
+    if (offset & 1) {
+        report(stack->top, "Bad branch target (odd address)\n");
+    }
 
     /* Sign-extend */
     if (offset & 0100000)
@@ -731,7 +742,7 @@ void write_globals(
     if (ident)
         gsd_ident(&gsd, ident);
 
-    /* write out each PSECT with it's global stuff */
+    /* write out each PSECT with its global stuff */
     /* Sections must be written out in the order that they
        appear in the assembly file.  */
     for (isect = 0; isect < sector; isect++) {

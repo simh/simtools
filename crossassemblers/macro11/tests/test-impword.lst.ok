@@ -17,7 +17,7 @@ test-impword.mac:10: ***ERROR Invalid expression in .WORD
 
 Symbol table
 
-.      ******R      001 MACRO =****** GX        START  000000R      001 
+.       ******R      001 MACRO = ****** GX        START   000000R      001 
 
 
 Program sections:

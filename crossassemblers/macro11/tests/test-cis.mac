@@ -1,0 +1,66 @@
+;;;;;
+;
+; Test assembling the CIS instructions (Commercial Instruction Set).
+;
+
+        ADDN
+        ADDP
+        ASHN
+        ASHP
+        CMPC
+        CMPN
+        CMPP
+        CVTLN
+        CVTLP
+        CVTNL
+        CVTPL
+        CVTNP
+        CVTPN
+        DIVP
+        LOCC
+        L2D0
+        L2D7
+        L3D0
+        L3D7
+        MATC
+        MOVC
+        MOVRC
+        MOVTC
+        MULP
+        SCANC
+        SKPC
+        SPANC
+        SUBN
+        SUBP
+
+        ADDNI   s1, s2, d1
+        ADDPI   s1, s2, d1
+        ASHNI   s1, d1, <<'5*256.>!3>   ; rounding digit and shift count
+        ASHPI   s1, d1, <<'5*256.>!3>
+        CMPCI   s1, s2, 'F              ; fill character
+        CMPNI   s1, s2
+        CMPPI   s1, s2
+        CVTLNI  s1, l1
+        CVTLPI  s1, l1
+        CVTNLI  s1, l1
+        CVTPLI  s1, l1
+        CVTNPI  s1, d1
+        CVTPNI  s1, d1
+        DIVPI   s1, s2, d1
+        LOCCI   s1, 'A
+        MATCI   s1, s2
+        MOVCI   s1, d1, 'F              ; fill character
+        MOVRCI  s1, d1, 'F              ; fill character
+        MOVTCI  s1, d1, 'F, t1
+        MULPI   s1, s2, d1
+        SCANCI  s1, s2                  ; src and set descriptors
+        SKPCI   s1, 'S                  ; skip character
+        SPANCI  s1, s2                  ; src and set descriptors
+        SUBNI   s1, s2, d1
+        SUBPI   s1, s2, d1
+
+s1:     .word 1, 2      ; string descriptor
+s2:     .word 3, 4      ; string descriptor
+d1:     .word 5, 6      ; string descriptor
+l1:     .word 7, 10     ; long integer
+t1:     .ascii /NOPABC/ ; translation table

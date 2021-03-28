@@ -239,10 +239,11 @@ void buffer_stream_construct(
     bstr->stream.vtbl = &buffer_stream_vtbl;
 
     bstr->stream.name = memcheck(strdup(name));
+    bstr->stream.line = 0;
+    bstr->stream.next = NULL;
 
     bstr->buffer = buffer_clone(buf);
     bstr->offset = 0;
-    bstr->stream.line = 0;
 }
 
 void buffer_stream_set_buffer(
@@ -350,9 +351,10 @@ STREAM         *new_file_stream(
 
     str->stream.vtbl = &file_stream_vtbl;
     str->stream.name = memcheck(strdup(filename));
+    str->stream.line = 0;
+    str->stream.next = NULL;
     str->buffer = memcheck(malloc(STREAM_BUFFER_SIZE));
     str->fp = fp;
-    str->stream.line = 0;
 
     return &str->stream;
 }

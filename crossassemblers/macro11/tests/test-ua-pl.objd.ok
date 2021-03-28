@@ -1,0 +1,29 @@
+GSD:
+	MODNAME .MAIN.=0 flags=0
+	PSECT       =0  CON RW REL LCL I flags=40
+	PSECT . ABS.=0  OVR RW ABS GBL I flags=104
+	PSECT CODE  =10  CON RW REL LCL I flags=40
+	PSECT SECTIO=12  CON RW REL LCL I flags=40
+	XFER . ABS.=1 flags=10
+ENDGSD
+RLD
+	Location counter definition SECTIO+0
+TEXT ADDR=0 LEN=12
+	000000: 000000 000012 000000 000010 ........
+	000010: 000010                      ..
+RLD
+	Internal 0=0
+	Internal 2=12
+	PSECT plus offset 4=CODE+0
+	PSECT plus offset 6=CODE+10
+	PSECT plus offset byte 10=CODE+10
+	Complex byte 11=CODE:10 256 / store 
+	Location counter definition CODE+0
+TEXT ADDR=0 LEN=10
+	000000: 000000 000012 000000 000010 ........
+RLD
+	PSECT plus offset 0=SECTIO+0
+	PSECT plus offset 2=SECTIO+12
+	Internal 4=0
+	Internal 6=10
+ENDMOD
