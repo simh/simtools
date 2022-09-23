@@ -106,17 +106,50 @@ void getsize (const char *name, long *tsize, long *rsize, int *dec166)
 	}
 }
 
+typedef struct {
+    char        Signature[4];           /* must be 'simh' */
+    char        CreatingSimulator[64];  /* name of simulator */
+    char        DriveType[16];
+    lword32     SectorSize;             /* Stored in Network Byte Order */
+    lword32     SectorCount;            /* Stored in Network Byte Order */
+    char        Reserved[420];          /* Currently unimportant */
+} simh_footer;
+
+long byteswap32 (lword32 value)
+{
+unsigned char *b = (unsigned char *)&value;
+
+return (long)((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
+}
+
 /* adjsize takes as input a container file size.  it returns the 
  * corresponding RSTS size, based on a match against a table of
  * known disk sizes.  if it finds a match, it returns the RSTS
  * size given in the table; otherwise it returns the value that
- * was passed.
+ * was passed.  This process adjust for simh disk container 
+ * metadata if present at the end of the container file.
  */
 
 long adjsize (long tsize)
 {
 	const diskent	*d;
 
+	if (rstsfile != NULL)
+	{
+		struct stat	sbuf;
+
+		if ((fstat (fileno(rstsfile), &sbuf) == 0) &&
+		    ((sbuf.st_size % BLKSIZE) == 0)) /* get info about disk/file */
+		{
+			simh_footer f;
+
+			if ((fseek (rstsfile, sbuf.st_size - BLKSIZE, SEEK_SET) == 0) &&
+				(fread (&f, sizeof (f), 1, rstsfile) == 1) &&
+				(memcmp (f.Signature, "simh", 4) == 0) && 
+				((byteswap32(f.SectorSize) * byteswap32(f.SectorCount)) == (long)(sbuf.st_size - BLKSIZE)))
+				return (long)((byteswap32(f.SectorSize) * byteswap32(f.SectorCount)) / BLKSIZE);
+		}
+	}
 	for (d = sizetbl; d->name != NULL; d++)
 		if (d->tsize == tsize)
 			return d->rsize;
