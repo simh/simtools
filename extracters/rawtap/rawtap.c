@@ -172,7 +172,7 @@ int main(
             }
             continue;
           }
-          if ((file = fopen(argv[0], "r")) != NULL) {
+          if ((file = fopen(argv[0], "rb")) != NULL) {
             size_t datalen;
             
             while ((datalen = fread(record, sizeof(char), reclen, file)) != 0) {
@@ -257,7 +257,7 @@ int main(
               default:
                 if ((status & ST_ERROR) == 0) {
                   sprintf(filename, "%05u.dat", seqno++);
-                  if ((file = fopen(filename, "w")) != NULL) {
+                  if ((file = fopen(filename, "wb")) != NULL) {
                     while ((status != ST_EOM) && (status != ST_TM)) {
                       size_t length = status & ST_LENGTH;
 
