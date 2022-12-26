@@ -66,6 +66,7 @@ mmdir | List directory of Interdata MDM tape
 mtdump | Dump the record structure of a SIMH, E11, TPC, or P7B
 ods2 | Directory, Copy & Search commands for VMS ODS2 disk images
 rawcopy | Create SIMH disk image from physical media on RAW device.
+rawtap | Extract files from a SIMH tap file.
 rstsflx | Manipulate PDP11 RSTS file systems.
 sdsdump | Disassemble SDS SDS paper tape
 tpdump | Dump files on IBM 1401 tape
