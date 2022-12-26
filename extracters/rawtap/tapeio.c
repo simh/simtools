@@ -69,7 +69,7 @@ int OpenTapeForRead(
   char *name
 )
 {
-  if ((tfile = fopen(name, "r")) != NULL) {
+  if ((tfile = fopen(name, "rb")) != NULL) {
     int status;
 
     status = verifyFormat();
@@ -113,7 +113,7 @@ int OpenTapeForWrite(
   if (access(name, F_OK) == 0)
     return TIO_CREATEFAIL;
 
-  if ((tfile = fopen(name, "w+")) != NULL) {
+  if ((tfile = fopen(name, "wb+")) != NULL) {
     uint32 tm = 0;
     int status = TIO_SUCCESS;
 
@@ -170,7 +170,7 @@ int OpenTapeForAppend(
   char *name
 )
 {
-  if ((tfile =fopen(name, "r+")) != NULL) {
+  if ((tfile =fopen(name, "rb+")) != NULL) {
     int status;
 
     status = verifyFormat();
